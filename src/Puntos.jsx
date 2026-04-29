@@ -99,6 +99,26 @@ export default function Puntos({onBack}) {
           </div>
         </div>
 
+        {/* WHATSAPP */}
+        <div style={{background:"rgba(37,211,102,0.06)",border:"2px solid rgba(37,211,102,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#25D366",fontWeight:"bold",marginBottom:"8px"}}>📱 GRUPO DE WHATSAPP [AOR]</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"10px"}}>El grupo de WhatsApp es donde se coordinan las jugadas. Estar en él te da puntos.</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+            {[
+              {label:"Ya estabas en el grupo al inicio",pts:"+50",color:"#25D366",desc:"Puntos de fundador"},
+              {label:"Te unes al grupo ahora",pts:"+25",color:"#A8FF78",desc:"El admin lo actualiza en el Roster"},
+            ].map(r=>(
+              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:r.color+"08",borderRadius:"6px",border:"1px solid "+r.color+"22"}}>
+                <div>
+                  <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
+                  <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>{r.desc}</div>
+                </div>
+                <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* REGLA DE ORO */}
         <div style={{background:"rgba(64,224,255,0.06)",border:"3px solid #40E0FF",borderRadius:"12px",padding:"16px",marginBottom:"12px"}}>
           <div style={{fontSize:"22px",textAlign:"center",marginBottom:"8px"}}>⚖️</div>
