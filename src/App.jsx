@@ -103,38 +103,56 @@ function FlagBar({count}) {
 
 // ── Registration Form (public) ─────────────────────────────────────────────
 function RegistrationForm({onRegistered}) {
-  const [name, setName]           = useState("");
-  const [avail, setAvail]         = useState("");
-  const [tz, setTz]               = useState("mexico");
-  const [hour, setHour]           = useState("No sé");
-  const [task1, setTask1]         = useState("");
+  const [name, setName]             = useState("");
+  const [avail, setAvail]           = useState("");
+  const [tz, setTz]                 = useState("mexico");
+  const [hour, setHour]             = useState("No sé");
+  const [task1, setTask1]           = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone]           = useState(false);
-  const [error, setError]         = useState("");
+  const [done, setDone]             = useState(false);
+  const [error, setError]           = useState("");
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+  useEffect(()=>{
+    supabase.from("players").select("id,name,level").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
+  },[]);
+
+  function handleNameChange(val) {
+    setName(val);
+    setSelectedPlayer(null);
+    if (val.trim().length < 2) { setSuggestions([]); return; }
+    const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
+    const input = clean(val.trim());
+    const matches = allPlayers.filter(p => clean(p.name).includes(input));
+    setSuggestions(matches.slice(0,5));
+  }
+
+  function selectSuggestion(player) {
+    setName(player.name);
+    setSelectedPlayer(player);
+    setSuggestions([]);
+  }
 
   const tasks = avail ? getTasksForPlayer(avail, 999999) : null;
 
   async function handleSubmit() {
     if (!name.trim() || !avail) { setError("Completa nombre y disponibilidad."); return; }
     setSubmitting(true);
-    // Flexible search: get all players and find best match
-    const { data: allPlayers } = await supabase.from("players").select("id,name").eq("active", true);
-    const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
-    const input = clean(name.trim());
-    const existing = allPlayers?.filter(p => clean(p.name).includes(input) || input.includes(clean(p.name)));
-    if (!existing || existing.length === 0) { setError("Nombre no encontrado. Intenta con parte de tu nombre, por ejemplo: 'saladino' en vez de '>> Saladino <<'"); setSubmitting(false); return; }
-    const player = existing[0];
+    let player = selectedPlayer;
+    if (!player) {
+      const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
+      const input = clean(name.trim());
+      const matches = allPlayers.filter(p => clean(p.name).includes(input));
+      if (!matches.length) { setError("Nombre no encontrado. Escribe parte de tu nombre y selecciona de las sugerencias."); setSubmitting(false); return; }
+      player = matches[0];
+    }
     const av = AVAILABILITY[avail];
-    const updates = {
-      availability: avail,
-      timezone: tz,
-      hour_mx: hour,
-      task_period1: task1,
-      registered_form: true,
-      pt_registro: 5,
-      pt_disponibilidad_declarada: av.declaredPts,
-    };
-    await supabase.from("players").update(updates).eq("id", player.id);
+    await supabase.from("players").update({
+      availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
+      registered_form: true, pt_registro: 5, pt_disponibilidad_declarada: av.declaredPts,
+    }).eq("id", player.id);
     setDone(true);
     setSubmitting(false);
     if (onRegistered) onRegistered();
@@ -163,9 +181,20 @@ function RegistrationForm({onRegistered}) {
         </div>
 
         {/* Name */}
-        <div style={{marginBottom:"16px"}}>
+        <div style={{marginBottom:"16px",position:"relative"}}>
           <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>NOMBRE EN EL JUEGO</label>
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Exactamente como aparece en el juego" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}/>
+          <input value={name} onChange={e=>handleNameChange(e.target.value)} placeholder="Escribe tu nombre..." style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}/>
+          {selectedPlayer && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"3px"}}>✓ {selectedPlayer.name} — {((selectedPlayer.level||0)/1000).toFixed(1)}k</div>}
+          {suggestions.length > 0 && (
+            <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1a1f",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",zIndex:100,overflow:"hidden",marginTop:"2px"}}>
+              {suggestions.map(p=>(
+                <div key={p.id} onClick={()=>selectSuggestion(p)} style={{padding:"10px 12px",cursor:"pointer",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(64,224,255,0.1)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <span style={{fontSize:"13px",color:"#fff"}}>{p.name}</span>
+                  <span style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>{((p.level||0)/1000).toFixed(1)}k</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Availability */}
