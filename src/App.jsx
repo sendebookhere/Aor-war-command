@@ -555,7 +555,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
             {players.filter(p=>p.active).sort((a,b)=>{
               if (a.registered_form && !b.registered_form) return -1;
               if (!a.registered_form && b.registered_form) return 1;
-              return totalPts(b) - totalPts(a);
+              return b.bp - a.bp;
             }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
               const tz    = TIMEZONES[p.timezone]||TIMEZONES.mexico;
