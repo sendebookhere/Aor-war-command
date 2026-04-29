@@ -418,11 +418,11 @@ function RegistrationForm({onRegistered}) {
         {error && <div style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",padding:"10px",fontSize:"11px",color:"#FF6B6B",marginBottom:"12px"}}>{error}</div>}
 
         <button onClick={handleSubmit} disabled={submitting||alreadyRegistered} style={{width:"100%",padding:"14px",background:alreadyRegistered?"rgba(255,255,255,0.05)":"rgba(64,224,255,0.15)",border:"1px solid "+(alreadyRegistered?"rgba(255,255,255,0.1)":"rgba(64,224,255,0.3)"),borderRadius:"8px",color:alreadyRegistered?"rgba(255,255,255,0.3)":"#40E0FF",fontFamily:"serif",fontSize:"14px",cursor:alreadyRegistered?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
-          {submitting ? "Registrando..." : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACIÓN ⚔️"}
+          {submitting ? "Registrando..." : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACION"}
         </button>
 
         <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>
-          Al registrarte recibes +{avail?AVAILABILITY[avail].pts:0} puntos automáticamente
+          Al registrarte recibes +{avail?AVAILABILITY[avail].pts:0} puntos automaticamente
         </div>
       </div>
     </div>
