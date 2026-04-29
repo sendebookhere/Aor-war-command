@@ -54,9 +54,9 @@ function convertTime(hour, fromTz, toTz) {
 
 function getTasksForPlayer(availability, level) {
   if (availability === "solo_una") {
-    if (level >= 80000) return { period1: ["Defender ciudad propia"], period2: [] };
-    if (level >= 60000) return { period1: ["Defender castillos conquistados"], period2: [] };
-    return { period1: ["Espía ciudad enemiga"], period2: [] };
+    if (level >= 80000) return { period1: ["Defender ciudad propia", "Defender castillos conquistados", "Espía ciudad enemiga"], period2: [] };
+    if (level >= 60000) return { period1: ["Defender castillos conquistados", "Espía ciudad enemiga"], period2: [] };
+    return { period1: ["Defender castillos conquistados", "Espía ciudad enemiga"], period2: [] };
   }
   return TASKS[availability] || { period1: [], period2: [] };
 }
