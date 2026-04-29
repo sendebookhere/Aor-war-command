@@ -173,6 +173,9 @@ export default function PublicReport() {
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Ranking</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Toca un nombre para ver su perfil ↓</div>
+          <div style={{marginTop:"10px"}}>
+            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>Ir a registro de guerra →</a>
+          </div>
         </div>
 
         {/* Ranks table */}
