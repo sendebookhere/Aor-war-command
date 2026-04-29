@@ -551,9 +551,23 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* REGISTRO TAB */}
         {activeTab==="registro" && (
           <div>
-            <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px 12px",marginBottom:"14px",fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
+            <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px 12px",marginBottom:"10px",fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
               ⚡ <strong style={{color:"#FFD700"}}>{pending.length} jugadores</strong> sin confirmar · <strong style={{color:"#A8FF78"}}>{confirmed.length} confirmados</strong> · <strong style={{color:"#FF9F43"}}>{notPlaying.length} no disponibles</strong>
             </div>
+            <button onClick={()=>{
+              const registrados = players.filter(p=>p.active&&p.registered_form).sort((a,b)=>b.bp-a.bp);
+              const noRegistrados = players.filter(p=>p.active&&!p.registered_form).sort((a,b)=>b.bp-a.bp);
+              const avMap = {siempre:"Siempre listo",intermitente:"Intermitente",solo_una:"Solo una vez",no_disponible:"No disponible",pendiente:"Sin responder"};
+              let msg = "*[AOR] Registro de Guerra*\n\n";
+              msg += `*Confirmados (${registrados.length}):*\n`;
+              registrados.forEach(p=>{ msg += `- ${p.name} | ${avMap[p.availability]||""} | ${p.task_period1||"Sin tarea"}\n`; });
+              msg += `\n*Sin registrar (${noRegistrados.length}):*\n`;
+              noRegistrados.forEach(p=>{ msg += `- ${p.name}\n`; });
+              navigator.clipboard.writeText(msg);
+              alert("Copiado al portapapeles. Pega en WhatsApp.");
+            }} style={{width:"100%",padding:"10px",background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#25D366",fontSize:"12px",cursor:"pointer",marginBottom:"10px"}}>
+              📋 Copiar reporte para WhatsApp
+            </button>
             {players.filter(p=>p.active).sort((a,b)=>{
               if (a.registered_form && !b.registered_form) return -1;
               if (!a.registered_form && b.registered_form) return 1;
