@@ -609,8 +609,12 @@ function AdminPanel({players, update, loading, saving, reload}) {
           <div>
             {players.filter(p=>p.active).sort((a,b)=>{
               const rankOrder = ["Líder 👑","Co-Líder 👑","Oficial ⚜️","Veterano ★★★","Guerrero ★★","Soldado ★","Recluta","⚠ Vigilado"];
-              const ra = rankOrder.indexOf(getRank(totalPts(a)).label);
-              const rb = rankOrder.indexOf(getRank(totalPts(b)).label);
+              const totalA = (a.pts_acumulados||0) + totalPts(a) + (a.pts_honorificos||0);
+              const totalB = (b.pts_acumulados||0) + totalPts(b) + (b.pts_honorificos||0);
+              const labelA = totalA >= 10000 ? "Co-Líder 👑" : totalA >= 1000 ? "Oficial ⚜️" : totalA >= 600 ? "Veterano ★★★" : totalA >= 300 ? "Guerrero ★★" : totalA >= 100 ? "Soldado ★" : totalA >= 0 ? "Recluta" : "⚠ Vigilado";
+              const labelB = totalB >= 10000 ? "Co-Líder 👑" : totalB >= 1000 ? "Oficial ⚜️" : totalB >= 600 ? "Veterano ★★★" : totalB >= 300 ? "Guerrero ★★" : totalB >= 100 ? "Soldado ★" : totalB >= 0 ? "Recluta" : "⚠ Vigilado";
+              const ra = rankOrder.indexOf(labelA);
+              const rb = rankOrder.indexOf(labelB);
               if (ra !== rb) return ra - rb;
               return b.bp - a.bp;
             }).map(p=>{
