@@ -134,10 +134,9 @@ export default function PublicReport() {
   useEffect(()=>{
     supabase.from("players").select("*").eq("active",true).then(({data})=>{
       if(data) {
-        // Sort by accumulated + current war points combined
         const sorted = data.sort((a,b)=>{
-          const totalA = (a.pts_acumulados||0) + totalPts(a);
-          const totalB = (b.pts_acumulados||0) + totalPts(b);
+          const totalA = (a.pts_acumulados||0) + totalPts(a) + (a.pts_honorificos||0);
+          const totalB = (b.pts_acumulados||0) + totalPts(b) + (b.pts_honorificos||0);
           return totalB - totalA;
         });
         setPlayers(sorted);
@@ -184,7 +183,8 @@ export default function PublicReport() {
         {players.map((p,i)=>{
           const pts  = totalPts(p);
           const acc  = p.pts_acumulados||0;
-          const combined = acc + pts;
+          const hon  = p.pts_honorificos||0;
+          const combined = acc + pts + hon;
           const rank = getRank(acc);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
@@ -196,11 +196,12 @@ export default function PublicReport() {
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
+                    {hon>0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
                   </div>
                 </div>
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",color:combined>=0?rank.color:"#FF6B6B",fontWeight:"bold"}}>{combined}</div>
+                <div style={{fontSize:"16px",color:combined>=0?rank.color:"#FF6B6B",fontWeight:"bold"}}>{combined.toLocaleString()}</div>
                 <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{acc} acum + {pts} hoy</div>
               </div>
             </div>
