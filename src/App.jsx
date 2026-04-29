@@ -557,12 +557,23 @@ function AdminPanel({players, update, loading, saving, reload}) {
             <button onClick={()=>{
               const registrados = players.filter(p=>p.active&&p.registered_form).sort((a,b)=>b.bp-a.bp);
               const noRegistrados = players.filter(p=>p.active&&!p.registered_form).sort((a,b)=>b.bp-a.bp);
-              const avMap = {siempre:"Siempre listo",intermitente:"Intermitente",solo_una:"Solo una vez",no_disponible:"No disponible",pendiente:"Sin responder"};
+              const avMap = {siempre:"Siempre listo",intermitente:"Intermitente",solo_una:"Solo una vez",no_disponible:"No disponible"};
               let msg = "*[AOR] Registro de Guerra*\n\n";
               msg += `*Confirmados (${registrados.length}):*\n`;
-              registrados.forEach(p=>{ msg += `- ${p.name} | ${avMap[p.availability]||""} | ${p.task_period1||"Sin tarea"}\n`; });
+              registrados.forEach(p=>{
+                const av = avMap[p.availability]||"";
+                if (p.availability==="siempre") {
+                  msg += `- *${p.name}* | ${av}\n`;
+                } else if (p.availability==="intermitente") {
+                  const tarea = p.task_period1||"⚠ Sin seleccionar actividad";
+                  msg += `- *${p.name}* | ${av} | ${tarea}\n`;
+                } else {
+                  const tarea = p.task_period1 ? ` | ${p.task_period1}` : "";
+                  msg += `- *${p.name}* | ${av}${tarea}\n`;
+                }
+              });
               msg += `\n*Sin registrar (${noRegistrados.length}):*\n`;
-              noRegistrados.forEach(p=>{ msg += `- ${p.name}\n`; });
+              noRegistrados.forEach(p=>{ msg += `- *${p.name}*\n`; });
               navigator.clipboard.writeText(msg);
               alert("Copiado al portapapeles. Pega en WhatsApp.");
             }} style={{width:"100%",padding:"10px",background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#25D366",fontSize:"12px",cursor:"pointer",marginBottom:"10px"}}>
