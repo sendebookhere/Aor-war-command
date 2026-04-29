@@ -14,11 +14,11 @@ const ROLES = {
 };
 
 const AVAILABILITY = {
-  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:5, penalty:10 },
-  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:3, penalty:7  },
-  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", pts:2, penalty:5  },
-  no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", pts:1, penalty:0  },
-  pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", pts:0, penalty:0  },
+  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:10, penalty:10 },
+  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:5,  penalty:7  },
+  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", pts:2,  penalty:5  },
+  no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", pts:1,  penalty:0  },
+  pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", pts:0,  penalty:0  },
 };
 
 const TASKS = {
@@ -694,9 +694,8 @@ function AdminPanel({players, update, loading, saving, reload}) {
           <div>
             <div style={{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap"}}>
               {[
-                {label:"Registro formulario",color:"#A8FF78",pts:"+5"},
-                {label:"Siempre listo",color:"#A8FF78",pts:"+5"},
-                {label:"Intermitente",color:"#FFD700",pts:"+3"},
+                {label:"Siempre listo",color:"#A8FF78",pts:"+10"},
+                {label:"Intermitente",color:"#FFD700",pts:"+5"},
                 {label:"Solo una vez",color:"#FF9F43",pts:"+2"},
                 {label:"No disponible",color:"#888",pts:"+1"},
                 {label:"Apareció",color:"#A8FF78",pts:"+3"},
