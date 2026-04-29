@@ -397,8 +397,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
                         </div>
                       )}
                     </div>
-                    <div style={{marginLeft:"8px"}}>
+                    <div style={{marginLeft:"8px",display:"flex",flexDirection:"column",gap:"4px"}}>
                       <Pill color={getRank(totalPts(p)).color}>{totalPts(p)}pts</Pill>
+                      {p.registered_form && (
+                        <button onClick={()=>update(p.id,{
+                          availability:"pendiente", registered_form:false,
+                          hour_mx:"No sé", task_period1:"", timezone:"mexico",
+                          pt_registro:0, pt_disponibilidad_declarada:0
+                        })} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer",whiteSpace:"nowrap"}}>
+                          ↺ Resetear
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
