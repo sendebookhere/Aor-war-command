@@ -822,5 +822,5 @@ export default function App() {
 
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
   if (path === "/reporte")  return <PublicReport players={players}/>;
-  return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
+  return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>; 
 }
