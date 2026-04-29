@@ -652,17 +652,22 @@ function AdminPanel({players, update, loading, saving, reload}) {
                             </div>
                           </div>
                           <div>
-                            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"2px"}}>Rol de guerra</div>
-                            <select defaultValue={p.role} id={"role_"+p.id} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"12px",outline:"none"}}>
-                              {Object.keys(ROLES).map(r=><option key={r} value={r} style={{background:"#1a1a1f"}}>{r.replace("_"," ")}</option>)}
+                            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"2px"}}>Rango del clan</div>
+                            <select defaultValue={p.clan_role} id={"clan_role_"+p.id} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"12px",outline:"none"}}>
+                              {["Líder","Co-Líder","Oficial","Veterano","Guerrero","Soldado","Recluta"].map(r=><option key={r} value={r} style={{background:"#1a1a1f"}}>{r}</option>)}
                             </select>
+                          </div>
+                          <div style={{fontSize:"9px",color:"rgba(255,215,0,0.6)",padding:"4px 6px",background:"rgba(255,215,0,0.05)",borderRadius:"4px"}}>
+                            ⚠ Cambiar rango ajusta pts honoríficos: Líder=25k · Co-Líder=10k · Oficial=1k · resto=0
                           </div>
                           <div style={{display:"flex",gap:"6px"}}>
                             <button onClick={async()=>{
                               const level = parseInt(document.getElementById("level_"+p.id).value);
                               const bp    = parseInt(document.getElementById("bp_"+p.id).value);
-                              const role  = document.getElementById("role_"+p.id).value;
-                              await update(p.id,{level,bp,role});
+                              const clan_role = document.getElementById("clan_role_"+p.id).value;
+                              const honorMap = {"Líder":25000,"Co-Líder":10000,"Oficial":1000};
+                              const pts_honorificos = honorMap[clan_role]||0;
+                              await update(p.id,{level,bp,clan_role,pts_honorificos});
                               setEditingId(null);
                             }} style={{padding:"5px 12px",borderRadius:"4px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",color:"#A8FF78",fontSize:"11px",cursor:"pointer"}}>Guardar</button>
                             <button onClick={()=>setEditingId(null)} style={{padding:"5px 12px",borderRadius:"4px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>Cancelar</button>
