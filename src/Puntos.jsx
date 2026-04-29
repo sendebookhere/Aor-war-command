@@ -99,7 +99,38 @@ export default function Puntos({onBack}) {
           </div>
         </div>
 
-        {/* MINIMO */}
+        {/* ASCENSOS Y DESCENSOS */}
+        <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>⚜️ ASCENSOS Y DESCENSOS DE RANGO</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"10px"}}>El admin puede cambiar tu rango. Cada rango tiene puntos honoríficos base:</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"4px",marginBottom:"10px"}}>
+            {[
+              {label:"Líder 👑",pts:"25,000",color:"#FFD700"},
+              {label:"Co-Líder 👑",pts:"10,000",color:"#FFD700"},
+              {label:"Oficial ⚜️",pts:"1,000",color:"#40E0FF"},
+              {label:"Veterano y abajo",pts:"0",color:"#888"},
+            ].map(r=>(
+              <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
+                <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
+                <span style={{fontSize:"12px",color:r.color}}>{r.pts} pts honoríficos</span>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>📌 Ejemplo de ascenso:</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",marginBottom:"8px"}}>
+            Oficial con 960 pts acumulados → ascendido a Co-Líder<br/>
+            Puntos honoríficos: 1,000 → 10,000 (+9,000)<br/>
+            <strong style={{color:"#A8FF78"}}>Total nuevo: 9,960 pts</strong>
+          </div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>⚠️ Ejemplo de descenso:</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",padding:"8px"}}>
+            Co-Líder con 9,500 pts totales → bajado a Oficial<br/>
+            Puntos honoríficos: 10,000 → 1,000 (-9,000)<br/>
+            <strong style={{color:"#FF6B6B"}}>Total nuevo: 500 pts</strong><br/><br/>
+            Si se baja a Recluta → honoríficos = 0<br/>
+            <strong style={{color:"#FF6B6B"}}>Total nuevo: -500 pts (en negativo = Vigilado)</strong>
+          </div>
+        </div>
         <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"12px",textAlign:"center"}}>
           <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo mensual: <strong>20 puntos</strong></div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Dos meses seguidos bajo 20 pts → expulsión</div>
