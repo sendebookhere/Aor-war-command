@@ -384,6 +384,12 @@ function AdminPanel({players, update, loading, saving, reload}) {
   const [copiedMsg, setCopiedMsg] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
+  useEffect(()=>{
+    if (showInactive && activeTab==="admin") {
+      setTimeout(()=>document.getElementById("inactivos-section")?.scrollIntoView({behavior:"smooth"}),300);
+    }
+  },[showInactive, activeTab]);
+
   const WAR_PHASES = ["Fase 1: Captura (0-6h)","Fase 2: Defensa (6-24h)","Fase 3: Ataque (24h+)"];
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
@@ -547,11 +553,11 @@ function AdminPanel({players, update, loading, saving, reload}) {
         ))}
       </div>
 
-      <div style={{padding:"14px 16px"}}>
+      <div style={{padding:"14px 0px"}}>
 
         {/* REGISTRO TAB */}
         {activeTab==="registro" && (
-          <div>
+          <div style={{padding:"0 16px"}}>
             <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px 12px",marginBottom:"10px",fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
               ⚡ <strong style={{color:"#FFD700"}}>{pending.length} jugadores</strong> sin confirmar · <strong style={{color:"#A8FF78"}}>{confirmed.length} confirmados</strong> · <strong style={{color:"#FF9F43"}}>{notPlaying.length} no disponibles</strong>
             </div>
@@ -634,7 +640,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
         {/* ROSTER TAB */}
         {activeTab==="roster" && (
-          <div>
+          <div style={{padding:"0 16px"}}>
             {players.filter(p=>p.active).sort((a,b)=>{
               if (a.name === "PUNK'Z") return -1;
               if (b.name === "PUNK'Z") return 1;
@@ -722,7 +728,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
         {/* PUNTOS TAB */}
         {activeTab==="puntos" && (
-          <div>
+          <div style={{padding:"0 16px"}}>
             <div style={{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap"}}>
               {[
                 {label:"Siempre listo",color:"#A8FF78",pts:"+10"},
@@ -830,7 +836,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
         {/* ADMIN TAB */}
         {activeTab==="admin" && (
-          <div>
+          <div style={{padding:"0 16px"}}>
             {/* Weekly reset */}
             <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
