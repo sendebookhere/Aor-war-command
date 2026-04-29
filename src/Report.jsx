@@ -19,18 +19,12 @@ const RANKS = [
   { label:"⚠ Vigilado",  color:"#FF6B6B", min:-9999, desc:"Bajo observación"       },
 ];
 
-function getRank(acc, hon, name) {
-  const total = acc + (hon||0);
-  // PUNK'Z is always protected as Leader
-  if (name === "PUNK'Z") return { label:"Líder 👑", color:"#FFD700", min:99999 };
-  // If total (accumulated + honorary) is negative or zero, rank falls
+function getRank(acc, hon, name, clan_role) {
+  if (name === "PUNK'Z" || clan_role === "Líder") return { label:"Líder 👑", color:"#FFD700", min:99999 };
+  if (clan_role === "Co-Líder") return RANKS.find(r=>r.min===25000)||RANKS[0];
+  if (clan_role === "Oficial")  return RANKS.find(r=>r.min===5000)||RANKS[1];
+  const total = (acc||0) + (hon||0);
   if (total <= 0) return { label:"⚠ Vigilado", color:"#FF6B6B", min:-9999 };
-  // Honorary points act as buffer - if honorary > 0 but accumulated < 0, rank drops
-  if (acc < 0 && (hon||0) > 0) {
-    // Rank drops one level from what honorary would give
-    if ((hon||0) >= 10000) return RANKS.find(r=>r.min===1000); // Co-Lider drops to Oficial
-    if ((hon||0) >= 1000)  return RANKS.find(r=>r.min===0);    // Oficial drops to Recluta
-  }
   return RANKS.find(r=>total>=r.min)||RANKS[RANKS.length-1];
 }
 
@@ -86,7 +80,7 @@ function PlayerProfile({player, onBack}) {
 
   const pts  = totalPts(player);
   const acc  = player.pts_acumulados||0;
-  const rank = getRank(acc, player.pts_honorificos, player.name);
+  const rank = getRank(acc, player.pts_honorificos, player.name, player.clan_role);
   const avail = AVAILABILITY[player.availability]||AVAILABILITY.pendiente;
 
   const breakdown = [
@@ -129,9 +123,17 @@ function PlayerProfile({player, onBack}) {
             <span style={{color:rank.color,fontWeight:"bold"}}>{acc} pts acumulados</span>
           </div>
           {(player.pts_honorificos||0) > 0 && (
-            <div style={{marginTop:"10px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontSize:"11px",color:"#FFD700"}}>⭐ Puntos honoríficos — Rango fundador</span>
-              <span style={{fontSize:"15px",color:"#FFD700",fontWeight:"bold"}}>{(player.pts_honorificos).toLocaleString()}</span>
+            <div style={{marginTop:"10px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",padding:"8px 12px"}}>
+              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",marginBottom:"6px"}}>Desglose de puntos:</div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"3px"}}>
+                <span>⚔ Ganados en guerras</span><span style={{color:"#A8FF78",fontWeight:"bold"}}>{(acc+pts).toLocaleString()}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"3px"}}>
+                <span>⭐ Bonus por cargo ({player.clan_role})</span><span style={{color:"#FFD700",fontWeight:"bold"}}>{(player.pts_honorificos).toLocaleString()}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"12px",borderTop:"1px solid rgba(255,215,0,0.2)",paddingTop:"4px",marginTop:"4px"}}>
+                <span style={{color:"#FFD700",fontWeight:"bold"}}>Total</span><span style={{color:"#FFD700",fontWeight:"bold"}}>{(acc+pts+(player.pts_honorificos||0)).toLocaleString()}</span>
+              </div>
             </div>
           )}
         </div>
@@ -211,10 +213,21 @@ export default function PublicReport() {
   useEffect(()=>{
     supabase.from("players").select("*").eq("active",true).then(({data})=>{
       if(data) {
+        const getRankOrder = p => {
+          if (p.name === "PUNK'Z" || p.clan_role === "Líder") return 0;
+          if (p.clan_role === "Co-Líder") return 1;
+          if (p.clan_role === "Oficial") return 2;
+          const total = (p.pts_acumulados||0) + totalPts(p) + (p.pts_honorificos||0);
+          if (total >= 600) return 3;
+          if (total >= 300) return 4;
+          if (total >= 100) return 5;
+          if (total >= 0)   return 6;
+          return 7;
+        };
         const sorted = data.sort((a,b)=>{
-          const totalA = (a.pts_acumulados||0) + totalPts(a) + (a.pts_honorificos||0);
-          const totalB = (b.pts_acumulados||0) + totalPts(b) + (b.pts_honorificos||0);
-          return totalB - totalA;
+          const ra = getRankOrder(a), rb = getRankOrder(b);
+          if (ra !== rb) return ra - rb;
+          return (b.bp||0) - (a.bp||0); // within same rank: sort by BP
         });
         setPlayers(sorted);
       }
@@ -286,7 +299,7 @@ export default function PublicReport() {
           const acc  = p.pts_acumulados||0;
           const hon  = p.pts_honorificos||0;
           const combined = acc + pts + hon;
-          const rank = getRank(acc, p.pts_honorificos, p.name);
+          const rank = getRank(acc, p.pts_honorificos, p.name, p.clan_role);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
             <div key={p.id} onClick={()=>setSelected(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
