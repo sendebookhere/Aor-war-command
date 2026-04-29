@@ -311,6 +311,7 @@ export default function PublicReport() {
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
                     {hon>0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
+                    {(p.pt_whatsapp||0)>0 && <Pill color="#25D366">📱 +{p.pt_whatsapp}</Pill>}
                   </div>
                   <div style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>
                     <span>⚔ {((p.level||0)/1000).toFixed(1)}k</span>
