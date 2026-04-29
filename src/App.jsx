@@ -736,6 +736,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     <div style={{flex:1}}>
                       <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"6px",flexWrap:"wrap"}}>
                         <span style={{fontFamily:"serif",fontSize:"13px",color:"#fff"}}>{p.name}</span>
+                        {!p.whatsapp && <Pill color="#25D366">📵 Sin WhatsApp</Pill>}
                         <Pill color={warRole.color}>{warRole.icon} {warRole.label}</Pill>
                         <Pill color={getRank((p.pts_acumulados||0)+(p.pts_honorificos||0), p.pts_honorificos, p.name).color}>{p.clan_role}</Pill>
                         <Pill color="#888">{totalPts(p)}pts guerra</Pill>
@@ -754,9 +755,15 @@ function AdminPanel({players, update, loading, saving, reload}) {
                           </div>
                           <div>
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"2px"}}>Rango del clan</div>
-                            <select defaultValue={p.clan_role} id={"clan_role_"+p.id} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"12px",outline:"none"}}>
+                            <select defaultValue={p.clan_role||"Recluta"} id={"clan_role_"+p.id} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"12px",outline:"none"}}>
                               {["Líder","Co-Líder","Oficial","Veterano","Guerrero","Soldado","Recluta"].map(r=><option key={r} value={r} style={{background:"#1a1a1f"}}>{r}</option>)}
                             </select>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
+                            <button onClick={()=>update(p.id,{whatsapp:!p.whatsapp})} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:p.whatsapp?"rgba(37,211,102,0.15)":"rgba(255,107,107,0.15)",border:"1px solid "+(p.whatsapp?"rgba(37,211,102,0.3)":"rgba(255,107,107,0.3)"),color:p.whatsapp?"#25D366":"#FF6B6B",cursor:"pointer"}}>
+                              {p.whatsapp?"✓ En grupo":"✕ Sin grupo"}
+                            </button>
                           </div>
                           <div style={{fontSize:"9px",color:"rgba(255,215,0,0.6)",padding:"4px 6px",background:"rgba(255,215,0,0.05)",borderRadius:"4px"}}>
                             ⚠ Cambiar rango ajusta pts honoríficos: Líder=25k · Co-Líder=10k · Oficial=1k · resto=0

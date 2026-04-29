@@ -230,7 +230,7 @@ export default function PublicReport() {
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
-                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name}</div>
+                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name} {!p.whatsapp && <span style={{fontSize:"10px",color:"#FF6B6B"}}>📵</span>}</div>
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
