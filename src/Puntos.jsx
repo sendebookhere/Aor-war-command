@@ -99,7 +99,20 @@ export default function Puntos({onBack}) {
           </div>
         </div>
 
-        {/* ASCENSOS Y DESCENSOS */}
+        {/* REGLA DE ORO */}
+        <div style={{background:"rgba(168,255,120,0.08)",border:"3px solid #A8FF78",borderRadius:"12px",padding:"16px",marginBottom:"12px",textAlign:"center"}}>
+          <div style={{fontSize:"22px",marginBottom:"8px"}}>🛡️</div>
+          <div style={{fontFamily:"serif",fontSize:"16px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>LOS PUNTOS GANADOS SON TUYOS PARA SIEMPRE</div>
+          <div style={{fontSize:"12px",color:"rgba(255,255,255,0.7)",lineHeight:"1.6"}}>
+            Cada punto que ganas participando en guerras, siguiendo órdenes o ganando batallas <strong style={{color:"#A8FF78"}}>nunca te lo pueden quitar.</strong>
+          </div>
+          <div style={{marginTop:"12px",padding:"10px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px"}}>
+            <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⚠️ Excepción: Puntos honoríficos de rango</div>
+            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
+              Los puntos que vienen con tu rango (Co-Líder, Oficial) <strong style={{color:"#FF6B6B"}}>sí pueden cambiar</strong> si el admin te sube o baja de rango. Son un privilegio del cargo, no un logro personal.
+            </div>
+          </div>
+        </div>
         <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>⚜️ ASCENSOS Y DESCENSOS DE RANGO</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"10px"}}>El admin puede cambiar tu rango. Cada rango tiene puntos honoríficos base:</div>
