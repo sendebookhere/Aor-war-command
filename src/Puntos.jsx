@@ -100,17 +100,23 @@ export default function Puntos({onBack}) {
         </div>
 
         {/* REGLA DE ORO */}
-        <div style={{background:"rgba(168,255,120,0.08)",border:"3px solid #A8FF78",borderRadius:"12px",padding:"16px",marginBottom:"12px",textAlign:"center"}}>
-          <div style={{fontSize:"22px",marginBottom:"8px"}}>🛡️</div>
-          <div style={{fontFamily:"serif",fontSize:"16px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>LOS PUNTOS GANADOS SON TUYOS PARA SIEMPRE</div>
-          <div style={{fontSize:"12px",color:"rgba(255,255,255,0.7)",lineHeight:"1.6"}}>
-            Cada punto que ganas participando en guerras, siguiendo órdenes o ganando batallas <strong style={{color:"#A8FF78"}}>nunca te lo pueden quitar.</strong>
+        <div style={{background:"rgba(64,224,255,0.06)",border:"3px solid #40E0FF",borderRadius:"12px",padding:"16px",marginBottom:"12px"}}>
+          <div style={{fontSize:"22px",textAlign:"center",marginBottom:"8px"}}>⚖️</div>
+          <div style={{fontFamily:"serif",fontSize:"15px",color:"#40E0FF",fontWeight:"bold",marginBottom:"10px",textAlign:"center"}}>CÓMO FUNCIONAN TUS PUNTOS</div>
+          
+          <div style={{background:"rgba(168,255,120,0.08)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"10px",marginBottom:"8px"}}>
+            <div style={{fontSize:"12px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px"}}>✅ Puntos que GANAS</div>
+            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Se suman a tu cuenta. Pueden bajar si recibes penalizaciones durante la guerra, pero el admin los registra manualmente — nadie te los quita sin razón.</div>
           </div>
-          <div style={{marginTop:"12px",padding:"10px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px"}}>
-            <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⚠️ Excepción: Puntos honoríficos de rango</div>
-            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
-              Los puntos que vienen con tu rango (Co-Líder, Oficial) <strong style={{color:"#FF6B6B"}}>sí pueden cambiar</strong> si el admin te sube o baja de rango. Son un privilegio del cargo, no un logro personal.
-            </div>
+
+          <div style={{background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px",marginBottom:"8px"}}>
+            <div style={{fontSize:"12px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"4px"}}>❌ Penalizaciones</div>
+            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Si no cumples lo que prometiste o desobedeces órdenes, el admin aplica penalizaciones que restan de tus puntos acumulados.</div>
+          </div>
+
+          <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"10px"}}>
+            <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⭐ Puntos honoríficos de rango</div>
+            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Son un privilegio del cargo. Si el admin te asciende, los recibes. Si te bajan de rango, los pierdes. Son distintos a los que ganas participando.</div>
           </div>
         </div>
         <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
