@@ -473,6 +473,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     reload();
     alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
   }
+  async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador?")) return;
     await supabase.from("players").update({active:false}).eq("id",id);
     reload();
