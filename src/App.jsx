@@ -470,7 +470,6 @@ function AdminPanel({players, update, loading, saving, reload}) {
     reload();
     alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
   }
-  async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador?")) return;
     await supabase.from("players").update({active:false}).eq("id",id);
     reload();
@@ -546,7 +545,11 @@ function AdminPanel({players, update, loading, saving, reload}) {
             <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px 12px",marginBottom:"14px",fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
               ⚡ <strong style={{color:"#FFD700"}}>{pending.length} jugadores</strong> sin confirmar · <strong style={{color:"#A8FF78"}}>{confirmed.length} confirmados</strong> · <strong style={{color:"#FF9F43"}}>{notPlaying.length} no disponibles</strong>
             </div>
-            {players.filter(p=>p.active).sort((a,b)=>b.bp-a.bp).map(p=>{
+            {players.filter(p=>p.active).sort((a,b)=>{
+              if (a.registered_form && !b.registered_form) return -1;
+              if (!a.registered_form && b.registered_form) return 1;
+              return totalPts(b) - totalPts(a);
+            }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
               const tz    = TIMEZONES[p.timezone]||TIMEZONES.mexico;
               const tasks = getTasksForPlayer(p.availability, p.level);
@@ -876,4 +879,3 @@ export default function App() {
   if (path === "/reporte")  return <PublicReport />;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
- 
