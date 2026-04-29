@@ -10,8 +10,8 @@ const AVAILABILITY = {
 };
 
 const RANKS = [
-  { label:"Co-Líder 👑",  color:"#FFD700", min:10000, desc:"Leyenda del clan"        },
-  { label:"Oficial ⚜️",   color:"#40E0FF", min:1000,  desc:"Pilar de la comunidad"  },
+  { label:"Co-Líder 👑",  color:"#FFD700", min:25000, desc:"Leyenda del clan"        },
+  { label:"Oficial ⚜️",   color:"#40E0FF", min:5000,  desc:"Pilar de la comunidad"  },
   { label:"Veterano ★★★", color:"#A8FF78", min:600,   desc:"Guerrero experimentado" },
   { label:"Guerrero ★★",  color:"#FFD700", min:300,   desc:"Miembro consolidado"    },
   { label:"Soldado ★",    color:"#FF9F43", min:100,   desc:"En camino"              },
