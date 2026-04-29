@@ -486,6 +486,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+      <div style={{maxWidth:"700px",margin:"0 auto"}}>
       {/* Header */}
       <div style={{background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,215,0,0.15)",padding:"12px 16px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
@@ -897,6 +898,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
