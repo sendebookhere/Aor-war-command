@@ -16,8 +16,8 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Antes de cada guerra (cierra jueves 12am hora México) entra al formulario de registro y confirma tu participación.</div>
           <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
             {[
-              {label:"Siempre listo 🟢",pts:"+5",color:"#A8FF78",desc:"Disponible toda la guerra"},
-              {label:"Intermitente 🟡",pts:"+3",color:"#FFD700",desc:"Disponible en uno de los dos periodos"},
+              {label:"Siempre listo 🟢",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
+              {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Disponible en uno de los dos periodos"},
               {label:"Solo una vez 🟠",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
               {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
             ].map(r=>(
