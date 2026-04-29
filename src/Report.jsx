@@ -19,7 +19,20 @@ const RANKS = [
   { label:"⚠ Vigilado",  color:"#FF6B6B", min:-9999, desc:"Bajo observación"       },
 ];
 
-function getRank(pts) { return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-1]; }
+function getRank(acc, hon, name) {
+  const total = acc + (hon||0);
+  // PUNK'Z is always protected as Leader
+  if (name === "PUNK'Z") return { label:"Líder 👑", color:"#FFD700", min:99999 };
+  // If total (accumulated + honorary) is negative or zero, rank falls
+  if (total <= 0) return { label:"⚠ Vigilado", color:"#FF6B6B", min:-9999 };
+  // Honorary points act as buffer - if honorary > 0 but accumulated < 0, rank drops
+  if (acc < 0 && (hon||0) > 0) {
+    // Rank drops one level from what honorary would give
+    if ((hon||0) >= 10000) return RANKS.find(r=>r.min===1000); // Co-Lider drops to Oficial
+    if ((hon||0) >= 1000)  return RANKS.find(r=>r.min===0);    // Oficial drops to Recluta
+  }
+  return RANKS.find(r=>total>=r.min)||RANKS[RANKS.length-1];
+}
 
 function totalPts(p) {
   return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
@@ -45,7 +58,7 @@ function PlayerProfile({player, onBack}) {
 
   const pts  = totalPts(player);
   const acc  = player.pts_acumulados||0;
-  const rank = getRank(acc);
+  const rank = getRank(acc, player.pts_honorificos, player.name);
   const avail = AVAILABILITY[player.availability]||AVAILABILITY.pendiente;
 
   const breakdown = [
@@ -185,7 +198,7 @@ export default function PublicReport() {
           const acc  = p.pts_acumulados||0;
           const hon  = p.pts_honorificos||0;
           const combined = acc + pts + hon;
-          const rank = getRank(acc);
+          const rank = getRank(acc, p.pts_honorificos, p.name);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
             <div key={p.id} onClick={()=>setSelected(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
