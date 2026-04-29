@@ -47,11 +47,16 @@ function Pill({color,children}) {
 
 function PlayerProfile({player, onBack}) {
   const [history, setHistory] = useState([]);
+  const [stats, setStats]     = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(()=>{
-    supabase.from("war_history").select("*").eq("player_id",player.id).order("created_at",{ascending:false}).then(({data})=>{
-      setHistory(data||[]);
+    Promise.all([
+      supabase.from("war_history").select("*").eq("player_id",player.id).order("created_at",{ascending:false}),
+      supabase.from("player_stats").select("*").eq("player_id",player.id).order("created_at",{ascending:false}).limit(10)
+    ]).then(([h,s])=>{
+      setHistory(h.data||[]);
+      setStats(s.data||[]);
       setLoading(false);
     });
   },[player.id]);
@@ -120,6 +125,22 @@ function PlayerProfile({player, onBack}) {
             ))
           }
         </div>
+
+        {/* Stats evolution */}
+        {stats.length > 0 && (
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📈 Evolución de stats</div>
+            {stats.map((s,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",marginBottom:"3px",background:"rgba(255,255,255,0.02)",borderRadius:"4px",borderLeft:"2px solid "+(s.updated_by==="jugador"?"#A8FF78":"#40E0FF")}}>
+                <div>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>💀 {s.bp?.toLocaleString()} BP · ⚔ {((s.level||0)/1000).toFixed(1)}k</span>
+                  <span style={{fontSize:"9px",color:s.updated_by==="jugador"?"#A8FF78":"#40E0FF",marginLeft:"8px"}}>{s.updated_by==="jugador"?"por jugador":"por admin"}</span>
+                </div>
+                <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{new Date(s.created_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* War history */}
         <div style={{color:"#FFD700",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📅 Historial de guerras</div>
