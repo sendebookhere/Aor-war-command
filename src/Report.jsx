@@ -54,6 +54,25 @@ function PlayerProfile({player, onBack}) {
   const [stats, setStats]     = useState([]);
   const [loading, setLoading] = useState(true);
 
+  async function updateStats() {
+    if (!newBp && !newLevel) return;
+    const hasBp = newBp.trim() !== "";
+    const hasLevel = newLevel.trim() !== "";
+    const pts = hasBp && hasLevel ? 5 : 2;
+    const updates = { pt_stats: (player.pt_stats||0) + pts };
+    if (hasBp)    updates.bp    = parseInt(newBp);
+    if (hasLevel) updates.level = parseInt(newLevel);
+    await supabase.from("players").update(updates).eq("id", player.id);
+    await supabase.from("player_stats").insert({
+      player_id: player.id, player_name: player.name,
+      bp: hasBp ? parseInt(newBp) : (player.bp||0),
+      level: hasLevel ? parseInt(newLevel) : (player.level||0),
+      updated_by: "jugador",
+    });
+    setStatsMsg("✓ +"+pts+" pts acreditados.");
+    setNewBp(""); setNewLevel("");
+  }
+
   useEffect(()=>{
     Promise.all([
       supabase.from("war_history").select("*").eq("player_id",player.id).order("created_at",{ascending:false}),
@@ -115,6 +134,25 @@ function PlayerProfile({player, onBack}) {
               <span style={{fontSize:"15px",color:"#FFD700",fontWeight:"bold"}}>{(player.pts_honorificos).toLocaleString()}</span>
             </div>
           )}
+        </div>
+
+        {/* Update stats */}
+        <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
+          <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"8px"}}>📊 Actualizar mis stats — gana +2 o +5 pts</div>
+          <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Nuevos BP (+2)</div>
+              <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={(player.bp||0).toString()} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Nuevo Poder (+2)</div>
+              <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={(player.level||0).toString()} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+          </div>
+          <button onClick={updateStats} disabled={!newBp&&!newLevel} style={{padding:"7px 16px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",opacity:(!newBp&&!newLevel)?0.4:1}}>
+            Guardar (+{newBp&&newLevel?5:2} pts)
+          </button>
+          {statsMsg && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"6px"}}>{statsMsg}</div>}
         </div>
 
         {/* Current war breakdown */}
