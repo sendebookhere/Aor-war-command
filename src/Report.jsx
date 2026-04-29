@@ -210,10 +210,14 @@ export default function PublicReport() {
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
                   <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name}</div>
-                  <div style={{display:"flex",gap:"4px",flexWrap:"wrap"}}>
+                  <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
                     {hon>0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
+                  </div>
+                  <div style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>
+                    <span>⚔ {((p.level||0)/1000).toFixed(1)}k</span>
+                    <span>💀 {(p.bp||0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
