@@ -11,11 +11,11 @@ const ROLES = {
 };
 
 const AVAILABILITY = {
-  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", formPts:5, declaredPts:5,  penalty:10 },
-  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", formPts:5, declaredPts:3,  penalty:7  },
-  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", formPts:5, declaredPts:2,  penalty:5  },
-  no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", formPts:5, declaredPts:1,  penalty:0  },
-  pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", formPts:0, declaredPts:0,  penalty:0  },
+  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:5, penalty:10 },
+  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:3, penalty:7  },
+  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", pts:2, penalty:5  },
+  no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", pts:1, penalty:0  },
+  pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", pts:0, penalty:0  },
 };
 
 const TASKS = {
@@ -196,7 +196,7 @@ function RegistrationForm({onRegistered}) {
     await supabase.from("players").update({
       availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
       registered_form: true, registered_week: currentWeek,
-      pt_registro: 5, pt_disponibilidad_declarada: av.declaredPts,
+      pt_registro: av.pts, pt_disponibilidad_declarada: 0,
     }).eq("id", player.id);
     setDone(true);
     setSubmitting(false);
@@ -261,7 +261,7 @@ function RegistrationForm({onRegistered}) {
               <button key={key} onClick={()=>{setAvail(key);setTask1("");}} style={{padding:"10px 14px",borderRadius:"6px",fontSize:"12px",cursor:"pointer",textAlign:"left",background:avail===key?av.color+"22":"rgba(255,255,255,0.03)",border:"1px solid "+(avail===key?av.color:"rgba(255,255,255,0.08)"),color:avail===key?av.color:"rgba(255,255,255,0.5)"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>{av.icon} {av.label}</span>
-                  <Pill color={av.color}>+{5+av.declaredPts} pts</Pill>
+                  <Pill color={av.color}>+{av.pts} pts</Pill>
                 </div>
                 {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje cuando se necesite. Sin restricciones.</div>}
                 {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una actividad por periodo de 24h</div>}
@@ -341,7 +341,7 @@ function RegistrationForm({onRegistered}) {
 
         {alreadyRegistered && (
           <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px",fontSize:"12px",color:"#FFD700"}}>
-            ⚠️ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong>. No puedes volver a registrarte hasta la próxima guerra.
+            ⚠️ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong> (+{AVAILABILITY[existingAvail]?.pts} pts). No puedes volver a registrarte hasta la próxima guerra.
           </div>
         )}
 
@@ -352,7 +352,7 @@ function RegistrationForm({onRegistered}) {
         </button>
 
         <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>
-          Al registrarte recibes +{avail?5+AVAILABILITY[avail].declaredPts:5} puntos automáticamente
+          Al registrarte recibes +{avail?AVAILABILITY[avail].pts:0} puntos automáticamente
         </div>
       </div>
     </div>
@@ -475,10 +475,10 @@ function AdminPanel({players, update, loading, saving, reload}) {
           </div>
         </div>
         <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-          {[{label:"Miembros",value:players.filter(p=>p.active).length+"/36",color:"#fff"},{label:"Confirmados",value:confirmed.length,color:"#A8FF78"},{label:"Pendientes",value:pending.length,color:"#FFD700"},{label:"No juegan",value:notPlaying.length,color:"#FF9F43"},{label:"Inactivos",value:inactive.length,color:"#888"}].map(s=>(
-            <div key={s.label} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"4px 10px",textAlign:"center"}}>
+          {[{label:"Miembros",value:players.filter(p=>p.active).length+"/36",color:"#fff",click:null},{label:"Confirmados",value:confirmed.length,color:"#A8FF78",click:null},{label:"Pendientes",value:pending.length,color:"#FFD700",click:null},{label:"No juegan",value:notPlaying.length,color:"#FF9F43",click:null},{label:"Inactivos",value:inactive.length,color:"#888",click:()=>{setActiveTab("admin");setShowInactive(true);}}].map(s=>(
+            <div key={s.label} onClick={s.click||undefined} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"4px 10px",textAlign:"center",cursor:s.click?"pointer":"default",transition:"all 0.2s"}}>
               <div style={{fontSize:"14px",color:s.color}}>{s.value}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",textTransform:"uppercase"}}>{s.label}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",textTransform:"uppercase"}}>{s.label}{s.click?" ↗":""}</div>
             </div>
           ))}
         </div>
