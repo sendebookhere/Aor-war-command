@@ -477,17 +477,46 @@ function PublicReport() {
           <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700"}}>[AOR] Ranking de Guerra</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Toca un nombre para ver su perfil</div>
         </div>
+
+        {/* Ranks legend */}
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
+          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"12px",marginBottom:"8px"}}>Sistema de Rangos [AOR]</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+            {[
+              {label:"Co-Líder 👑",   color:"#FFD700", min:10000, desc:"Leyenda del clan"},
+              {label:"Oficial ⚜️",    color:"#40E0FF", min:1000,  desc:"Pilar de la comunidad"},
+              {label:"Veterano ★★★",  color:"#A8FF78", min:600,   desc:"Guerrero experimentado"},
+              {label:"Guerrero ★★",   color:"#FFD700", min:300,   desc:"Miembro consolidado"},
+              {label:"Soldado ★",     color:"#FF9F43", min:100,   desc:"En camino"},
+              {label:"Recluta",       color:"#888888", min:0,     desc:"Recién llegado"},
+              {label:"⚠ Vigilado",   color:"#FF6B6B", min:-99,   desc:"Bajo observación"},
+            ].map(r=>(
+              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 6px",borderRadius:"4px",background:r.color+"08"}}>
+                <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                  <span style={{fontSize:"11px",color:r.color,fontWeight:"bold",minWidth:"120px"}}>{r.label}</span>
+                  <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{r.desc}</span>
+                </div>
+                <span style={{fontSize:"10px",color:r.color}}>{r.min >= 0 ? r.min.toLocaleString()+"+ pts" : r.min+" pts"}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginTop:"8px",textAlign:"center"}}>
+            Mínimo mensual: 20 pts · -100 pts acumulados = candidato a expulsión
+          </div>
+        </div>
+
+        {/* Player list */}
         {active.map((p,i)=>{
           const pts  = totalPts(p);
           const acc  = acumulado(p);
           const rank = getRank(acc);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
-            <div key={p.id} onClick={()=>openPlayer(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.05)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}>
+            <div key={p.id} onClick={()=>openPlayer(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
-                  <div style={{fontSize:"13px",color:"#fff"}}>{p.name}</div>
+                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline"}}>{p.name}</div>
                   <div style={{display:"flex",gap:"6px",marginTop:"2px",flexWrap:"wrap"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
@@ -495,16 +524,12 @@ function PublicReport() {
                 </div>
               </div>
               <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:"2px"}}>
-                <span style={{fontFamily:"serif",fontSize:"16px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts>0?"+":""}{pts} esta guerra</span>
-                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.4)"}}>{acc} acumulados</span>
-                <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>→</span>
+                <span style={{fontSize:"13px",color:acc>0?rank.color:"#888",fontWeight:"bold"}}>{acc} pts</span>
+                <span style={{fontSize:"10px",color:pts>=0?"#A8FF78":"#FF6B6B"}}>{pts>0?"+":""}{pts} hoy</span>
               </div>
             </div>
           );
         })}
-        <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.2)",marginTop:"16px"}}>
-          Mínimo mensual: 20 pts · 4 guerras/mes
-        </div>
       </div>
     </div>
   );
