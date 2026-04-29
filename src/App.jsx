@@ -361,20 +361,107 @@ function RegistrationForm({onRegistered}) {
 
 // ── Public Report ──────────────────────────────────────────────────────────
 function PublicReport({players}) {
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [history, setHistory]               = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const active = players.filter(p=>p.active).sort((a,b)=>totalPts(b)-totalPts(a));
+
+  async function openPlayer(player) {
+    setSelectedPlayer(player);
+    setLoadingHistory(true);
+    const {data} = await supabase.from("war_history").select("*").eq("player_id", player.id).order("created_at", {ascending:false});
+    setHistory(data||[]);
+    setLoadingHistory(false);
+  }
+
+  // Player profile view
+  if (selectedPlayer) {
+    const pts  = totalPts(selectedPlayer);
+    const rank = getRank(pts);
+    const avail = AVAILABILITY[selectedPlayer.availability]||AVAILABILITY.pendiente;
+    return (
+      <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+        <div style={{maxWidth:"500px",margin:"0 auto"}}>
+          <button onClick={()=>setSelectedPlayer(null)} style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"12px",marginBottom:"16px",padding:0}}>← Volver al ranking</button>
+
+          {/* Player header */}
+          <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700",marginBottom:"6px"}}>{selectedPlayer.name}</div>
+            <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"8px"}}>
+              <Pill color={rank.color}>{rank.label}</Pill>
+              <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
+              <Pill color="rgba(255,255,255,0.4)">{selectedPlayer.clan_role}</Pill>
+            </div>
+            <div style={{display:"flex",gap:"16px",fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>
+              <span>⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k</span>
+              <span>💀 {(selectedPlayer.bp||0).toLocaleString()}</span>
+              <span style={{color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold",fontSize:"16px"}}>{pts} pts totales</span>
+            </div>
+          </div>
+
+          {/* Current war points breakdown */}
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"13px",marginBottom:"10px"}}>Guerra actual</div>
+            <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+              {[
+                {label:"Registro",          val:selectedPlayer.pt_registro||0,              color:"#A8FF78", show: (selectedPlayer.pt_registro||0)>0},
+                {label:"Disponibilidad",    val:selectedPlayer.pt_disponibilidad_declarada||0, color:"#A8FF78", show: (selectedPlayer.pt_disponibilidad_declarada||0)>0},
+                {label:"Apareció",          val:(selectedPlayer.pt_disponibilidad||0)*3,    color:"#A8FF78", show: (selectedPlayer.pt_disponibilidad||0)>0},
+                {label:"Siguió órdenes",    val:(selectedPlayer.pt_obediencia||0)*2,         color:"#FFD700", show: (selectedPlayer.pt_obediencia||0)>0},
+                {label:"Batallas ganadas",  val:(selectedPlayer.pt_batallas_ganadas||0)*2,   color:"#40E0FF", show: (selectedPlayer.pt_batallas_ganadas||0)>0},
+                {label:"Batallas perdidas", val:selectedPlayer.pt_batallas_perdidas||0,      color:"#40E0FF", show: (selectedPlayer.pt_batallas_perdidas||0)>0},
+                {label:"Defensas",          val:selectedPlayer.pt_defensas||0,               color:"#40E0FF", show: (selectedPlayer.pt_defensas||0)>0},
+                {label:"Bonus completo",    val:(selectedPlayer.pt_bonus||0)*5,              color:"#FFD700", show: (selectedPlayer.pt_bonus||0)>0},
+                {label:"Sin registro pero participó", val:selectedPlayer.pt_disponibilidad===3?3:0, color:"#A8FF78", show: selectedPlayer.pt_disponibilidad===3},
+                {label:"No apareció",       val:-(selectedPlayer.pt_no_aparecio||0),         color:"#FF6B6B", show: (selectedPlayer.pt_no_aparecio||0)>0},
+                {label:"Sin registro ni participación", val:-(selectedPlayer.pt_penalizacion||0), color:"#FF6B6B", show: (selectedPlayer.pt_penalizacion||0)>0},
+                {label:"Ignoró órdenes",    val:-(selectedPlayer.pt_ignoro_orden||0)*2,      color:"#FF9F43", show: (selectedPlayer.pt_ignoro_orden||0)>0},
+                {label:"Abandonó defensa",  val:-(selectedPlayer.pt_abandono||0)*2,          color:"#FF9F43", show: (selectedPlayer.pt_abandono||0)>0},
+                {label:"Inactivo +4h",      val:-(selectedPlayer.pt_inactivo_4h||0)*3,       color:"#FF6B6B", show: (selectedPlayer.pt_inactivo_4h||0)>0},
+              ].filter(r=>r.show).map((r,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 8px",background:r.val>=0?"rgba(168,255,120,0.05)":"rgba(255,107,107,0.05)",borderRadius:"4px",border:"1px solid "+(r.val>=0?"rgba(168,255,120,0.1)":"rgba(255,107,107,0.1)")}}>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>{r.label}</span>
+                  <span style={{fontSize:"13px",color:r.color,fontWeight:"bold"}}>{r.val>0?"+":""}{r.val}</span>
+                </div>
+              ))}
+              {totalPts(selectedPlayer)===0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Sin actividad registrada esta guerra</div>}
+            </div>
+          </div>
+
+          {/* War history */}
+          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"13px",marginBottom:"10px"}}>Historial de guerras</div>
+          {loadingHistory && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)"}}>Cargando...</div>}
+          {!loadingHistory && history.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)"}}>Sin historial previo.</div>}
+          {history.map((h,i)=>(
+            <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
+                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.5)"}}>Semana {h.week}</span>
+                <span style={{fontSize:"16px",color:h.total<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{h.total>0?"+":""}{h.total}</span>
+              </div>
+              <Pill color={AVAILABILITY[h.availability]?.color||"#888"}>{AVAILABILITY[h.availability]?.icon} {AVAILABILITY[h.availability]?.label||"Sin datos"}</Pill>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Main ranking view
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"500px",margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:"20px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700"}}>[AOR] Ranking de Guerra</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Toca un nombre para ver su perfil</div>
         </div>
         {active.map((p,i)=>{
           const pts  = totalPts(p);
           const rank = getRank(pts);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
-            <div key={p.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div key={p.id} onClick={()=>openPlayer(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.05)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}>
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
@@ -385,7 +472,10 @@ function PublicReport({players}) {
                   </div>
                 </div>
               </div>
-              <span style={{fontFamily:"serif",fontSize:"20px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts}</span>
+              <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                <span style={{fontFamily:"serif",fontSize:"20px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts}</span>
+                <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>→</span>
+              </div>
             </div>
           );
         })}
@@ -452,7 +542,46 @@ function AdminPanel({players, update, loading, saving, reload}) {
     reload();
   }
 
-  async function removePlayer(id) {
+  async function weeklyReset() {
+    if (!confirm("¿Archivar puntos de esta guerra y resetear para la siguiente? Esta acción no se puede deshacer.")) return;
+    const currentWeek = getWarWeek();
+    // Archive all active players' points
+    const activePlayers = players.filter(p=>p.active);
+    for (const p of activePlayers) {
+      const total = totalPts(p);
+      if (total !== 0 || p.registered_form) {
+        await supabase.from("war_history").insert({
+          player_id: p.id, player_name: p.name, week: currentWeek,
+          availability: p.availability,
+          pt_registro: p.pt_registro||0,
+          pt_disponibilidad_declarada: p.pt_disponibilidad_declarada||0,
+          pt_disponibilidad: p.pt_disponibilidad||0,
+          pt_obediencia: p.pt_obediencia||0,
+          pt_batallas_ganadas: p.pt_batallas_ganadas||0,
+          pt_batallas_perdidas: p.pt_batallas_perdidas||0,
+          pt_defensas: p.pt_defensas||0,
+          pt_bonus: p.pt_bonus||0,
+          pt_penalizacion: p.pt_penalizacion||0,
+          pt_no_aparecio: p.pt_no_aparecio||0,
+          pt_ignoro_orden: p.pt_ignoro_orden||0,
+          pt_abandono: p.pt_abandono||0,
+          pt_inactivo_4h: p.pt_inactivo_4h||0,
+          total,
+        });
+      }
+    }
+    // Reset weekly points for all players
+    await supabase.from("players").update({
+      availability: "pendiente", registered_form: false, registered_week: "",
+      hour_mx: "No sé", task_period1: "", timezone: "mexico",
+      pt_registro: 0, pt_disponibilidad_declarada: 0, pt_disponibilidad: 0,
+      pt_obediencia: 0, pt_batallas_ganadas: 0, pt_batallas_perdidas: 0,
+      pt_defensas: 0, pt_bonus: 0, pt_penalizacion: 0, pt_no_aparecio: 0,
+      pt_ignoro_orden: 0, pt_abandono: 0, pt_inactivo_4h: 0,
+    }).eq("active", true);
+    reload();
+    alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
+  }
     if (!confirm("¿Expulsar este jugador?")) return;
     await supabase.from("players").update({active:false}).eq("id",id);
     reload();
@@ -711,6 +840,24 @@ function AdminPanel({players, update, loading, saving, reload}) {
                         ))}
                       </div>
                     </div>
+                    {/* No se registró y no participó -20 */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🚫 Sin registro ni participación (-20)</span>
+                      <div style={{display:"flex",gap:"2px"}}>
+                        {[0,1].map(v=>(
+                          <button key={v} onClick={()=>update(p.id,{pt_penalizacion: v ? 20 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_penalizacion||0)===0)||(v===1&&(p.pt_penalizacion||0)===20)?"rgba(255,107,107,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_penalizacion||0)===0)||(v===1&&(p.pt_penalizacion||0)===20)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_penalizacion||0)===0)||(v===1&&(p.pt_penalizacion||0)===20)?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* No se registró pero sí participó +3 */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(168,255,120,0.8)"}}>✅ Sin registro pero participó (+3)</span>
+                      <div style={{display:"flex",gap:"2px"}}>
+                        {[0,1].map(v=>(
+                          <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 3 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
+                        ))}
+                      </div>
+                    </div>
                     {[
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
                       {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
@@ -735,6 +882,15 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* ADMIN TAB */}
         {activeTab==="admin" && (
           <div>
+            {/* Weekly reset */}
+            <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
+              <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Archiva los puntos de esta guerra en el historial y resetea todos los contadores para la siguiente. Ejecutar cada viernes antes de la nueva guerra.</div>
+              <button onClick={weeklyReset} style={{padding:"8px 16px",background:"rgba(255,107,107,0.15)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>
+                Archivar guerra y resetear puntos
+              </button>
+            </div>
+
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>➕ Agregar jugador</div>
             {addingPlayer ? (
               <div style={{background:"rgba(64,224,255,0.05)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
