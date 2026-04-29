@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
 import Puntos from "./Puntos";
@@ -101,6 +101,17 @@ function getRank(pts) { return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-1];
 
 function Pill({color,children}) {
   return <span style={{fontSize:"9px",padding:"1px 6px",borderRadius:"10px",background:color+"22",color,border:"1px solid "+color+"44"}}>{children}</span>;
+}
+
+
+function Stepper({value, onChange, color="#FFD700"}) {
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:"3px"}}>
+      <button onClick={()=>onChange(Math.max(0,value-1))} style={{width:"22px",height:"22px",borderRadius:"4px",fontSize:"14px",cursor:"pointer",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.6)",lineHeight:1,padding:0}}>−</button>
+      <span style={{fontSize:"14px",color,minWidth:"22px",textAlign:"center",fontWeight:"bold"}}>{value}</span>
+      <button onClick={()=>onChange(value+1)} style={{width:"22px",height:"22px",borderRadius:"4px",fontSize:"14px",cursor:"pointer",background:color+"22",border:"1px solid "+color+"44",color,lineHeight:1,padding:0}}>+</button>
+    </div>
+  );
 }
 
 function FlagBar({count}) {
@@ -462,7 +473,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     setTimeout(()=>setCopiedMsg(false), 2000);
   }
 
-  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"}];
+  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"}];
 
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
@@ -843,21 +854,29 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     {[
                       {label:"✅ Apareció +3",key:"pt_disponibilidad",max:1,color:"#A8FF78"},
                       {label:"📋 Órdenes +2",key:"pt_obediencia",max:1,color:"#FFD700"},
-                      {label:"⚔ B.Gan +2",key:"pt_batallas_ganadas",max:9,color:"#40E0FF"},
-                      {label:"🛡 B.Per +1",key:"pt_batallas_perdidas",max:9,color:"#40E0FF"},
-                      {label:"🏰 Def +1",key:"pt_defensas",max:9,color:"#40E0FF"},
-                      {label:"🌟 Bonus +5",key:"pt_bonus",max:1,color:"#FFD700"},
-                      {label:"🏴‍☠ Bandido post-guerra +1",key:"pt_bandido_post",max:9,color:"#A8FF78"},
-                    ].map(cat=>(
-                      <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
-                        <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
-                        <div style={{display:"flex",gap:"2px"}}>
-                          {Array.from({length:Math.min(cat.max<=1?2:6,cat.max+1)}).map((_,v)=>(
-                            <button key={v} onClick={()=>update(p.id,{[cat.key]:v})} style={{width:"22px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:p[cat.key]===v?cat.color+"44":"rgba(255,255,255,0.04)",border:"1px solid "+(p[cat.key]===v?cat.color:"rgba(255,255,255,0.08)"),color:p[cat.key]===v?cat.color:"rgba(255,255,255,0.3)"}}>{v}</button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      ].map(()=>null)}
+                    {/* Batallas ganadas */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>⚔ B.Gan +2{(p.pt_batallas_ganadas||0)>=6?" 🌟":""}</span>
+                      <Stepper value={p.pt_batallas_ganadas||0} onChange={v=>update(p.id,{pt_batallas_ganadas:v})} color="#40E0FF"/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🛡 B.Per +1</span>
+                      <Stepper value={p.pt_batallas_perdidas||0} onChange={v=>update(p.id,{pt_batallas_perdidas:v})} color="#40E0FF"/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🏰 Def +1</span>
+                      <Stepper value={p.pt_defensas||0} onChange={v=>update(p.id,{pt_defensas:v})} color="#40E0FF"/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🌟 Bonus +5</span>
+                      <Stepper value={p.pt_bonus||0} onChange={v=>update(p.id,{pt_bonus:v})} color="#FFD700"/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🏴‍☠ Bandido +1</span>
+                      <Stepper value={p.pt_bandido_post||0} onChange={v=>update(p.id,{pt_bandido_post:v})} color="#A8FF78"/>
+                    </div>
+                    {[].map(()=>null)}
                     {/* No apareció - auto penalty based on declared availability */}
                     <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                       <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>❌ No apareció (-{AVAILABILITY[p.availability]?.penalty||0})</span>
@@ -997,6 +1016,115 @@ function AdminPanel({players, update, loading, saving, reload}) {
             )}
           </div>
         )}
+
+        {/* MENSAJES TAB */}
+        {activeTab==="mensajes" && (
+          <div style={{padding:"0 16px"}}>
+            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
+            {[
+              {
+                title:"Registro de guerra semanal",
+                desc:"Aviso semanal para que se registren",
+                msg:`*[AOR] ¡GUERRA DE CLANES!* ⚔
+
+Registra tu disponibilidad antes del jueves:
+📋 https://aor-war-command.vercel.app/registro
+
+Puntos por registrarte:
+🟢 Siempre listo: +10 pts
+🟡 Intermitente: +5 pts
+🟠 Solo una vez: +2 pts
+🔴 No disponible: +1 pt
+
+Ver ranking: https://aor-war-command.vercel.app/reporte`
+              },
+              {
+                title:"Aviso a jugadores sin WhatsApp",
+                desc:"Para enviar en el chat del juego (con colores)",
+                msg:`<color=#FFD700>[AOR]</color> Únete al <color=#A8FF78>WhatsApp</color> del clan +25 pts. Regístrate: https://aor-war-command.vercel.app/registro`
+              },
+              {
+                title:"Advertencia de inactividad",
+                desc:"Para jugadores bajo el mínimo",
+                msg:`*[AOR] Aviso de actividad* ⚠
+
+Estás por debajo del mínimo semanal (20 pts). Registra tu disponibilidad para la próxima guerra:
+📋 https://aor-war-command.vercel.app/registro
+
+Ver tu posición: https://aor-war-command.vercel.app/reporte`
+              },
+              {
+                title:"Bienvenida nuevo miembro",
+                desc:"Para nuevos reclutas",
+                msg:`*¡Bienvenido a [AOR] Antigua Orden!* ⚔
+
+📋 Regístrate antes de cada guerra: https://aor-war-command.vercel.app/registro
+📊 Ver ranking: https://aor-war-command.vercel.app/reporte
+❓ Cómo funciona: https://aor-war-command.vercel.app/puntos
+
+¡Buena suerte en batalla!`
+              },
+            ].map((m,i)=>{
+              const [copied, setCopied] = React.useState(false);
+              return (
+                <div key={i} style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"10px"}}>
+                  <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{m.title}</div>
+                  <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>{m.desc}</div>
+                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
+                  <button onClick={()=>{navigator.clipboard.writeText(m.msg);setCopied(true);setTimeout(()=>setCopied(false),2000);}} style={{padding:"4px 12px",background:copied?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.15)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.3)"),borderRadius:"20px",color:copied?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+                    {copied?"✓ Copiado!":"📋 Copiar"}
+                  </button>
+                </div>
+              );
+            })}
+
+            <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>⚔ Mensajes para el chat del juego</div>
+            {[
+              {
+                title:"Reclutamiento general",
+                msg:`<color=#FFD700>━━━━ [AOR] RECLUTA ━━━━</color>
+<color=#40E0FF>¿Buscas clan activo y organizado?</color>
+⚔ Batallas · 🏰 Guerras · 🌟 Rangos
+<color=#A8FF78>Únete a Antigua Orden [AOR]</color>
+Registro: aor-war-command.vercel.app`
+              },
+              {
+                title:"Llamada a defensa urgente",
+                msg:`<color=#FF6B6B>━━━━ [AOR] ALERTA ━━━━</color>
+<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>
+Todos los defensores al castillo.
+<color=#40E0FF>Defensores: NOMBRE1, NOMBRE2</color>`
+              },
+              {
+                title:"Inicio de guerra",
+                msg:`<color=#FFD700>━━━━ [AOR] GUERRA ━━━━</color>
+<color=#A8FF78>¡Comienza la batalla!</color>
+Fase 1: Atacar castillos enemigos
+<color=#40E0FF>Atacantes: NOMBRE1, NOMBRE2</color>
+<color=#FF9F43>¡A por la victoria!</color>`
+              },
+              {
+                title:"Victoria / Celebración",
+                msg:`<color=#FFD700>━━━━ [AOR] VICTORIA ━━━━</color>
+<color=#A8FF78>¡GUERRA GANADA!</color> 🏆
+Gracias a todos los guerreros.
+<color=#40E0FF>¡Antigua Orden [AOR] sigue invicta!</color>`
+              },
+            ].map((m,i)=>{
+              const [copied2, setCopied2] = React.useState(false);
+              return (
+                <div key={i} style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"10px"}}>
+                  <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>{m.title}</div>
+                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
+                  <button onClick={()=>{navigator.clipboard.writeText(m.msg);setCopied2(true);setTimeout(()=>setCopied2(false),2000);}} style={{padding:"4px 12px",background:copied2?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied2?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied2?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
+                    {copied2?"✓ Copiado!":"📋 Copiar"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
       </div>
       </div>
     </div>
