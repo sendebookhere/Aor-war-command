@@ -486,7 +486,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
-      <div style={{maxWidth:"700px",margin:"0 auto"}}>
+      <div style={{maxWidth:"700px",margin:"0 auto",padding:"0 0 40px 0"}}>
       {/* Header */}
       <div style={{background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,215,0,0.15)",padding:"12px 16px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
@@ -502,7 +502,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
           </div>
         </div>
         <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-          {[{label:"Miembros",value:players.filter(p=>p.active).length+"/36",color:"#fff",click:null},{label:"Confirmados",value:confirmed.length,color:"#A8FF78",click:null},{label:"Pendientes",value:pending.length,color:"#FFD700",click:null},{label:"No juegan",value:notPlaying.length,color:"#FF9F43",click:null},{label:"Inactivos",value:inactive.length,color:"#888",click:()=>{setActiveTab("admin");setShowInactive(true);}}].map(s=>(
+          {[{label:"Miembros",value:players.filter(p=>p.active).length+"/36",color:"#fff",click:null},{label:"Confirmados",value:confirmed.length,color:"#A8FF78",click:null},{label:"Pendientes",value:pending.length,color:"#FFD700",click:null},{label:"No juegan",value:notPlaying.length,color:"#FF9F43",click:null},{label:"Inactivos",value:inactive.length,color:"#888",click:()=>{setActiveTab("admin");setShowInactive(true);setTimeout(()=>document.getElementById("inactivos-section")?.scrollIntoView({behavior:"smooth"}),200);}}].map(s=>(
             <div key={s.label} onClick={s.click||undefined} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"4px 10px",textAlign:"center",cursor:s.click?"pointer":"default",transition:"all 0.2s"}}>
               <div style={{fontSize:"14px",color:s.color}}>{s.value}</div>
               <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",textTransform:"uppercase"}}>{s.label}{s.click?" ↗":""}</div>
@@ -869,7 +869,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               </div>
             ))}
 
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
+            <div id="inactivos-section" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
               <div style={{fontFamily:"serif",color:"#888",fontSize:"14px"}}>💤 Jugadores inactivos ({inactive.length})</div>
               <button onClick={()=>setShowInactive(!showInactive)} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>
                 {showInactive?"Ocultar":"Ver lista"}
