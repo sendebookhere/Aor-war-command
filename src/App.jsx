@@ -875,3 +875,4 @@ export default function App() {
   if (path === "/reporte")  return <PublicReport />;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
+ 
