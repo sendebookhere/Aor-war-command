@@ -75,6 +75,7 @@ function totalPts(p) {
        + (p.pt_bonus||0)
        + (p.pt_bandido_post||0)
        + (p.pt_stats||0)
+       + (p.pt_whatsapp||0)
        - (p.pt_penalizacion||0)
        - (p.pt_no_aparecio||0)
        - (p.pt_ignoro_orden||0)*2
@@ -637,6 +638,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               });
               msg += `\n*Sin registrar (${noRegistrados.length}):*\n`;
               noRegistrados.forEach(p=>{ msg += `- *${p.name}*\n`; });
+              msg += `\n📋 *Regístrate aquí:* https://aor-war-command.vercel.app/registro`;
               navigator.clipboard.writeText(msg);
               alert("Copiado al portapapeles. Pega en WhatsApp.");
             }} style={{width:"100%",padding:"10px",background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#25D366",fontSize:"12px",cursor:"pointer",marginBottom:"10px"}}>
@@ -761,7 +763,11 @@ function AdminPanel({players, update, loading, saving, reload}) {
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
-                            <button onClick={()=>update(p.id,{whatsapp:!p.whatsapp})} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:p.whatsapp?"rgba(37,211,102,0.15)":"rgba(255,107,107,0.15)",border:"1px solid "+(p.whatsapp?"rgba(37,211,102,0.3)":"rgba(255,107,107,0.3)"),color:p.whatsapp?"#25D366":"#FF6B6B",cursor:"pointer"}}>
+                            <button onClick={()=>{
+                              const newVal = !p.whatsapp;
+                              const pts = newVal ? 25 : 0;
+                              update(p.id,{whatsapp:newVal, pt_whatsapp: newVal ? pts : (p.pt_whatsapp||0)});
+                            }} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:p.whatsapp?"rgba(37,211,102,0.15)":"rgba(255,107,107,0.15)",border:"1px solid "+(p.whatsapp?"rgba(37,211,102,0.3)":"rgba(255,107,107,0.3)"),color:p.whatsapp?"#25D366":"#FF6B6B",cursor:"pointer"}}>
                               {p.whatsapp?"✓ En grupo":"✕ Sin grupo"}
                             </button>
                           </div>
