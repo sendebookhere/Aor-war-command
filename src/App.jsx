@@ -117,8 +117,12 @@ function RegistrationForm({onRegistered}) {
   async function handleSubmit() {
     if (!name.trim() || !avail) { setError("Completa nombre y disponibilidad."); return; }
     setSubmitting(true);
-    const { data: existing } = await supabase.from("players").select("id,name").ilike("name", name.trim());
-    if (!existing || existing.length === 0) { setError("Nombre no encontrado. Asegúrate de escribirlo exactamente como aparece en el juego."); setSubmitting(false); return; }
+    // Flexible search: get all players and find best match
+    const { data: allPlayers } = await supabase.from("players").select("id,name").eq("active", true);
+    const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
+    const input = clean(name.trim());
+    const existing = allPlayers?.filter(p => clean(p.name).includes(input) || input.includes(clean(p.name)));
+    if (!existing || existing.length === 0) { setError("Nombre no encontrado. Intenta con parte de tu nombre, por ejemplo: 'saladino' en vez de '>> Saladino <<'"); setSubmitting(false); return; }
     const player = existing[0];
     const av = AVAILABILITY[avail];
     const updates = {
