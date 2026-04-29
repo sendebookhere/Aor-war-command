@@ -1,7 +1,7 @@
 export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
-      <div style={{maxWidth:"500px",margin:"0 auto"}}>
+      <div style={{maxWidth:"600px",margin:"0 auto"}}>
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0}}>← Volver</button>
 
         <div style={{textAlign:"center",marginBottom:"24px"}}>
