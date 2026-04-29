@@ -679,7 +679,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"6px",flexWrap:"wrap"}}>
                         <span style={{fontFamily:"serif",fontSize:"13px",color:"#fff"}}>{p.name}</span>
                         <Pill color={warRole.color}>{warRole.icon} {warRole.label}</Pill>
-                        <Pill color={getRank(totalPts(p)).color}>{getRank(totalPts(p)).label}</Pill>
+                        <Pill color={getRank((p.pts_acumulados||0)+(p.pts_honorificos||0), p.pts_honorificos, p.name).color}>{p.clan_role}</Pill>
                         <Pill color="#888">{totalPts(p)}pts guerra</Pill>
                       </div>
                       {isEditing ? (
