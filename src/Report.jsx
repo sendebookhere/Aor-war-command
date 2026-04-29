@@ -126,8 +126,16 @@ export default function PublicReport() {
   const [selected, setSelected]       = useState(null);
 
   useEffect(()=>{
-    supabase.from("players").select("*").eq("active",true).order("pts_acumulados",{ascending:false}).then(({data})=>{
-      if(data) setPlayers(data);
+    supabase.from("players").select("*").eq("active",true).then(({data})=>{
+      if(data) {
+        // Sort by accumulated + current war points combined
+        const sorted = data.sort((a,b)=>{
+          const totalA = (a.pts_acumulados||0) + totalPts(a);
+          const totalB = (b.pts_acumulados||0) + totalPts(b);
+          return totalB - totalA;
+        });
+        setPlayers(sorted);
+      }
       setLoading(false);
     });
   },[]);
@@ -170,6 +178,7 @@ export default function PublicReport() {
         {players.map((p,i)=>{
           const pts  = totalPts(p);
           const acc  = p.pts_acumulados||0;
+          const combined = acc + pts;
           const rank = getRank(acc);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
@@ -185,8 +194,8 @@ export default function PublicReport() {
                 </div>
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",color:rank.color,fontWeight:"bold"}}>{acc}</div>
-                <div style={{fontSize:"10px",color:pts>=0?"#A8FF78":"#FF6B6B"}}>{pts>0?"+":""}{pts} hoy</div>
+                <div style={{fontSize:"16px",color:combined>=0?rank.color:"#FF6B6B",fontWeight:"bold"}}>{combined}</div>
+                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{acc} acum + {pts} hoy</div>
               </div>
             </div>
           );
