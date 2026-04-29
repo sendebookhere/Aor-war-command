@@ -277,7 +277,7 @@ function RegistrationForm({onRegistered}) {
                   <Pill color={av.color}>+{av.pts} pts</Pill>
                 </div>
                 {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje cuando se necesite. Sin restricciones.</div>}
-                {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una actividad por periodo de 24h</div>}
+                {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una aparición por periodo: primeras 24h (expansión) y segundas 24h (conquista)</div>}
                 {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Una sola participación — tarea según tu nivel</div>}
                 {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
               </button>

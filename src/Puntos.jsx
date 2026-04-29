@@ -17,7 +17,7 @@ export default function Puntos({onBack}) {
           <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
             {[
               {label:"Siempre listo 🟢",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
-              {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Disponible en uno de los dos periodos"},
+              {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Al menos una aparición por periodo: primeras 24h (expansión) y segundas 24h (conquista)"},
               {label:"Solo una vez 🟠",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
               {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
             ].map(r=>(
