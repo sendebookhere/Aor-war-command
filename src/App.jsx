@@ -449,7 +449,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
   const notPlaying = players.filter(p=>p.active&&p.availability==="no_disponible");
-  const inactive   = players.filter(p=>!p.active);
+  const inactive   = players.filter(p=>!p.active && p.status !== "expulsado" && p.flags !== -1);
 
   // Phase-based player filters
   const phaseFilters = [
