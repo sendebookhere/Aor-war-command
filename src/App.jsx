@@ -291,8 +291,79 @@ function RegistrationForm({onRegistered}) {
           )}
         </div>
 
-        {/* Availability */}
+        {/* Stats update - right after name */}
+        {selectedPlayer && !alreadyRegistered && (
+          <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
+            <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"6px"}}>
+              📊 ACTUALIZA TUS STATS <span style={{color:"rgba(255,255,255,0.4)",fontSize:"10px"}}>(opcional — gana hasta +5 pts)</span>
+            </label>
+            {lastStats ? (
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
+                Últimos: 💀 {lastStats.bp?.toLocaleString()} BP · ⚔ {((lastStats.level||0)/1000).toFixed(1)}k · {new Date(lastStats.created_at).toLocaleDateString()}
+              </div>
+            ) : (
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
+                Actuales: 💀 {selectedPlayer.bp?.toLocaleString()} BP · ⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k
+              </div>
+            )}
+            <div style={{display:"flex",gap:"8px"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (+2 pts)</div>
+                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={selectedPlayer.bp?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (+2 pts)</div>
+                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+            </div>
+            {(newBp||newLevel) && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"4px"}}>+{newBp&&newLevel?5:2} pts por actualizar stats</div>}
+          </div>
+        )}
+
+        {/* Availability with inline tasks */}
         <div style={{marginBottom:"16px"}}>
+          <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>DISPONIBILIDAD</label>
+          <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+            {Object.entries(AVAILABILITY).filter(([k])=>k!=="pendiente").map(([key,av])=>(
+              <div key={key}>
+                <button onClick={()=>{setAvail(key);setTask1("");}} style={{width:"100%",padding:"10px 14px",borderRadius:"6px",fontSize:"12px",cursor:"pointer",textAlign:"left",background:avail===key?av.color+"22":"rgba(255,255,255,0.03)",border:"1px solid "+(avail===key?av.color:"rgba(255,255,255,0.08)"),color:avail===key?av.color:"rgba(255,255,255,0.5)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span>{av.icon} {av.label}</span>
+                    <Pill color={av.color}>+{av.pts} pts</Pill>
+                  </div>
+                  {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje. Sin restricciones.</div>}
+                  {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una aparición por periodo: primeras 24h y segundas 24h</div>}
+                  {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Una sola participación — tarea según tu nivel</div>}
+                  {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
+                </button>
+                {avail===key && key==="intermitente" && (
+                  <div style={{marginTop:"4px",padding:"10px",background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"6px",borderTop:"none"}}>
+                    <div style={{marginBottom:"8px"}}>
+                      <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔️ Primeras 24h — Captura de castillos</div>
+                      {["Atacar castillos","Defender castillos"].map(t=>(
+                        <button key={t} onClick={()=>setTask1(t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#FFD700":"rgba(255,255,255,0.08)"),color:task1===t?"#FFD700":"rgba(255,255,255,0.5)"}}>{t}</button>
+                      ))}
+                    </div>
+                    <div>
+                      <div style={{fontSize:"10px",color:"#FF6B6B",marginBottom:"4px"}}>🏰 Segundas 24h — Ataque a ciudades enemigas</div>
+                      {["Atacar ciudad enemiga","Defender castillos"].map(t=>(
+                        <button key={t} onClick={()=>setTask1(prev=>prev.includes(t)?prev:prev+"→"+t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1.includes(t)?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.5)"}}>{t}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {avail===key && key==="solo_una" && tasks && tasks.period1.length>0 && (
+                  <div style={{marginTop:"4px",padding:"10px",background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.12)",borderRadius:"6px"}}>
+                    <div style={{fontSize:"10px",color:"#40E0FF",marginBottom:"4px"}}>Selecciona tu tarea:</div>
+                    {tasks.period1.map(t=>(
+                      <button key={t} onClick={()=>setTask1(t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#40E0FF":"rgba(255,255,255,0.08)"),color:task1===t?"#40E0FF":"rgba(255,255,255,0.5)"}}>{t}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
           <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>DISPONIBILIDAD</label>
           <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
             {Object.entries(AVAILABILITY).filter(([k])=>k!=="pendiente").map(([key,av])=>(
@@ -309,46 +380,6 @@ function RegistrationForm({onRegistered}) {
             ))}
           </div>
         </div>
-
-        {/* Tasks based on availability */}
-        {avail === "intermitente" && (
-          <div style={{marginBottom:"16px"}}>
-            <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"8px"}}>TAREAS POR PERIODO</label>
-            <div style={{marginBottom:"10px"}}>
-              <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔️ Primeras 24h — Captura de castillos</div>
-              <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
-                {["Atacar castillos","Defender castillos"].map(t=>(
-                  <button key={t} onClick={()=>setTask1(t)} style={{padding:"7px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#FFD700":"rgba(255,255,255,0.08)"),color:task1===t?"#FFD700":"rgba(255,255,255,0.5)"}}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{fontSize:"10px",color:"#FF6B6B",marginBottom:"4px"}}>🏰 Segundas 24h — Ataque a ciudades enemigas</div>
-              <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
-                {["Atacar ciudad enemiga","Defender castillos"].map(t=>(
-                  <button key={t} onClick={()=>setTask1(prev=>prev===t?prev:task1+"→"+t)} style={{padding:"7px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1.includes(t)?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.5)"}}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {avail && avail !== "no_disponible" && avail !== "intermitente" && avail !== "siempre" && tasks && tasks.period1.length > 0 && (
-          <div style={{marginBottom:"16px"}}>
-            <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>TAREA PRINCIPAL</label>
-            <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-              {[...tasks.period1, ...(tasks.period2||[])].filter((v,i,a)=>a.indexOf(v)===i).map(t=>(
-                <button key={t} onClick={()=>setTask1(t)} style={{padding:"8px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#40E0FF":"rgba(255,255,255,0.08)"),color:task1===t?"#40E0FF":"rgba(255,255,255,0.5)"}}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Timezone */}
         <div style={{marginBottom:"16px"}}>
@@ -374,36 +405,6 @@ function RegistrationForm({onRegistered}) {
                 {TIMEZONES[tz].flag} {hour} → 🇲🇽 {convertTime(hour,tz,"mexico")} / 🇪🇸 {convertTime(hour,tz,"espana")}
               </div>
             )}
-          </div>
-        )}
-
-        {/* Stats update - optional */}
-        {selectedPlayer && !alreadyRegistered && (
-          <div style={{marginBottom:"16px"}}>
-            <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>
-              ACTUALIZA TUS STATS <span style={{color:"#FFD700"}}>(opcional — gana hasta +5 pts)</span>
-            </label>
-            {lastStats && (
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px",padding:"6px 10px",background:"rgba(255,255,255,0.03)",borderRadius:"6px"}}>
-                Últimos datos: 💀 {lastStats.bp?.toLocaleString()} BP · ⚔ {((lastStats.level||0)/1000).toFixed(1)}k poder · {new Date(lastStats.created_at).toLocaleDateString()}
-              </div>
-            )}
-            {!lastStats && selectedPlayer && (
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
-                Datos actuales: 💀 {selectedPlayer.bp?.toLocaleString()} BP · ⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k poder
-              </div>
-            )}
-            <div style={{display:"flex",gap:"8px"}}>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (+2 pts)</div>
-                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder="Ej: 3,054" type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (+2 pts)</div>
-                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder="Ej: 138700" type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-              </div>
-            </div>
-            {(newBp||newLevel) && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"4px"}}>+{newBp&&newLevel?5:2} pts por actualizar stats</div>}
           </div>
         )}
 
