@@ -445,7 +445,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
   },[showInactive, activeTab]);
 
   const WAR_PHASES = ["Fase 1: Captura (0-6h)","Fase 2: Defensa (6-24h)","Fase 3: Ataque (24h+)"];
-  const expelled   = players.filter(p=>p.status==="expulsado");
+  const expelled   = players.filter(p=>p.status==="expulsado" || p.flags===-1);
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
   const notPlaying = players.filter(p=>p.active&&p.availability==="no_disponible");
@@ -541,8 +541,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
   async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador?")) return;
-    await supabase.from("players").update({active:false, status:"expulsado"}).eq("id",id);
-    reload();
+    await update(id, {active: false, status: "expulsado", flags: -1});
   }
 
   return (
