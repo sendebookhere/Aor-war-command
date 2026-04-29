@@ -71,7 +71,7 @@ function totalPts(p) {
        + (p.pt_defensas||0)
        + (p.pt_bonus||0)
        - (p.pt_penalizacion||0)
-       - (p.pt_no_aparecio||0)*3
+       - (p.pt_no_aparecio||0)
        - (p.pt_ignoro_orden||0)*2
        - (p.pt_abandono||0)*2
        - (p.pt_inactivo_4h||0)*3;
@@ -702,12 +702,19 @@ function AdminPanel({players, update, loading, saving, reload}) {
                         </div>
                       </div>
                     ))}
+                    {/* No apareció - auto penalty based on declared availability */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>❌ No apareció (-{AVAILABILITY[p.availability]?.penalty||0})</span>
+                      <div style={{display:"flex",gap:"2px"}}>
+                        {[0,1].map(v=>(
+                          <button key={v} onClick={()=>update(p.id,{pt_no_aparecio: v ? AVAILABILITY[p.availability]?.penalty||0 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_no_aparecio||0)===0)||(v===1&&(p.pt_no_aparecio||0)>0)?"rgba(255,107,107,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_no_aparecio||0)===0)||(v===1&&(p.pt_no_aparecio||0)>0)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_no_aparecio||0)===0)||(v===1&&(p.pt_no_aparecio||0)>0)?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
+                        ))}
+                      </div>
+                    </div>
                     {[
-                      {label:"❌ Penaliz.",key:"pt_penalizacion",color:"#FF6B6B"},
-                      {label:"No apareció",key:"pt_no_aparecio",color:"#FF6B6B"},
-                      {label:"Ignoró",key:"pt_ignoro_orden",color:"#FF9F43"},
-                      {label:"Abandonó",key:"pt_abandono",color:"#FF9F43"},
-                      {label:"Inactivo 4h",key:"pt_inactivo_4h",color:"#FF6B6B"},
+                      {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
+                      {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
+                      {label:"Inactivo 4h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                         <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
