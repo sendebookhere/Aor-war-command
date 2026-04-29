@@ -77,12 +77,16 @@ function totalPts(p) {
        - (p.pt_inactivo_4h||0)*3;
 }
 
+function acumulado(p) { return p.pts_acumulados||0; }
+
 const RANKS = [
-  { label:"Élite ★★★",   color:"#FFD700", min:30  },
-  { label:"Veterano ★★", color:"#40E0FF", min:18  },
-  { label:"Soldado ★",   color:"#A8FF78", min:8   },
-  { label:"Recluta",     color:"#888888", min:1   },
-  { label:"⚠ Vigilado",  color:"#FF6B6B", min:-999},
+  { label:"Co-Líder 👑",   color:"#FFD700", min:10000 },
+  { label:"Oficial ⚜️",    color:"#40E0FF", min:1000  },
+  { label:"Veterano ★★★",  color:"#A8FF78", min:600   },
+  { label:"Guerrero ★★",   color:"#FFD700", min:300   },
+  { label:"Soldado ★",     color:"#FF9F43", min:100   },
+  { label:"Recluta",       color:"#888888", min:0     },
+  { label:"⚠ Vigilado",   color:"#FF6B6B", min:-999  },
 ];
 function getRank(pts) { return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-1]; }
 
@@ -378,7 +382,8 @@ function PublicReport({players}) {
   // Player profile view
   if (selectedPlayer) {
     const pts  = totalPts(selectedPlayer);
-    const rank = getRank(pts);
+    const acc  = acumulado(selectedPlayer);
+    const rank = getRank(acc);
     const avail = AVAILABILITY[selectedPlayer.availability]||AVAILABILITY.pendiente;
     return (
       <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
@@ -393,10 +398,11 @@ function PublicReport({players}) {
               <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
               <Pill color="rgba(255,255,255,0.4)">{selectedPlayer.clan_role}</Pill>
             </div>
-            <div style={{display:"flex",gap:"16px",fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>
+            <div style={{display:"flex",gap:"16px",fontSize:"12px",color:"rgba(255,255,255,0.5)",flexWrap:"wrap"}}>
               <span>⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k</span>
               <span>💀 {(selectedPlayer.bp||0).toLocaleString()}</span>
-              <span style={{color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold",fontSize:"16px"}}>{pts} pts totales</span>
+              <span style={{color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts>0?"+":""}{pts} esta guerra</span>
+              <span style={{color:getRank(acc).color,fontWeight:"bold"}}>{acc} pts acumulados</span>
             </div>
           </div>
 
@@ -458,7 +464,8 @@ function PublicReport({players}) {
         </div>
         {active.map((p,i)=>{
           const pts  = totalPts(p);
-          const rank = getRank(pts);
+          const acc  = acumulado(p);
+          const rank = getRank(acc);
           const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
           return (
             <div key={p.id} onClick={()=>openPlayer(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.05)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}>
@@ -466,14 +473,15 @@ function PublicReport({players}) {
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
                   <div style={{fontSize:"13px",color:"#fff"}}>{p.name}</div>
-                  <div style={{display:"flex",gap:"6px",marginTop:"2px"}}>
+                  <div style={{display:"flex",gap:"6px",marginTop:"2px",flexWrap:"wrap"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
                   </div>
                 </div>
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
-                <span style={{fontFamily:"serif",fontSize:"20px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts}</span>
+              <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:"2px"}}>
+                <span style={{fontFamily:"serif",fontSize:"16px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts>0?"+":""}{pts} esta guerra</span>
+                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.4)"}}>{acc} acumulados</span>
                 <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>→</span>
               </div>
             </div>
@@ -579,6 +587,15 @@ function AdminPanel({players, update, loading, saving, reload}) {
       pt_defensas: 0, pt_bonus: 0, pt_penalizacion: 0, pt_no_aparecio: 0,
       pt_ignoro_orden: 0, pt_abandono: 0, pt_inactivo_4h: 0,
     }).eq("active", true);
+    // Add weekly points to accumulated for each player
+    for (const p of activePlayers) {
+      const weekPts = totalPts(p);
+      if (weekPts !== 0) {
+        await supabase.from("players").update({
+          pts_acumulados: (p.pts_acumulados||0) + weekPts
+        }).eq("id", p.id);
+      }
+    }
     reload();
     alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
   }
