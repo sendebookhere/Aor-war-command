@@ -35,10 +35,14 @@ function getRank(acc, hon, name) {
 }
 
 function totalPts(p) {
+  const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
   return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
         +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
-        +(p.pt_defensas||0)+(p.pt_bonus||0)-(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
-        -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3;
+        +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+        +(p.pt_whatsapp||0)+sb
+        -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+        -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
+        -(p.pt_bandido_pre||0);
 }
 
 function Pill({color,children}) {
@@ -75,6 +79,7 @@ function PlayerProfile({player, onBack}) {
     {label:"Batallas perdidas",             val:player.pt_batallas_perdidas||0,          show:(player.pt_batallas_perdidas||0)>0},
     {label:"Defensas de castillo",          val:player.pt_defensas||0,                  show:(player.pt_defensas||0)>0},
     {label:"Bonus completo",               val:(player.pt_bonus||0)*5,                  show:(player.pt_bonus||0)>0},
+    {label:player.pt_whatsapp===50?"📱 WhatsApp Fundador":"📱 WhatsApp Grupo", val:player.pt_whatsapp||0, show:(player.pt_whatsapp||0)>0},
     {label:"Sin registro pero participó",  val:3,                                        show:player.pt_disponibilidad===3},
     {label:"No apareció",                  val:-(player.pt_no_aparecio||0),             show:(player.pt_no_aparecio||0)>0},
     {label:"Sin registro ni participación",val:-(player.pt_penalizacion||0),            show:(player.pt_penalizacion||0)>0},
@@ -194,9 +199,29 @@ export default function PublicReport() {
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Ranking</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Toca un nombre para ver su perfil ↓</div>
-          <div style={{marginTop:"10px",display:"flex",gap:"8px",justifyContent:"center"}}>
+          <div style={{display:"flex",gap:"8px",justifyContent:"center",marginTop:"10px",flexWrap:"wrap"}}>
+            <span style={{fontSize:"10px",color:"#25D366",background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"12px",padding:"3px 10px"}}>📱 WA: {players.filter(p=>p.whatsapp&&p.registered_form).length}/{players.filter(p=>p.whatsapp).length} reg.</span>
+            <span style={{fontSize:"10px",color:"#FFD700",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"12px",padding:"3px 10px"}}>📋 {players.filter(p=>p.registered_form).length}/{players.length} registrados</span>
+          </div>
+          <div style={{marginTop:"8px",display:"flex",gap:"8px",justifyContent:"center",flexWrap:"wrap"}}>
             <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>Ir a registro →</a>
             <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Cómo funciona</a>
+          </div>
+          <div style={{marginTop:"8px",display:"flex",gap:"8px",justifyContent:"center"}}>
+            <button onClick={()=>{
+              const s=[...players].sort((a,b)=>totalPts(b)-totalPts(a));
+              let m="*[AOR] Reporte Semanal*\n\n";
+              s.forEach((p,i)=>{const pts=totalPts(p);m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
+              m+="\n📊 Ranking: https://aor-war-command.vercel.app/reporte";
+              navigator.clipboard.writeText(m);alert("Copiado!");
+            }} style={{fontSize:"11px",color:"#25D366",padding:"6px 12px",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"20px",background:"rgba(37,211,102,0.08)",cursor:"pointer"}}>📊 Reporte semanal WA</button>
+            <button onClick={()=>{
+              const s=[...players].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
+              let m="*[AOR] Acumulado (sin bonos)*\n\n";
+              s.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0)} pts\n`;});
+              m+="\n📊 Ranking: https://aor-war-command.vercel.app/reporte";
+              navigator.clipboard.writeText(m);alert("Copiado!");
+            }} style={{fontSize:"11px",color:"#25D366",padding:"6px 12px",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"20px",background:"rgba(37,211,102,0.08)",cursor:"pointer"}}>📅 Reporte acumulado WA</button>
           </div>
         </div>
 
@@ -230,7 +255,7 @@ export default function PublicReport() {
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
-                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name} {!p.whatsapp && <span style={{fontSize:"10px",color:"#FF6B6B"}}>📵</span>}</div>
+                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name} <span style={{fontSize:"12px"}}>{p.whatsapp?"📱":"📵"}</span></div>
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
@@ -239,12 +264,14 @@ export default function PublicReport() {
                   <div style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>
                     <span>⚔ {((p.level||0)/1000).toFixed(1)}k</span>
                     <span>💀 {(p.bp||0).toLocaleString()}</span>
+                    {p.timezone==="mexico"&&<span>🇲🇽</span>}{p.timezone==="espana"&&<span>🇪🇸</span>}{p.timezone==="otra"&&<span>🌍</span>}
                   </div>
                 </div>
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontSize:"16px",color:combined>=0?rank.color:"#FF6B6B",fontWeight:"bold"}}>{combined.toLocaleString()}</div>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{acc} acum + {pts} hoy</div>
+                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{acc} acum + {pts} sem</div>
+                {hon>0&&<div style={{fontSize:"9px",color:"rgba(255,215,0,0.4)"}}>+{hon.toLocaleString()} título</div>}
               </div>
             </div>
           );

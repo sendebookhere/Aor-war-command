@@ -65,6 +65,7 @@ function getTasksForPlayer(availability, level) {
 }
 
 function totalPts(p) {
+  const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
   return (p.pt_registro||0)
        + (p.pt_disponibilidad_declarada||0)
        + (p.pt_disponibilidad||0)
@@ -81,7 +82,8 @@ function totalPts(p) {
        - (p.pt_ignoro_orden||0)*2
        - (p.pt_abandono||0)*2
        - (p.pt_inactivo_4h||0)*3
-       - (p.pt_bandido_pre||0);
+       - (p.pt_bandido_pre||0)
+       + sb;
 }
 
 function acumulado(p) { return p.pts_acumulados||0; }
@@ -432,6 +434,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
   },[showInactive, activeTab]);
 
   const WAR_PHASES = ["Fase 1: Captura (0-6h)","Fase 2: Defensa (6-24h)","Fase 3: Ataque (24h+)"];
+  const expelled   = players.filter(p=>p.status==="expulsado");
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
   const notPlaying = players.filter(p=>p.active&&p.availability==="no_disponible");
@@ -908,7 +911,18 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {activeTab==="admin" && (
           <div style={{padding:"0 16px"}}>
             {/* Weekly reset */}
-            <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
+            <div style={{background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
+              <div style={{fontFamily:"serif",color:"#25D366",fontSize:"13px",marginBottom:"8px"}}>📱 WhatsApp</div>
+              <button onClick={async()=>{
+                if(!confirm("¿Asignar 50 pts a todos los jugadores con WhatsApp?"))return;
+                const wp=players.filter(p=>p.active&&p.whatsapp);
+                for(const p of wp){await update(p.id,{pt_whatsapp:50});}
+                alert("✓ 50 pts asignados a "+wp.length+" jugadores.");
+              }} style={{padding:"6px 12px",background:"rgba(37,211,102,0.15)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#25D366",fontSize:"11px",cursor:"pointer",marginRight:"8px"}}>
+                ⭐ Asignar 50 pts fundadores
+              </button>
+            </div>
+            <div style={{background:"rgba(255,107,107,0.05)"}},border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
               <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Archiva los puntos de esta guerra en el historial y resetea todos los contadores para la siguiente. Ejecutar cada viernes antes de la nueva guerra.</div>
               <button onClick={weeklyReset} style={{padding:"8px 16px",background:"rgba(255,107,107,0.15)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>
@@ -953,6 +967,15 @@ function AdminPanel({players, update, loading, saving, reload}) {
             </div>
             {showInactive && (
               <div>
+                {inactive.map(p=>(
+                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
+                    <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{p.name} — {p.last_seen}</div>
+                    <div style={{display:"flex",gap:"6px"}}>
+                      <button onClick={()=>update(p.id,{active:true})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Reactivar</button>
+                      <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
+                    </div>
+                  </div>
+                ))}
                 {inactive.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>No hay jugadores inactivos.</div>}
                 {inactive.map(p=>(
                   <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
