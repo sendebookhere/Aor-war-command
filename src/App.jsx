@@ -646,20 +646,22 @@ function AdminPanel({players, update, loading, saving, reload}) {
               if (b.name === "PUNK'Z") return 1;
               const getRankOrder = p => {
                 const total = (p.pts_acumulados||0) + (p.pts_honorificos||0);
-                if (total >= 10000) return 0; // Co-Lider
-                if (total >= 1000)  return 1; // Oficial
-                if (total >= 600)   return 2; // Veterano
-                if (total >= 300)   return 3; // Guerrero
-                if (total >= 100)   return 4; // Soldado
-                if (total >= 0)     return 5; // Recluta
-                return 6; // Vigilado
+                if (total >= 10000) return 0;
+                if (total >= 1000)  return 1;
+                if (total >= 600)   return 2;
+                if (total >= 300)   return 3;
+                if (total >= 100)   return 4;
+                if (total >= 0)     return 5;
+                return 6;
               };
-              const roleOrder = ["siempre","intermitente","solo_una","no_disponible","pendiente"];
               const ra = getRankOrder(a);
               const rb = getRankOrder(b);
               if (ra !== rb) return ra - rb;
+              // Within same rank: registered first
               if (a.registered_form && !b.registered_form) return -1;
               if (!a.registered_form && b.registered_form) return 1;
+              // Within registered: by war role
+              const roleOrder = ["siempre","intermitente","solo_una","no_disponible","pendiente"];
               const roa = roleOrder.indexOf(a.availability);
               const rob = roleOrder.indexOf(b.availability);
               if (roa !== rob) return roa - rob;
