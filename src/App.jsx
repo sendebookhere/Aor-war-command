@@ -176,7 +176,7 @@ function RegistrationForm({onRegistered}) {
     setAlreadyRegistered(false);
     setExistingAvail(null);
     if (val.trim().length < 2) { setSuggestions([]); return; }
-    const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
+    const clean = s => s.toLowerCase().replace(/[^a-z0-9]/gi,"").trim();
     const input = clean(val.trim());
     const matches = allPlayers.filter(p => clean(p.name).includes(input));
     setSuggestions(matches.slice(0,5));
@@ -200,7 +200,7 @@ function RegistrationForm({onRegistered}) {
     setSubmitting(true);
     let player = selectedPlayer;
     if (!player) {
-      const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
+      const clean = s => s.toLowerCase().replace(/[^a-z0-9]/gi,"").trim();
       const input = clean(name.trim());
       const matches = allPlayers.filter(p => clean(p.name).includes(input));
       if (!matches.length) { setError("Nombre no encontrado. Escribe parte de tu nombre y selecciona de las sugerencias."); setSubmitting(false); return; }
