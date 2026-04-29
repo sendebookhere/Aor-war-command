@@ -405,12 +405,36 @@ function AdminPanel({players, update, loading, saving, reload}) {
   const [editingId, setEditingId] = useState(null);
   const [newPlayer, setNewPlayer] = useState({name:"",level:"",bp:""});
   const [addingPlayer, setAddingPlayer] = useState(false);
+  const [copiedMsg, setCopiedMsg] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   const WAR_PHASES = ["Fase 1: Captura (0-6h)","Fase 2: Defensa (6-24h)","Fase 3: Ataque (24h+)"];
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
   const notPlaying = players.filter(p=>p.active&&p.availability==="no_disponible");
   const inactive   = players.filter(p=>!p.active);
+
+  // Phase-based player filters
+  const phaseFilters = [
+    // Fase 1: attackers
+    players.filter(p=>p.active&&(p.availability==="siempre"||(p.availability==="intermitente"&&p.task_period1?.includes("Atacar castillos")))),
+    // Fase 2: defenders
+    players.filter(p=>p.active&&(p.availability==="siempre"||p.task_period1?.includes("Defender"))),
+    // Fase 3: city attackers
+    players.filter(p=>p.active&&(p.availability==="siempre"||(p.availability==="intermitente"&&p.task_period1?.includes("ciudad")))),
+  ];
+
+  const phaseMessages = [
+    `<color=#40E0FF>━━━━━━ [AOR] Fase 1 ━━━━━━</color>\n<color=#FFD700>¡A atacar castillos!</color> Jugadores activos: ${phaseFilters[0].map(p=>p.name).join(", ")}`,
+    `<color=#40E0FF>━━━━━━ [AOR] Fase 2 ━━━━━━</color>\n<color=#FFD700>¡Defender castillos!</color> Defensores: ${phaseFilters[1].map(p=>p.name).join(", ")}`,
+    `<color=#40E0FF>━━━━━━ [AOR] Fase 3 ━━━━━━</color>\n<color=#FFD700>¡Ataque a ciudad enemiga!</color> Atacantes: ${phaseFilters[2].map(p=>p.name).join(", ")}`,
+  ];
+
+  function copyPhaseMessage() {
+    navigator.clipboard.writeText(phaseMessages[phase]);
+    setCopiedMsg(true);
+    setTimeout(()=>setCopiedMsg(false), 2000);
+  }
 
   const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙️ Admin"}];
 
@@ -462,11 +486,30 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
       {/* Phase */}
       {warActive && (
-        <div style={{padding:"6px 16px",borderBottom:"1px solid rgba(255,215,0,0.08)",display:"flex",gap:"5px",alignItems:"center",overflowX:"auto"}}>
-          <span style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>FASE:</span>
-          {WAR_PHASES.map((ph,i)=>(
-            <button key={i} onClick={()=>setPhase(i)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"9px",whiteSpace:"nowrap",background:phase===i?"rgba(255,215,0,0.15)":"transparent",border:"1px solid "+(phase===i?"#FFD700":"rgba(255,255,255,0.1)"),color:phase===i?"#FFD700":"rgba(255,255,255,0.35)",cursor:"pointer"}}>{ph}</button>
-          ))}
+        <div style={{padding:"8px 16px",borderBottom:"1px solid rgba(255,215,0,0.08)"}}>
+          <div style={{display:"flex",gap:"5px",alignItems:"center",overflowX:"auto",marginBottom:"8px"}}>
+            <span style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>FASE:</span>
+            {WAR_PHASES.map((ph,i)=>(
+              <button key={i} onClick={()=>setPhase(i)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"9px",whiteSpace:"nowrap",background:phase===i?"rgba(255,215,0,0.15)":"transparent",border:"1px solid "+(phase===i?"#FFD700":"rgba(255,255,255,0.1)"),color:phase===i?"#FFD700":"rgba(255,255,255,0.35)",cursor:"pointer"}}>{ph}</button>
+            ))}
+          </div>
+          {/* Phase players + message */}
+          <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.1)",borderRadius:"6px",padding:"8px 10px"}}>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"4px"}}>
+              Jugadores para esta fase ({phaseFilters[phase].length}):
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"4px",marginBottom:"8px"}}>
+              {phaseFilters[phase].length === 0
+                ? <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>Ninguno confirmado aún</span>
+                : phaseFilters[phase].map(p=>(
+                    <span key={p.id} style={{fontSize:"10px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"4px",padding:"1px 6px",color:"#FFD700"}}>{p.name}</span>
+                  ))
+              }
+            </div>
+            <button onClick={copyPhaseMessage} style={{padding:"4px 12px",borderRadius:"4px",fontSize:"10px",background:copiedMsg?"rgba(168,255,120,0.15)":"rgba(64,224,255,0.1)",border:"1px solid "+(copiedMsg?"rgba(168,255,120,0.3)":"rgba(64,224,255,0.2)"),color:copiedMsg?"#A8FF78":"#40E0FF",cursor:"pointer"}}>
+              {copiedMsg?"✓ Copiado!":"📋 Copiar mensaje para el chat"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -714,24 +757,33 @@ function AdminPanel({players, update, loading, saving, reload}) {
               </div>
             ))}
 
-            <div style={{fontFamily:"serif",color:"#888",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>💤 Jugadores inactivos ({inactive.length})</div>
-            {inactive.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>No hay jugadores inactivos.</div>}
-            {inactive.map(p=>(
-              <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
-                <div>
-                  <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{p.name}</div>
-                  <div style={{display:"flex",gap:"6px",alignItems:"center",marginTop:"3px"}}>
-                    <span style={{fontSize:"10px",color:"#888"}}>Último acceso: {p.last_seen}</span>
-                    <input defaultValue={p.last_seen} id={"ls_"+p.id} style={{width:"80px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"#fff",padding:"2px 6px",fontSize:"10px",outline:"none"}} placeholder="dd.m.aa"/>
-                    <button onClick={()=>{ const v=document.getElementById("ls_"+p.id).value; update(p.id,{last_seen:v}); }} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer"}}>✓</button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
+              <div style={{fontFamily:"serif",color:"#888",fontSize:"14px"}}>💤 Jugadores inactivos ({inactive.length})</div>
+              <button onClick={()=>setShowInactive(!showInactive)} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>
+                {showInactive?"Ocultar":"Ver lista"}
+              </button>
+            </div>
+            {showInactive && (
+              <div>
+                {inactive.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>No hay jugadores inactivos.</div>}
+                {inactive.map(p=>(
+                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
+                    <div>
+                      <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{p.name}</div>
+                      <div style={{display:"flex",gap:"6px",alignItems:"center",marginTop:"3px"}}>
+                        <span style={{fontSize:"10px",color:"#888"}}>Último: {p.last_seen}</span>
+                        <input defaultValue={p.last_seen} id={"ls_"+p.id} style={{width:"80px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"#fff",padding:"2px 6px",fontSize:"10px",outline:"none"}} placeholder="dd.m.aa"/>
+                        <button onClick={()=>{ const v=document.getElementById("ls_"+p.id).value; update(p.id,{last_seen:v}); }} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer"}}>✓</button>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:"6px"}}>
+                      <button onClick={()=>update(p.id,{active:true})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Reactivar</button>
+                      <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
+                    </div>
                   </div>
-                </div>
-                <div style={{display:"flex",gap:"6px"}}>
-                  <button onClick={()=>update(p.id,{active:true})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Reactivar</button>
-                  <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
