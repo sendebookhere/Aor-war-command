@@ -74,6 +74,7 @@ function totalPts(p) {
        + (p.pt_defensas||0)
        + (p.pt_bonus||0)
        + (p.pt_bandido_post||0)
+       + (p.pt_stats||0)
        - (p.pt_penalizacion||0)
        - (p.pt_no_aparecio||0)
        - (p.pt_ignoro_orden||0)*2
@@ -152,12 +153,21 @@ function RegistrationForm({onRegistered}) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [existingAvail, setExistingAvail] = useState(null);
+  const [newBp, setNewBp]           = useState("");
+  const [newLevel, setNewLevel]     = useState("");
+  const [lastStats, setLastStats]   = useState(null);
   const isOpen = isRegistrationOpen();
   const currentWeek = getWarWeek();
 
   useEffect(()=>{
-    supabase.from("players").select("id,name,level,registered_week,availability").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
+    supabase.from("players").select("id,name,level,bp,registered_week,availability").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
   },[]);
+
+  async function loadLastStats(playerId) {
+    const {data} = await supabase.from("player_stats").select("*").eq("player_id",playerId).order("created_at",{ascending:false}).limit(1);
+    if (data && data.length > 0) setLastStats(data[0]);
+    else setLastStats(null);
+  }
 
   function handleNameChange(val) {
     setName(val);
@@ -175,11 +185,11 @@ function RegistrationForm({onRegistered}) {
     setName(player.name);
     setSelectedPlayer(player);
     setSuggestions([]);
-    // Check if already registered this week
     if (player.registered_week === currentWeek) {
       setAlreadyRegistered(true);
       setExistingAvail(player.availability);
     }
+    loadLastStats(player.id);
   }
 
   const tasks = avail ? getTasksForPlayer(avail, 999999) : null;
@@ -202,11 +212,26 @@ function RegistrationForm({onRegistered}) {
       return;
     }
     const av = AVAILABILITY[avail];
-    await supabase.from("players").update({
+    const hasBp    = newBp.trim() !== "";
+    const hasLevel = newLevel.trim() !== "";
+    const statsPts = hasBp && hasLevel ? 5 : (hasBp || hasLevel) ? 2 : 0;
+    const updates = {
       availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
       registered_form: true, registered_week: currentWeek,
       pt_registro: av.pts, pt_disponibilidad_declarada: 0,
-    }).eq("id", player.id);
+      pt_stats: statsPts,
+    };
+    if (hasBp)    updates.bp    = parseInt(newBp);
+    if (hasLevel) updates.level = parseInt(newLevel);
+    await supabase.from("players").update(updates).eq("id", player.id);
+    if (hasBp || hasLevel) {
+      await supabase.from("player_stats").insert({
+        player_id: player.id, player_name: player.name,
+        bp: hasBp ? parseInt(newBp) : (selectedPlayer?.bp||0),
+        level: hasLevel ? parseInt(newLevel) : (selectedPlayer?.level||0),
+        updated_by: "jugador",
+      });
+    }
     setDone(true);
     setSubmitting(false);
     if (onRegistered) onRegistered();
@@ -349,6 +374,36 @@ function RegistrationForm({onRegistered}) {
                 {TIMEZONES[tz].flag} {hour} → 🇲🇽 {convertTime(hour,tz,"mexico")} / 🇪🇸 {convertTime(hour,tz,"espana")}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Stats update - optional */}
+        {selectedPlayer && !alreadyRegistered && (
+          <div style={{marginBottom:"16px"}}>
+            <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>
+              ACTUALIZA TUS STATS <span style={{color:"#FFD700"}}>(opcional — gana hasta +5 pts)</span>
+            </label>
+            {lastStats && (
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px",padding:"6px 10px",background:"rgba(255,255,255,0.03)",borderRadius:"6px"}}>
+                Últimos datos: 💀 {lastStats.bp?.toLocaleString()} BP · ⚔ {((lastStats.level||0)/1000).toFixed(1)}k poder · {new Date(lastStats.created_at).toLocaleDateString()}
+              </div>
+            )}
+            {!lastStats && selectedPlayer && (
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
+                Datos actuales: 💀 {selectedPlayer.bp?.toLocaleString()} BP · ⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k poder
+              </div>
+            )}
+            <div style={{display:"flex",gap:"8px"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (+2 pts)</div>
+                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder="Ej: 3,054" type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (+2 pts)</div>
+                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder="Ej: 138700" type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+            </div>
+            {(newBp||newLevel) && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"4px"}}>+{newBp&&newLevel?5:2} pts por actualizar stats</div>}
           </div>
         )}
 
@@ -713,6 +768,10 @@ function AdminPanel({players, update, loading, saving, reload}) {
                               const honorMap = {"Líder":25000,"Co-Líder":10000,"Oficial":1000};
                               const pts_honorificos = honorMap[clan_role]||0;
                               await update(p.id,{level,bp,clan_role,pts_honorificos});
+                              await supabase.from("player_stats").insert({
+                                player_id: p.id, player_name: p.name,
+                                bp, level, updated_by: "admin"
+                              });
                               setEditingId(null);
                             }} style={{padding:"5px 12px",borderRadius:"4px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",color:"#A8FF78",fontSize:"11px",cursor:"pointer"}}>Guardar</button>
                             <button onClick={()=>setEditingId(null)} style={{padding:"5px 12px",borderRadius:"4px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>Cancelar</button>
