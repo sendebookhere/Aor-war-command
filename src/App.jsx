@@ -364,12 +364,21 @@ function RegistrationForm({onRegistered}) {
 }
 
 // ── Public Report ──────────────────────────────────────────────────────────
-function PublicReport({players}) {
+function PublicReport() {
+  const [players, setPlayers]           = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [history, setHistory]               = useState([]);
+  const [history, setHistory]           = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const active = players.filter(p=>p.active).sort((a,b)=>totalPts(b)-totalPts(a));
+  useEffect(()=>{
+    supabase.from("players").select("*").eq("active",true).order("pts_acumulados",{ascending:false}).then(({data})=>{
+      if(data) setPlayers(data);
+      setLoading(false);
+    });
+  },[]);
+
+  const active = players;
 
   async function openPlayer(player) {
     setSelectedPlayer(player);
@@ -378,6 +387,12 @@ function PublicReport({players}) {
     setHistory(data||[]);
     setLoadingHistory(false);
   }
+
+  if (loading) return (
+    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFD700",fontFamily:"serif",fontSize:"18px"}}>
+      Cargando ranking...
+    </div>
+  );
 
   // Player profile view
   if (selectedPlayer) {
@@ -1001,6 +1016,6 @@ export default function App() {
   );
 
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
-  if (path === "/reporte")  return <PublicReport players={players}/>;
+  if (path === "/reporte")  return <PublicReport />;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
