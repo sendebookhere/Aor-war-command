@@ -6,10 +6,10 @@ import Puntos from "./Puntos";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const ROLES = {
-  Lancero:  { color: "#FF6B6B", icon: "⚔️",  desc: "Ataque y captura" },
-  Guerrero: { color: "#FFD700", icon: "🛡️",  desc: "Apoyo y defensa"  },
+  Lancero:  { color: "#FF6B6B", icon: "⚔",  desc: "Ataque y captura" },
+  Guerrero: { color: "#FFD700", icon: "🛡",  desc: "Apoyo y defensa"  },
   Guardian: { color: "#40E0FF", icon: "🏰",  desc: "Defensa castillos"},
-  Espia:    { color: "#A8FF78", icon: "👁️",  desc: "Inteligencia"     },
+  Espia:    { color: "#A8FF78", icon: "👁",  desc: "Inteligencia"     },
   Sin_Rol:  { color: "#666666", icon: "❓",  desc: "Sin asignar"      },
 };
 
@@ -88,7 +88,7 @@ function acumulado(p) { return p.pts_acumulados||0; }
 
 const RANKS = [
   { label:"Co-Líder 👑",   color:"#FFD700", min:10000 },
-  { label:"Oficial ⚜️",    color:"#40E0FF", min:1000  },
+  { label:"Oficial ⚜",    color:"#40E0FF", min:1000  },
   { label:"Veterano ★★★",  color:"#A8FF78", min:600   },
   { label:"Guerrero ★★",   color:"#FFD700", min:300   },
   { label:"Soldado ★",     color:"#FF9F43", min:100   },
@@ -252,7 +252,7 @@ function RegistrationForm({onRegistered}) {
   if (done) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
       <div style={{textAlign:"center",maxWidth:"360px"}}>
-        <div style={{fontSize:"48px",marginBottom:"16px"}}>⚔️</div>
+        <div style={{fontSize:"48px",marginBottom:"16px"}}>⚔</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",marginBottom:"8px"}}>¡Registrado!</div>
         <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"16px"}}>Tu participación ha sido confirmada. El comando de [AOR] ha sido notificado.</div>
         <div style={{background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"8px",padding:"12px",fontSize:"12px",color:"#A8FF78"}}>
@@ -340,7 +340,7 @@ function RegistrationForm({onRegistered}) {
                 {avail===key && key==="intermitente" && (
                   <div style={{marginTop:"4px",padding:"10px",background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"6px",borderTop:"none"}}>
                     <div style={{marginBottom:"8px"}}>
-                      <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔️ Primeras 24h — Captura de castillos</div>
+                      <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔ Primeras 24h — Captura de castillos</div>
                       {["Atacar castillos","Defender castillos"].map(t=>(
                         <button key={t} onClick={()=>setTask1(t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#FFD700":"rgba(255,255,255,0.08)"),color:task1===t?"#FFD700":"rgba(255,255,255,0.5)"}}>{t}</button>
                       ))}
@@ -411,7 +411,7 @@ function RegistrationForm({onRegistered}) {
 
         {alreadyRegistered && (
           <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px",fontSize:"12px",color:"#FFD700"}}>
-            ⚠️ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong> (+{AVAILABILITY[existingAvail]?.pts} pts). No puedes volver a registrarte hasta la próxima guerra.
+            ⚠ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong> (+{AVAILABILITY[existingAvail]?.pts} pts). No puedes volver a registrarte hasta la próxima guerra.
           </div>
         )}
 
@@ -475,7 +475,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     setTimeout(()=>setCopiedMsg(false), 2000);
   }
 
-  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙️ Admin"}];
+  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"}];
 
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
@@ -726,9 +726,9 @@ function AdminPanel({players, update, loading, saving, reload}) {
               return b.bp - a.bp;
             }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
-              const warRole = p.availability==="siempre" ? {label:"Conquistador",icon:"⚔️",color:"#A8FF78"}
-                : p.availability==="intermitente" ? {label:"Refuerzo",icon:"🛡️",color:"#FFD700"}
-                : p.availability==="solo_una" ? {label:"Scouting",icon:"👁️",color:"#40E0FF"}
+              const warRole = p.availability==="siempre" ? {label:"Conquistador",icon:"⚔",color:"#A8FF78"}
+                : p.availability==="intermitente" ? {label:"Refuerzo",icon:"🛡",color:"#FFD700"}
+                : p.availability==="solo_una" ? {label:"Scouting",icon:"👁",color:"#40E0FF"}
                 : p.availability==="no_disponible" ? {label:"Ausente",icon:"🚫",color:"#FF6B6B"}
                 : {label:"Sin asignar",icon:"❓",color:"#666666"};
               const isEditing = editingId===p.id;
@@ -801,7 +801,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     </div>
                     {!isEditing && (
                       <div style={{display:"flex",flexDirection:"column",gap:"4px",marginLeft:"8px"}}>
-                        <button onClick={()=>setEditingId(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer"}}>✏️ Editar</button>
+                        <button onClick={()=>setEditingId(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer"}}>✏ Editar</button>
                         <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>🚫 Expulsar</button>
                       </div>
                     )}
@@ -856,11 +856,11 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     {[
                       {label:"✅ Apareció +3",key:"pt_disponibilidad",max:1,color:"#A8FF78"},
                       {label:"📋 Órdenes +2",key:"pt_obediencia",max:1,color:"#FFD700"},
-                      {label:"⚔️ B.Gan +2",key:"pt_batallas_ganadas",max:9,color:"#40E0FF"},
+                      {label:"⚔ B.Gan +2",key:"pt_batallas_ganadas",max:9,color:"#40E0FF"},
                       {label:"🛡 B.Per +1",key:"pt_batallas_perdidas",max:9,color:"#40E0FF"},
                       {label:"🏰 Def +1",key:"pt_defensas",max:9,color:"#40E0FF"},
                       {label:"🌟 Bonus +5",key:"pt_bonus",max:1,color:"#FFD700"},
-                      {label:"🏴‍☠️ Bandido post-guerra +1",key:"pt_bandido_post",max:9,color:"#A8FF78"},
+                      {label:"🏴‍☠ Bandido post-guerra +1",key:"pt_bandido_post",max:9,color:"#A8FF78"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                         <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
@@ -902,7 +902,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
                       {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
                       {label:"Inactivo 4h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
-                      {label:"🏴‍☠️ Bandido pre-guerra -1",key:"pt_bandido_pre",color:"#FF6B6B"},
+                      {label:"🏴‍☠ Bandido pre-guerra -1",key:"pt_bandido_pre",color:"#FF6B6B"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                         <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
@@ -950,7 +950,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               <button onClick={()=>setAddingPlayer(true)} style={{width:"100%",padding:"10px",background:"rgba(64,224,255,0.08)",border:"1px dashed rgba(64,224,255,0.3)",borderRadius:"6px",color:"#40E0FF",fontSize:"12px",cursor:"pointer",marginBottom:"16px"}}>+ Nuevo jugador</button>
             )}
 
-            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>⚠️ Jugadores bajo mínimo mensual</div>
+            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>⚠ Jugadores bajo mínimo mensual</div>
             {players.filter(p=>p.active&&totalPts(p)<20).sort((a,b)=>totalPts(a)-totalPts(b)).map(p=>(
               <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px"}}>
                 <span style={{fontSize:"12px",color:"#fff"}}>{p.name}</span>
