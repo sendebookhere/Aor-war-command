@@ -14,8 +14,8 @@ const ROLES = {
 };
 
 const AVAILABILITY = {
-  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:10, penalty:10 },
-  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:5,  penalty:7  },
+  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:10, penalty:15 },
+  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:5,  penalty:10 },
   solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", pts:2,  penalty:5  },
   no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", pts:1,  penalty:0  },
   pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", pts:0,  penalty:0  },
@@ -87,8 +87,8 @@ function totalPts(p) {
 function acumulado(p) { return p.pts_acumulados||0; }
 
 const RANKS = [
-  { label:"Co-Líder 👑",   color:"#FFD700", min:10000 },
-  { label:"Oficial ⚜",    color:"#40E0FF", min:1000  },
+  { label:"Co-Líder 👑",   color:"#FFD700", min:25000 },
+  { label:"Oficial ⚜",    color:"#40E0FF", min:5000  },
   { label:"Veterano ★★★",  color:"#A8FF78", min:600   },
   { label:"Guerrero ★★",   color:"#FFD700", min:300   },
   { label:"Soldado ★",     color:"#FF9F43", min:100   },
@@ -365,23 +365,7 @@ function RegistrationForm({onRegistered}) {
             ))}
           </div>
         </div>
-          <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>DISPONIBILIDAD</label>
-          <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
-            {Object.entries(AVAILABILITY).filter(([k])=>k!=="pendiente").map(([key,av])=>(
-              <button key={key} onClick={()=>{setAvail(key);setTask1("");}} style={{padding:"10px 14px",borderRadius:"6px",fontSize:"12px",cursor:"pointer",textAlign:"left",background:avail===key?av.color+"22":"rgba(255,255,255,0.03)",border:"1px solid "+(avail===key?av.color:"rgba(255,255,255,0.08)"),color:avail===key?av.color:"rgba(255,255,255,0.5)"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span>{av.icon} {av.label}</span>
-                  <Pill color={av.color}>+{av.pts} pts</Pill>
-                </div>
-                {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje cuando se necesite. Sin restricciones.</div>}
-                {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una aparición por periodo: primeras 24h (expansión) y segundas 24h (conquista)</div>}
-                {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Una sola participación — tarea según tu nivel</div>}
-                {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
-              </button>
-            ))}
-          </div>
-        </div>
-
+          
         {/* Timezone */}
         <div style={{marginBottom:"16px"}}>
           <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>ZONA HORARIA</label>
@@ -543,7 +527,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
   async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador?")) return;
-    await supabase.from("players").update({active:false}).eq("id",id);
+    await supabase.from("players").update({active:false, status:"expulsado"}).eq("id",id);
     reload();
   }
 
@@ -779,7 +763,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                               const level = parseInt(document.getElementById("level_"+p.id).value);
                               const bp    = parseInt(document.getElementById("bp_"+p.id).value);
                               const clan_role = document.getElementById("clan_role_"+p.id).value;
-                              const honorMap = {"Líder":25000,"Co-Líder":10000,"Oficial":1000};
+                              const honorMap = {"Líder":25000,"Co-Líder":25000,"Oficial":5000};
                               const pts_honorificos = honorMap[clan_role]||0;
                               await update(p.id,{level,bp,clan_role,pts_honorificos});
                               await supabase.from("player_stats").insert({
@@ -834,7 +818,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 {label:"No apareció",color:"#FF6B6B",pts:"-10/-7/-5"},
                 {label:"Ignoró orden",color:"#FF6B6B",pts:"-2"},
                 {label:"Abandonó",color:"#FF6B6B",pts:"-2"},
-                {label:"Inactivo 4h",color:"#FF6B6B",pts:"-3"},
+                {label:"Inactivo 12h",color:"#FF6B6B",pts:"-3"},
               ].map(c=>(
                 <div key={c.label} style={{background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",padding:"3px 8px",fontSize:"9px",color:"#FF6B6B"}}>{c.label} <strong>{c.pts}</strong></div>
               ))}
@@ -894,14 +878,14 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       <span style={{fontSize:"8px",color:"rgba(168,255,120,0.8)"}}>✅ Sin registro pero participó (+3)</span>
                       <div style={{display:"flex",gap:"2px"}}>
                         {[0,1].map(v=>(
-                          <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 3 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
+                          <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 1 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
                         ))}
                       </div>
                     </div>
                     {[
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
                       {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
-                      {label:"Inactivo 4h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
+                      {label:"Inactivo 12h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
                       {label:"🏴‍☠ Bandido pre-guerra -1",key:"pt_bandido_pre",color:"#FF6B6B"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
