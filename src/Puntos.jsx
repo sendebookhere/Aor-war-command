@@ -38,14 +38,14 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cada acción durante la guerra suma puntos. El admin los registra después de cada guerra.</div>
           <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
             {[
-              {label:"Apareciste y participaste",pts:"+3",color:"#A8FF78"},
+              {label:"Apareciste y participaste",pts:"+1",color:"#A8FF78"},
               {label:"Seguiste las órdenes del admin",pts:"+2",color:"#FFD700"},
               {label:"Ganaste una batalla",pts:"+2",color:"#40E0FF"},
               {label:"Declaraste una batalla y la perdiste",pts:"+1",color:"#40E0FF"},
               {label:"Defendiste un castillo",pts:"+1",color:"#40E0FF"},
               {label:"Atacaste bandidos DESPUÉS de ganar",pts:"+1",color:"#A8FF78"},
               {label:"Cumpliste TODO perfectamente",pts:"+5",color:"#FFD700"},
-              {label:"Participaste sin haberte registrado",pts:"+3",color:"#A8FF78"},
+              {label:"Participaste sin haberte registrado",pts:"+1",color:"#A8FF78"},
             ].map(r=>(
               <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
                 <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
@@ -60,13 +60,13 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>❌ PENALIZACIONES — Lo que te quita puntos</div>
           <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
             {[
-              {label:"Dijiste Siempre listo y no apareciste",pts:"-10",color:"#FF6B6B"},
-              {label:"Dijiste Intermitente y no apareciste",pts:"-7",color:"#FF6B6B"},
+              {label:"Dijiste Siempre listo y no apareciste",pts:"-15",color:"#FF6B6B"},
+              {label:"Dijiste Intermitente y no apareciste",pts:"-10",color:"#FF6B6B"},
               {label:"Dijiste Solo una vez y no apareciste",pts:"-5",color:"#FF6B6B"},
               {label:"No te registraste y tampoco participaste",pts:"-20",color:"#FF6B6B"},
               {label:"Ignoraste una orden directa del admin",pts:"-2",color:"#FF9F43"},
               {label:"Abandonaste una defensa sin avisar",pts:"-2",color:"#FF9F43"},
-              {label:"Estuviste inactivo +4h sin justificación",pts:"-3",color:"#FF9F43"},
+              {label:"Estuviste inactivo +12h sin justificación",pts:"-3",color:"#FF9F43"},
               {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1",color:"#FF9F43"},
             ].map(r=>(
               <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:"rgba(255,107,107,0.05)",borderRadius:"6px"}}>
@@ -83,8 +83,8 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Se acumulan guerra tras guerra. No se resetean.</div>
           <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
             {[
-              {label:"Co-Líder 👑",pts:"10,000+",color:"#FFD700"},
-              {label:"Oficial ⚜️",pts:"1,000+",color:"#40E0FF"},
+              {label:"Co-Líder 👑",pts:"25,000+",color:"#FFD700"},
+              {label:"Oficial ⚜️",pts:"5,000+",color:"#40E0FF"},
               {label:"Veterano ★★★",pts:"600+",color:"#A8FF78"},
               {label:"Guerrero ★★",pts:"300+",color:"#FFD700"},
               {label:"Soldado ★",pts:"100+",color:"#FF9F43"},
@@ -145,8 +145,8 @@ export default function Puntos({onBack}) {
           <div style={{display:"flex",flexDirection:"column",gap:"4px",marginBottom:"10px"}}>
             {[
               {label:"Líder 👑",pts:"25,000",color:"#FFD700"},
-              {label:"Co-Líder 👑",pts:"10,000",color:"#FFD700"},
-              {label:"Oficial ⚜️",pts:"1,000",color:"#40E0FF"},
+              {label:"Co-Líder 👑",pts:"25,000",color:"#FFD700"},
+              {label:"Oficial ⚜️",pts:"5,000",color:"#40E0FF"},
               {label:"Veterano y abajo",pts:"0",color:"#888"},
             ].map(r=>(
               <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
@@ -158,14 +158,14 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>📌 Ejemplo de ascenso:</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",marginBottom:"8px"}}>
             Oficial con 960 pts acumulados → ascendido a Co-Líder<br/>
-            Puntos honoríficos: 1,000 → 10,000 (+9,000)<br/>
-            <strong style={{color:"#A8FF78"}}>Total nuevo: 9,960 pts</strong>
+            Puntos honoríficos: 5,000 → 25,000 (+20,000)<br/>
+            <strong style={{color:"#A8FF78"}}>Total nuevo: 24,960 pts</strong>
           </div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>⚠️ Ejemplo de descenso:</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",padding:"8px"}}>
-            Co-Líder con 9,500 pts totales → bajado a Oficial<br/>
-            Puntos honoríficos: 10,000 → 1,000 (-9,000)<br/>
-            <strong style={{color:"#FF6B6B"}}>Total nuevo: 500 pts</strong><br/><br/>
+            Co-Líder con 5,960 pts totales → bajado a Oficial<br/>
+            Puntos honoríficos: 25,000 → 5,000 (-20,000)<br/>
+            <strong style={{color:"#FF6B6B"}}>Total nuevo: -19,040 pts (Vigilado)</strong><br/><br/>
             Si se baja a Recluta → honoríficos = 0<br/>
             <strong style={{color:"#FF6B6B"}}>Total nuevo: -500 pts (en negativo = Vigilado)</strong>
           </div>
