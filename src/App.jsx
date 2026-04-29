@@ -263,7 +263,7 @@ function RegistrationForm({onRegistered}) {
                   <span>{av.icon} {av.label}</span>
                   <Pill color={av.color}>+{5+av.declaredPts} pts</Pill>
                 </div>
-                {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible toda la guerra — ataque y defensa ambos periodos</div>}
+                {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje cuando se necesite. Sin restricciones.</div>}
                 {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una actividad por periodo de 24h</div>}
                 {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Una sola participación — tarea según tu nivel</div>}
                 {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
@@ -299,7 +299,7 @@ function RegistrationForm({onRegistered}) {
           </div>
         )}
 
-        {avail && avail !== "no_disponible" && avail !== "intermitente" && tasks && tasks.period1.length > 0 && (
+        {avail && avail !== "no_disponible" && avail !== "intermitente" && avail !== "siempre" && tasks && tasks.period1.length > 0 && (
           <div style={{marginBottom:"16px"}}>
             <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>TAREA PRINCIPAL</label>
             <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
@@ -822,5 +822,5 @@ export default function App() {
 
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
   if (path === "/reporte")  return <PublicReport players={players}/>;
-  return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>; 
+  return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
