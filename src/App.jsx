@@ -102,6 +102,33 @@ function FlagBar({count}) {
 }
 
 // ── Registration Form (public) ─────────────────────────────────────────────
+function getWarWeek() {
+  // Returns string like "2026-W18" representing current war week (Friday to Thursday)
+  const now = new Date();
+  // Adjust to Mexico time (UTC-6)
+  const mx = new Date(now.getTime() - 6*60*60*1000);
+  const day = mx.getDay(); // 0=Sun, 4=Thu, 5=Fri
+  // War week starts Friday, ends Thursday
+  const daysFromFriday = (day + 2) % 7; // days since last Friday
+  const friday = new Date(mx);
+  friday.setDate(mx.getDate() - daysFromFriday);
+  const year = friday.getFullYear();
+  const week = Math.ceil(((friday - new Date(year,0,1)) / 86400000 + 1) / 7);
+  return `${year}-W${week}`;
+}
+
+function isRegistrationOpen() {
+  // Closes Thursday 12:00am Mexico time (UTC-6)
+  const now = new Date();
+  const mx = new Date(now.getTime() - 6*60*60*1000);
+  const day = mx.getDay(); // 4 = Thursday
+  const hour = mx.getHours();
+  // Closed: Thursday after midnight (00:00) until Friday 00:00
+  if (day === 4 && hour >= 0) return false;
+  // Also closed Friday before war starts (optional: keep open all week except Thu)
+  return true;
+}
+
 function RegistrationForm({onRegistered}) {
   const [name, setName]             = useState("");
   const [avail, setAvail]           = useState("");
@@ -114,14 +141,20 @@ function RegistrationForm({onRegistered}) {
   const [allPlayers, setAllPlayers] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [existingAvail, setExistingAvail] = useState(null);
+  const isOpen = isRegistrationOpen();
+  const currentWeek = getWarWeek();
 
   useEffect(()=>{
-    supabase.from("players").select("id,name,level").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
+    supabase.from("players").select("id,name,level,registered_week,availability").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
   },[]);
 
   function handleNameChange(val) {
     setName(val);
     setSelectedPlayer(null);
+    setAlreadyRegistered(false);
+    setExistingAvail(null);
     if (val.trim().length < 2) { setSuggestions([]); return; }
     const clean = s => s.toLowerCase().replace(/[^a-z0-9áéíóúüñ]/gi,"").trim();
     const input = clean(val.trim());
@@ -133,6 +166,11 @@ function RegistrationForm({onRegistered}) {
     setName(player.name);
     setSelectedPlayer(player);
     setSuggestions([]);
+    // Check if already registered this week
+    if (player.registered_week === currentWeek) {
+      setAlreadyRegistered(true);
+      setExistingAvail(player.availability);
+    }
   }
 
   const tasks = avail ? getTasksForPlayer(avail, 999999) : null;
@@ -148,15 +186,33 @@ function RegistrationForm({onRegistered}) {
       if (!matches.length) { setError("Nombre no encontrado. Escribe parte de tu nombre y selecciona de las sugerencias."); setSubmitting(false); return; }
       player = matches[0];
     }
+    // Check weekly limit
+    if (player.registered_week === currentWeek) {
+      setError("Ya te registraste esta semana. Solo puedes registrarte una vez por guerra.");
+      setSubmitting(false);
+      return;
+    }
     const av = AVAILABILITY[avail];
     await supabase.from("players").update({
       availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
-      registered_form: true, pt_registro: 5, pt_disponibilidad_declarada: av.declaredPts,
+      registered_form: true, registered_week: currentWeek,
+      pt_registro: 5, pt_disponibilidad_declarada: av.declaredPts,
     }).eq("id", player.id);
     setDone(true);
     setSubmitting(false);
     if (onRegistered) onRegistered();
   }
+
+  // Registration closed screen
+  if (!isOpen) return (
+    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+      <div style={{textAlign:"center",maxWidth:"360px"}}>
+        <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
+        <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
+        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro cierra los jueves a las 12:00am hora México. Vuelve el viernes cuando comience la nueva guerra.</div>
+      </div>
+    </div>
+  );
 
   if (done) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
@@ -217,7 +273,33 @@ function RegistrationForm({onRegistered}) {
         </div>
 
         {/* Tasks based on availability */}
-        {avail && avail !== "no_disponible" && tasks && tasks.period1.length > 0 && (
+        {avail === "intermitente" && (
+          <div style={{marginBottom:"16px"}}>
+            <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"8px"}}>TAREAS POR PERIODO</label>
+            <div style={{marginBottom:"10px"}}>
+              <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔️ Primeras 24h — Captura de castillos</div>
+              <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
+                {["Atacar castillos","Defender castillos"].map(t=>(
+                  <button key={t} onClick={()=>setTask1(t)} style={{padding:"7px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#FFD700":"rgba(255,255,255,0.08)"),color:task1===t?"#FFD700":"rgba(255,255,255,0.5)"}}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:"10px",color:"#FF6B6B",marginBottom:"4px"}}>🏰 Segundas 24h — Ataque a ciudades enemigas</div>
+              <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
+                {["Atacar ciudad enemiga","Defender castillos"].map(t=>(
+                  <button key={t} onClick={()=>setTask1(prev=>prev===t?prev:task1+"→"+t)} style={{padding:"7px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1.includes(t)?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.5)"}}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {avail && avail !== "no_disponible" && avail !== "intermitente" && tasks && tasks.period1.length > 0 && (
           <div style={{marginBottom:"16px"}}>
             <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>TAREA PRINCIPAL</label>
             <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
@@ -257,10 +339,16 @@ function RegistrationForm({onRegistered}) {
           </div>
         )}
 
+        {alreadyRegistered && (
+          <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px",fontSize:"12px",color:"#FFD700"}}>
+            ⚠️ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong>. No puedes volver a registrarte hasta la próxima guerra.
+          </div>
+        )}
+
         {error && <div style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",padding:"10px",fontSize:"11px",color:"#FF6B6B",marginBottom:"12px"}}>{error}</div>}
 
-        <button onClick={handleSubmit} disabled={submitting} style={{width:"100%",padding:"14px",background:"rgba(64,224,255,0.15)",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"8px",color:"#40E0FF",fontFamily:"serif",fontSize:"14px",cursor:"pointer",letterSpacing:"0.1em"}}>
-          {submitting ? "Registrando..." : "CONFIRMAR PARTICIPACIÓN ⚔️"}
+        <button onClick={handleSubmit} disabled={submitting||alreadyRegistered} style={{width:"100%",padding:"14px",background:alreadyRegistered?"rgba(255,255,255,0.05)":"rgba(64,224,255,0.15)",border:"1px solid "+(alreadyRegistered?"rgba(255,255,255,0.1)":"rgba(64,224,255,0.3)"),borderRadius:"8px",color:alreadyRegistered?"rgba(255,255,255,0.3)":"#40E0FF",fontFamily:"serif",fontSize:"14px",cursor:alreadyRegistered?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
+          {submitting ? "Registrando..." : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACIÓN ⚔️"}
         </button>
 
         <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>
@@ -621,6 +709,25 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 <span style={{fontSize:"12px",color:"#fff"}}>{p.name}</span>
                 <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
                   <span style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold"}}>{totalPts(p)} pts</span>
+                  <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
+                </div>
+              </div>
+            ))}
+
+            <div style={{fontFamily:"serif",color:"#888",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>💤 Jugadores inactivos ({inactive.length})</div>
+            {inactive.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>No hay jugadores inactivos.</div>}
+            {inactive.map(p=>(
+              <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
+                <div>
+                  <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{p.name}</div>
+                  <div style={{display:"flex",gap:"6px",alignItems:"center",marginTop:"3px"}}>
+                    <span style={{fontSize:"10px",color:"#888"}}>Último acceso: {p.last_seen}</span>
+                    <input defaultValue={p.last_seen} id={"ls_"+p.id} style={{width:"80px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"#fff",padding:"2px 6px",fontSize:"10px",outline:"none"}} placeholder="dd.m.aa"/>
+                    <button onClick={()=>{ const v=document.getElementById("ls_"+p.id).value; update(p.id,{last_seen:v}); }} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer"}}>✓</button>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:"6px"}}>
+                  <button onClick={()=>update(p.id,{active:true})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Reactivar</button>
                   <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
                 </div>
               </div>
