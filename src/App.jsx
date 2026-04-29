@@ -644,14 +644,8 @@ function AdminPanel({players, update, loading, saving, reload}) {
             {players.filter(p=>p.active).sort((a,b)=>{
               if (a.name === "PUNK'Z") return -1;
               if (b.name === "PUNK'Z") return 1;
-              const rankOrder = ["Co-Líder 👑","Oficial ⚜️","Veterano ★★★","Guerrero ★★","Soldado ★","Recluta","⚠ Vigilado"];
-              const getLabel = p => {
-                const total = (p.pts_acumulados||0) + totalPts(p) + (p.pts_honorificos||0);
-                return total >= 10000 ? "Co-Líder 👑" : total >= 1000 ? "Oficial ⚜️" : total >= 600 ? "Veterano ★★★" : total >= 300 ? "Guerrero ★★" : total >= 100 ? "Soldado ★" : total >= 0 ? "Recluta" : "⚠ Vigilado";
-              };
-              const ra = rankOrder.indexOf(getLabel(a));
-              const rb = rankOrder.indexOf(getLabel(b));
-              if (ra !== rb) return ra - rb;
+              if (a.registered_form && !b.registered_form) return -1;
+              if (!a.registered_form && b.registered_form) return 1;
               return b.bp - a.bp;
             }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
