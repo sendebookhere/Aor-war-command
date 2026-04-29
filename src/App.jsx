@@ -72,11 +72,13 @@ function totalPts(p) {
        + (p.pt_batallas_perdidas||0)
        + (p.pt_defensas||0)
        + (p.pt_bonus||0)
+       + (p.pt_bandido_post||0)
        - (p.pt_penalizacion||0)
        - (p.pt_no_aparecio||0)
        - (p.pt_ignoro_orden||0)*2
        - (p.pt_abandono||0)*2
-       - (p.pt_inactivo_4h||0)*3;
+       - (p.pt_inactivo_4h||0)*3
+       - (p.pt_bandido_pre||0);
 }
 
 function acumulado(p) { return p.pts_acumulados||0; }
@@ -473,6 +475,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     reload();
     alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
   }
+
   async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador?")) return;
     await supabase.from("players").update({active:false}).eq("id",id);
@@ -604,19 +607,29 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* ROSTER TAB */}
         {activeTab==="roster" && (
           <div>
-            {players.filter(p=>p.active).sort((a,b)=>b.bp-a.bp).map(p=>{
+            {players.filter(p=>p.active).sort((a,b)=>{
+              const rankOrder = ["Líder 👑","Co-Líder 👑","Oficial ⚜️","Veterano ★★★","Guerrero ★★","Soldado ★","Recluta","⚠ Vigilado"];
+              const ra = rankOrder.indexOf(getRank(totalPts(a)).label);
+              const rb = rankOrder.indexOf(getRank(totalPts(b)).label);
+              if (ra !== rb) return ra - rb;
+              return b.bp - a.bp;
+            }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
-              const role  = ROLES[p.role]||ROLES.Sin_Rol;
+              const warRole = p.availability==="siempre" ? {label:"Conquistador",icon:"⚔️",color:"#A8FF78"}
+                : p.availability==="intermitente" ? {label:"Refuerzo",icon:"🛡️",color:"#FFD700"}
+                : p.availability==="solo_una" ? {label:"Scouting",icon:"👁️",color:"#40E0FF"}
+                : p.availability==="no_disponible" ? {label:"Ausente",icon:"🚫",color:"#FF6B6B"}
+                : {label:"Sin asignar",icon:"❓",color:"#666666"};
               const isEditing = editingId===p.id;
               return (
-                <div key={p.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+avail.color+"22",borderLeft:"3px solid "+avail.color,borderRadius:"8px",padding:"10px 12px",marginBottom:"6px"}}>
+                <div key={p.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+avail.color+"22",borderLeft:"3px solid "+warRole.color,borderRadius:"8px",padding:"10px 12px",marginBottom:"6px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                     <div style={{flex:1}}>
                       <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"6px",flexWrap:"wrap"}}>
                         <span style={{fontFamily:"serif",fontSize:"13px",color:"#fff"}}>{p.name}</span>
-                        <Pill color={role.color}>{role.icon} {p.role.replace("_"," ")}</Pill>
-                        <Pill color={avail.color}>{avail.icon}</Pill>
-                        <Pill color={getRank(totalPts(p)).color}>{totalPts(p)}pts</Pill>
+                        <Pill color={warRole.color}>{warRole.icon} {warRole.label}</Pill>
+                        <Pill color={getRank(totalPts(p)).color}>{getRank(totalPts(p)).label}</Pill>
+                        <Pill color="#888">{totalPts(p)}pts guerra</Pill>
                       </div>
                       {isEditing ? (
                         <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
@@ -717,6 +730,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       {label:"🛡 B.Per +1",key:"pt_batallas_perdidas",max:9,color:"#40E0FF"},
                       {label:"🏰 Def +1",key:"pt_defensas",max:9,color:"#40E0FF"},
                       {label:"🌟 Bonus +5",key:"pt_bonus",max:1,color:"#FFD700"},
+                      {label:"🏴‍☠️ Bandido post-guerra +1",key:"pt_bandido_post",max:9,color:"#A8FF78"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                         <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
@@ -758,6 +772,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
                       {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
                       {label:"Inactivo 4h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
+                      {label:"🏴‍☠️ Bandido pre-guerra -1",key:"pt_bandido_pre",color:"#FF6B6B"},
                     ].map(cat=>(
                       <div key={cat.key} style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                         <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{cat.label}</span>
