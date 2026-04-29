@@ -646,6 +646,12 @@ function AdminPanel({players, update, loading, saving, reload}) {
               if (b.name === "PUNK'Z") return 1;
               if (a.registered_form && !b.registered_form) return -1;
               if (!a.registered_form && b.registered_form) return 1;
+              if (a.registered_form && b.registered_form) {
+                const roleOrder = ["siempre","intermitente","solo_una","no_disponible","pendiente"];
+                const ra = roleOrder.indexOf(a.availability);
+                const rb = roleOrder.indexOf(b.availability);
+                if (ra !== rb) return ra - rb;
+              }
               return b.bp - a.bp;
             }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
