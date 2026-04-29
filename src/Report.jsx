@@ -86,6 +86,12 @@ function PlayerProfile({player, onBack}) {
             <span style={{color:pts>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{pts>0?"+":""}{pts} esta guerra</span>
             <span style={{color:rank.color,fontWeight:"bold"}}>{acc} pts acumulados</span>
           </div>
+          {(player.pts_honorificos||0) > 0 && (
+            <div style={{marginTop:"10px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:"11px",color:"#FFD700"}}>⭐ Puntos honoríficos — Rango fundador</span>
+              <span style={{fontSize:"15px",color:"#FFD700",fontWeight:"bold"}}>{(player.pts_honorificos).toLocaleString()}</span>
+            </div>
+          )}
         </div>
 
         {/* Current war breakdown */}
