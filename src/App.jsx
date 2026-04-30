@@ -944,8 +944,101 @@ function VisitsTab() {
 
 
 
-// ── Snapshot / Restore Tab ─────────────────────────────────────────────────
-function SnapshotTab({players}) {
+// ── Heroic Points Button ───────────────────────────────────────────────────
+function HeroicPointsButton({players, update, reload}) {
+  const [open, setOpen]     = useState(false);
+  const [selected, setSel]  = useState({});
+  const [pts, setPts]       = useState("50");
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg]       = useState("");
+
+  const active = players.filter(p=>p.active);
+
+  function toggleAll(v) {
+    const next = {};
+    if (v) active.forEach(p=>{ next[p.id]=true; });
+    setSel(next);
+  }
+
+  async function apply() {
+    const chosen = active.filter(p=>selected[p.id]);
+    if (!chosen.length) { setMsg("Selecciona al menos un jugador"); return; }
+    const n = parseInt(pts)||0;
+    if (!n) { setMsg("Ingresa puntos válidos"); return; }
+    if (!confirm("¿Asignar +" + n + " pts a " + chosen.length + " jugador(es)" + (reason?" por: "+reason:"") + "?")) return;
+    setSaving(true);
+    for (const p of chosen) {
+      await update(p.id, {pts_acumulados: (p.pts_acumulados||0) + n});
+    }
+    await reload();
+    setMsg(`✓ +${n} pts asignados a ${chosen.length} jugador(es)`);
+    setSaving(false);
+    setSel({});
+    setTimeout(()=>setMsg(""),4000);
+  }
+
+  return (
+    <>
+      <button onClick={()=>setOpen(true)} style={{padding:"6px 12px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#FFD700",fontSize:"11px",cursor:"pointer"}}>
+        ⭐ Gestas heroicas
+      </button>
+
+      {open && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
+          <div style={{background:"#0d0d0f",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"12px",padding:"20px",width:"100%",maxWidth:"420px",maxHeight:"90vh",overflow:"auto"}}>
+            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"16px",marginBottom:"4px"}}>⭐ Gestas heroicas</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"14px"}}>Asigna puntos a uno o varios jugadores por logros extraordinarios</div>
+
+            <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>Puntos a asignar</div>
+                <input value={pts} onChange={e=>setPts(e.target.value)} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#FFD700",padding:"7px 10px",fontSize:"16px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
+              </div>
+              <div style={{flex:2}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>Motivo (opcional)</div>
+                <input value={reason} onChange={e=>setReason(e.target.value)} placeholder="ej: Defensa épica del castillo" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#d4c9a8",padding:"7px 10px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+            </div>
+
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}}>
+              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)"}}>Seleccionar jugadores:</div>
+              <div style={{display:"flex",gap:"6px"}}>
+                <button onClick={()=>toggleAll(true)} style={{padding:"2px 8px",fontSize:"9px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>Todos</button>
+                <button onClick={()=>toggleAll(false)} style={{padding:"2px 8px",fontSize:"9px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>Ninguno</button>
+              </div>
+            </div>
+
+            <div style={{maxHeight:"240px",overflow:"auto",marginBottom:"12px"}}>
+              {active.sort((a,b)=>a.name.localeCompare(b.name)).map(p=>(
+                <div key={p.id} onClick={()=>setSel(s=>({...s,[p.id]:!s[p.id]}))}
+                  style={{display:"flex",alignItems:"center",gap:"10px",padding:"7px 10px",marginBottom:"3px",borderRadius:"6px",cursor:"pointer",background:selected[p.id]?"rgba(255,215,0,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(selected[p.id]?"rgba(255,215,0,0.3)":"rgba(255,255,255,0.05)")}}>
+                  <div style={{width:"16px",height:"16px",borderRadius:"3px",border:"1px solid "+(selected[p.id]?"#FFD700":"rgba(255,255,255,0.2)"),background:selected[p.id]?"#FFD700":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    {selected[p.id] && <span style={{color:"#000",fontSize:"10px",fontWeight:"bold"}}>✓</span>}
+                  </div>
+                  <span style={{fontSize:"12px",color:selected[p.id]?"#FFD700":"rgba(255,255,255,0.6)",flex:1}}>{p.name}</span>
+                  <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{(p.pts_acumulados||0)} pts</span>
+                </div>
+              ))}
+            </div>
+
+            {msg && <div style={{fontSize:"11px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",marginBottom:"8px"}}>{msg}</div>}
+
+            <div style={{display:"flex",gap:"8px"}}>
+              <button onClick={apply} disabled={saving} style={{flex:1,padding:"9px",background:"rgba(255,215,0,0.15)",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"6px",color:"#FFD700",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>
+                {saving?"Asignando...":"⭐ Asignar "+pts+" pts a "+Object.values(selected).filter(Boolean).length+" jugador(es)"}
+              </button>
+              <button onClick={()=>{setOpen(false);setSel({});setMsg("");}} style={{padding:"9px 14px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>✕</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Seguridad Tab (includes Snapshots + security audit) ────────────────────
+function SeguridadTab({players}) {
   const [snapshots, setSnapshots] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
@@ -953,69 +1046,99 @@ function SnapshotTab({players}) {
   const [label, setLabel]         = useState("");
   const [msg, setMsg]             = useState("");
 
-  useEffect(() => { loadSnapshots(); }, []);
+  useEffect(()=>{ loadSnapshots(); },[]);
 
   async function loadSnapshots() {
     const {data} = await supabase.from("player_snapshots")
       .select("id,created_at,label,player_count")
-      .order("created_at", {ascending:false})
-      .limit(20);
-    setSnapshots(data||[]);
-    setLoading(false);
+      .order("created_at",{ascending:false}).limit(20);
+    setSnapshots(data||[]); setLoading(false);
   }
 
   async function saveSnapshot() {
-    if (!confirm("¿Guardar snapshot del estado actual de todos los jugadores?")) return;
+    if (!confirm("¿Guardar snapshot del estado actual?")) return;
     setSaving(true);
     const {error} = await supabase.from("player_snapshots").insert({
-      label: label.trim() || "Snapshot " + new Date().toLocaleString("es-MX"),
+      label: label.trim() || "Snapshot "+new Date().toLocaleString("es-MX"),
       data: players,
       player_count: players.filter(p=>p.active).length,
     });
-    if (error) { setMsg("Error: " + error.message); setSaving(false); return; }
-    setMsg("✓ Snapshot guardado");
-    setLabel("");
-    await loadSnapshots();
-    setSaving(false);
-    setTimeout(()=>setMsg(""), 3000);
+    if (error) { setMsg("Error: "+error.message); setSaving(false); return; }
+    setMsg("✓ Snapshot guardado"); setLabel("");
+    await loadSnapshots(); setSaving(false);
+    setTimeout(()=>setMsg(""),3000);
   }
 
   async function restoreSnapshot(snap) {
-    if (!confirm("¿Restaurar a este snapshot? Esto sobreescribirá todos los puntos y registros actuales. Esta acción NO se puede deshacer.")) return;
+    if (!confirm("¿Restaurar a \"" + snap.label + "\"? Esto sobreescribirá todos los datos actuales.")) return;
     setRestoring(snap.id);
-    // Load full snapshot data
     const {data} = await supabase.from("player_snapshots").select("data").eq("id",snap.id).single();
     if (!data?.data) { setMsg("Error al cargar snapshot"); setRestoring(null); return; }
-    // Restore each player
-    let errors = 0;
+    let errors=0;
     for (const p of data.data) {
       const {id, created_at, ...fields} = p;
-      const {error} = await supabase.from("players").update(fields).eq("id", id);
+      const {error} = await supabase.from("players").update(fields).eq("id",id);
       if (error) errors++;
     }
     setRestoring(null);
-    if (errors > 0) setMsg(`⚠ Restaurado con ${errors} errores`);
-    else setMsg("✓ Snapshot restaurado correctamente — recarga la app para ver los cambios");
-    setTimeout(()=>setMsg(""), 6000);
+    setMsg(errors>0 ? "⚠ Restaurado con "+errors+" errores" : "✓ Restaurado correctamente — recarga la app");
+    setTimeout(()=>setMsg(""),6000);
   }
 
   async function deleteSnapshot(id) {
     if (!confirm("¿Borrar este snapshot?")) return;
-    await supabase.from("player_snapshots").delete().eq("id", id);
+    await supabase.from("player_snapshots").delete().eq("id",id);
     await loadSnapshots();
   }
 
   return (
     <div style={{padding:"0 16px"}}>
-      <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"6px"}}>📸 Snapshots — respaldo y restauración</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"14px"}}>
-        Guarda el estado completo de todos los jugadores. Si un rival sabotea datos, puedes restaurar en segundos.
+      <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"12px"}}>🔒 Seguridad</div>
+
+      {/* Protection mechanisms */}
+      <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"14px"}}>
+        <div style={{fontSize:"12px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"10px"}}>🛡 Mecanismos de protección activos</div>
+        {[
+          {icon:"✅",label:"PIN de acceso al Admin",desc:"Sin PIN no se puede acceder al panel de control"},
+          {icon:"✅",label:"Registro: 1 vez por semana",desc:"Ningún jugador puede sobreescribir su registro más de una vez por semana"},
+          {icon:"✅",label:"Stats BP/Poder: 1 vez por semana",desc:"Con control de tolerancia ±30% para detectar valores anómalos"},
+          {icon:"✅",label:"Historial de stats",desc:"Cada cambio de BP/Poder queda registrado con fecha — puedes ver quién modificó qué"},
+          {icon:"✅",label:"Snapshots de respaldo",desc:"Guarda el estado completo antes de cada guerra y restaura en segundos si hay sabotaje"},
+          {icon:"⚠",label:"Registro público sin login",desc:"Un rival podría registrar a un miembro tuyo con disponibilidad baja (Reserva). Monitorea el registro antes de cada guerra"},
+        ].map((item,i)=>(
+          <div key={i} style={{display:"flex",gap:"10px",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <span style={{fontSize:"14px",flexShrink:0}}>{item.icon}</span>
+            <div>
+              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>{item.label}</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Save new snapshot */}
-      <div style={{background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
-        <div style={{fontSize:"11px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>💾 Guardar snapshot ahora</div>
-        <input value={label} onChange={e=>setLabel(e.target.value)} placeholder="Descripción (ej: Antes de guerra semana 18)" style={{width:"100%",boxSizing:"border-box",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"11px",outline:"none",marginBottom:"8px"}}/>
+      {/* Response protocol */}
+      <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"14px"}}>
+        <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold",marginBottom:"10px"}}>⚡ Protocolo de respuesta ante sabotaje</div>
+        {[
+          {n:"1",text:"Detectas datos incorrectos en el Roster o en el Ranking"},
+          {n:"2",text:"Ve a la pestaña Seguridad → sección Snapshots"},
+          {n:"3",text:"Identifica el último snapshot ANTES del sabotaje"},
+          {n:"4",text:"Haz clic en 🔄 Restaurar — confirma la acción"},
+          {n:"5",text:"Recarga la app — todos los datos vuelven al estado guardado"},
+          {n:"6",text:"Si el sabotaje fue en stats individuales, usa el botón ↩ Revertir stats en cada perfil desde /reporte"},
+        ].map(s=>(
+          <div key={s.n} style={{display:"flex",gap:"10px",padding:"5px 0"}}>
+            <span style={{width:"18px",height:"18px",background:"rgba(64,224,255,0.15)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",color:"#40E0FF",fontWeight:"bold",flexShrink:0}}>{s.n}</span>
+            <span style={{fontSize:"10px",color:"rgba(255,255,255,0.5)"}}>{s.text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Snapshot save */}
+      <div style={{background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"12px"}}>
+        <div style={{fontSize:"11px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>📸 Guardar snapshot ahora</div>
+        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>Recomendado: guarda uno antes de cada guerra del viernes</div>
+        <input value={label} onChange={e=>setLabel(e.target.value)} placeholder="Descripción (ej: Pre-guerra semana 19)" style={{width:"100%",boxSizing:"border-box",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"11px",outline:"none",marginBottom:"8px"}}/>
         <button onClick={saveSnapshot} disabled={saving} style={{width:"100%",padding:"9px",background:saving?"rgba(255,255,255,0.04)":"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:saving?"rgba(255,255,255,0.3)":"#A8FF78",fontSize:"12px",cursor:saving?"default":"pointer",fontWeight:"bold"}}>
           {saving?"Guardando...":"📸 Guardar snapshot ("+players.filter(p=>p.active).length+" jugadores)"}
         </button>
@@ -1023,24 +1146,18 @@ function SnapshotTab({players}) {
       </div>
 
       {/* Snapshots list */}
-      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>
-        Historial de snapshots ({snapshots.length})
-      </div>
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Historial de snapshots ({snapshots.length})</div>
       {loading && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)"}}>Cargando...</div>}
-      {!loading && snapshots.length === 0 && (
-        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center",padding:"20px"}}>Sin snapshots. Guarda uno antes de cada guerra.</div>
-      )}
-      {snapshots.map(snap => (
-        <div key={snap.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",marginBottom:"8px"}}>
+      {!loading && snapshots.length===0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center",padding:"16px"}}>Sin snapshots. Guarda uno antes de cada guerra.</div>}
+      {snapshots.map(snap=>(
+        <div key={snap.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px 14px",marginBottom:"6px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"8px"}}>
             <div style={{flex:1}}>
               <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px"}}>{snap.label}</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>
-                {new Date(snap.created_at).toLocaleString("es-MX")} · {snap.player_count} jugadores
-              </div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>{new Date(snap.created_at).toLocaleString("es-MX")} · {snap.player_count} jugadores</div>
             </div>
             <div style={{display:"flex",gap:"6px",flexShrink:0}}>
-              <button onClick={()=>restoreSnapshot(snap)} disabled={restoring===snap.id} style={{padding:"4px 10px",background:"rgba(64,224,255,0.1)",border:"1px solid rgba(64,224,255,0.25)",borderRadius:"6px",color:"#40E0FF",fontSize:"10px",cursor:"pointer"}}>
+              <button onClick={()=>restoreSnapshot(snap)} disabled={!!restoring} style={{padding:"4px 10px",background:"rgba(64,224,255,0.1)",border:"1px solid rgba(64,224,255,0.25)",borderRadius:"6px",color:"#40E0FF",fontSize:"10px",cursor:"pointer"}}>
                 {restoring===snap.id?"...":"🔄 Restaurar"}
               </button>
               <button onClick={()=>deleteSnapshot(snap.id)} style={{padding:"4px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer"}}>✕</button>
@@ -1048,25 +1165,10 @@ function SnapshotTab({players}) {
           </div>
         </div>
       ))}
-
-      {/* Security audit info */}
-      <div style={{marginTop:"20px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px"}}>
-        <div style={{fontSize:"11px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>🔒 Auditoría de seguridad</div>
-        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",lineHeight:"1.6"}}>
-          <strong style={{color:"rgba(255,255,255,0.6)"}}>Campos protegidos:</strong><br/>
-          ✅ Admin — requiere PIN<br/>
-          ✅ Registro semanal — solo 1 vez por semana por jugador<br/>
-          ✅ Stats BP/Poder — solo en /registro, 1 vez por semana<br/>
-          ✅ Puntos — solo el admin puede modificarlos<br/><br/>
-          <strong style={{color:"rgba(255,255,255,0.6)"}}>Riesgos residuales:</strong><br/>
-          ⚠ Registro público — cualquiera puede registrar a otro jugador con disponibilidad baja<br/>
-          ⚠ Sin autenticación por usuario — no hay contraseña por jugador<br/><br/>
-          <strong style={{color:"rgba(255,255,255,0.6)"}}>Recomendación:</strong> Guarda un snapshot antes de cada guerra (viernes temprano). Si detectas sabotaje, restaura con un clic.
-        </div>
-      </div>
     </div>
   );
 }
+
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 function AdminPanel({players, update, loading, saving, reload}) {
@@ -1114,7 +1216,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     setTimeout(()=>setCopiedMsg(false), 2000);
   }
 
-  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"},{id:"links",label:"🔗 Links"},{id:"visitas",label:"👁 Visitas"},{id:"snapshots",label:"📸 Backup"}];
+  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"},{id:"links",label:"🔗 Links"},{id:"visitas",label:"👁 Visitas"},{id:"seguridad",label:"🔒 Seguridad"}];
 
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
@@ -1599,14 +1701,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
             {/* Weekly reset */}
             <div style={{background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
               <div style={{fontFamily:"serif",color:"#25D366",fontSize:"13px",marginBottom:"8px"}}>📱 WhatsApp</div>
-              <button onClick={async()=>{
-                if(!confirm("¿Asignar 50 pts a todos los jugadores con WhatsApp?"))return;
-                const wp=players.filter(p=>p.active&&p.whatsapp);
-                for(const p of wp){await update(p.id,{pt_whatsapp:50});}
-                alert("✓ 50 pts asignados a "+wp.length+" jugadores.");
-              }} style={{padding:"6px 12px",background:"rgba(37,211,102,0.15)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#25D366",fontSize:"11px",cursor:"pointer",marginRight:"8px"}}>
-                ⭐ Asignar 50 pts fundadores
-              </button>
+              <HeroicPointsButton players={players} update={update} reload={reload}/>
             </div>
             <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
@@ -1692,7 +1787,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* MENSAJES TAB */}
         {activeTab==="mensajes" && <MensajesTab players={players}/>}
         {activeTab==="visitas" && <VisitsTab/>}
-        {activeTab==="snapshots" && <SnapshotTab players={players}/>}
+        {activeTab==="seguridad" && <SeguridadTab players={players}/>}
         {activeTab==="links" && (
           <div style={{padding:"0 16px"}}>
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"16px"}}>🔗 Links de la app</div>
