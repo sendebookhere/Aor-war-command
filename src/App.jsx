@@ -800,7 +800,8 @@ function VisitsTab() {
     byDay[day][pg] = (byDay[day][pg]||0) + 1;
   });
 
-  const total = visits.length;
+  const total    = visits.length;
+  const uniqueSessions = new Set(visits.map(v=>v.session_id).filter(Boolean)).size;
   const days  = Object.keys(byDay).sort().reverse().slice(0,14);
 
   return (
@@ -819,7 +820,12 @@ function VisitsTab() {
         <div style={{flex:1,minWidth:"80px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontWeight:"bold",marginBottom:"4px"}}>🌐 Total</div>
           <div style={{fontSize:"22px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>{total}</div>
-          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>todas las páginas</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>cargas de página</div>
+        </div>
+        <div style={{flex:1,minWidth:"80px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
+          <div style={{fontSize:"11px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px"}}>👤 Sesiones</div>
+          <div style={{fontSize:"22px",color:"#A8FF78",fontWeight:"bold"}}>{uniqueSessions}</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>dispositivos únicos</div>
         </div>
       </div>
 
@@ -852,7 +858,7 @@ function VisitsTab() {
           </tbody>
         </table>
       </div>
-      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"12px",textAlign:"center"}}>Nota: Visitas aproximadas — sin login no se distinguen usuarios únicos. Una visita = una carga de página.</div>
+      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"12px",textAlign:"center"}}>Una sesión = un dispositivo/navegador distinto (via localStorage). Una carga de página = una visita.</div>
     </div>
   );
 }
@@ -1592,10 +1598,16 @@ export default function App() {
 
   useEffect(()=>{
     loadPlayers();
-    // Track page visit
+    // Track page visit with session_id (unique per browser session)
+    let sid = localStorage.getItem("aor_sid");
+    if (!sid) {
+      sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("aor_sid", sid);
+    }
     supabase.from("page_visits").insert({
       page: window.location.pathname,
       visited_at: new Date().toISOString(),
+      session_id: sid,
     }).then(()=>{});
   },[]);
 
