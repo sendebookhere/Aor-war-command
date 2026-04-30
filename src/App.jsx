@@ -114,6 +114,13 @@ function Stepper({value, onChange, color="#FFD700"}) {
   );
 }
 
+function computedFlags(p) {
+  const battles  = (p.pt_batallas_ganadas||0) + (p.pt_batallas_perdidas||0);
+  const defenses = Math.ceil((p.pt_defensas||0)/2);
+  const bandido  = (p.pt_bandido_post||0) + (p.pt_bandido_pre||0);
+  return Math.max(0, 10 - (battles * 2 + defenses + bandido));
+}
+
 function FlagBar({count}) {
   return (
     <div style={{display:"flex",gap:"2px",alignItems:"center"}}>
