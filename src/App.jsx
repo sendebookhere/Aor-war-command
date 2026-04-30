@@ -909,10 +909,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
                             <button onClick={()=>{
                               const newVal = !p.whatsapp;
-                              const pts = newVal ? (confirm('¿Es fundador del grupo?
-
-Aceptar = 50 pts (fundador)
-Cancelar = 25 pts (nuevo miembro)') ? 50 : 25) : 0;
+                              const pts = newVal ? (confirm('Fundador del grupo? OK=50pts / Cancelar=25pts') ? 50 : 25) : 0;
                               update(p.id,{whatsapp:newVal, pt_whatsapp: pts});
                             }} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:p.whatsapp?"rgba(37,211,102,0.15)":"rgba(255,107,107,0.15)",border:"1px solid "+(p.whatsapp?"rgba(37,211,102,0.3)":"rgba(255,107,107,0.3)"),color:p.whatsapp?"#25D366":"#FF6B6B",cursor:"pointer"}}>
                               {p.whatsapp?"✓ En grupo":"✕ Sin grupo"}
