@@ -82,21 +82,57 @@ function PlayerProfile({ player, onBack }) {
     });
   }, [player.id]);
 
+  async function revertStats() {
+    if (statsList.length < 2) { setStatsMsg("No hay versión anterior disponible"); return; }
+    const prev = statsList[1]; // second entry is previous
+    if (!confirm("¿Revertir stats al estado anterior? BP: "+prev.bp+" / Poder: "+prev.level)) return;
+    await supabase.from("players").update({bp: prev.bp, level: prev.level}).eq("id", player.id);
+    // Log the revert
+    await supabase.from("player_stats").insert({
+      player_id: player.id, player_name: player.name,
+      bp: prev.bp, level: prev.level, updated_by: "revert",
+    });
+    setStatsMsg("✓ Stats revertidos a BP: "+prev.bp+" / Poder: "+prev.level);
+    setTimeout(()=>setStatsMsg(""),4000);
+  }
+
   async function saveStats() {
     if (!newBp && !newLevel) return;
-    // Weekly limit check using last player_stats entry date
+    // Weekly limit check
     if (statsList.length > 0) {
       const last = new Date(statsList[0].created_at);
-      const now  = new Date();
-      const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+      const diffDays = (new Date() - last) / (1000*60*60*24);
       if (diffDays < 7) {
-        const nextUpdate = new Date(last.getTime() + 7*24*60*60*1000);
-        alert(`Ya actualizaste tus stats. Próxima actualización disponible el ${nextUpdate.toLocaleDateString('es-MX')}.`);
+        const next = new Date(last.getTime() + 7*24*60*60*1000);
+        setStatsMsg("⚠ Próxima actualización: " + next.toLocaleDateString("es-MX"));
         return;
       }
     }
     const hasBp    = newBp.trim() !== "";
     const hasLevel = newLevel.trim() !== "";
+    // 30% tolerance check
+    if (hasBp) {
+      const current = player.bp || 0;
+      const newVal  = parseInt(newBp);
+      if (current > 0) {
+        const pct = Math.abs(newVal - current) / current;
+        if (pct > 0.30) {
+          setStatsMsg("⚠ El nuevo BP ("+newVal.toLocaleString()+") difiere más del 30% del actual ("+current.toLocaleString()+"). Pide al admin que lo ajuste manualmente.");
+          return;
+        }
+      }
+    }
+    if (hasLevel) {
+      const current = player.level || 0;
+      const newVal  = parseInt(newLevel);
+      if (current > 0) {
+        const pct = Math.abs(newVal - current) / current;
+        if (pct > 0.30) {
+          setStatsMsg("⚠ El nuevo Poder difiere más del 30% del actual. Pide al admin que lo ajuste manualmente.");
+          return;
+        }
+      }
+    }
     const pts = hasBp && hasLevel ? 5 : 2;
     const updates = { pt_stats: (player.pt_stats||0) + pts };
     if (hasBp)    updates.bp    = parseInt(newBp);
@@ -186,10 +222,34 @@ function PlayerProfile({ player, onBack }) {
           )}
         </div>
 
-        {/* Stats info only - update moved to /registro for security */}
-        <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px"}}>
-          <div style={{fontSize:"11px",color:"rgba(255,215,0,0.6)",marginBottom:"4px"}}>📊 Para actualizar tus stats y ganar puntos</div>
-          <a href="/registro" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",display:"inline-block",padding:"5px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"6px",marginTop:"2px"}}>→ Ir a la página de registro</a>
+        {/* Update stats with 30% tolerance */}
+        <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
+          <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"6px",fontWeight:"bold"}}>📊 Actualizar mis stats</div>
+          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"7px 10px",marginBottom:"8px",fontSize:"10px"}}>
+            <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
+            <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
+            <div style={{color:"#FFD700",marginBottom:"2px"}}>💀 BP + ⚔ Poder juntos → <strong>+5 pts</strong> (bonus extra)</div>
+            <div style={{color:"rgba(255,107,107,0.7)",fontSize:"9px"}}>⚠ Máx ±30% de variación respecto al valor actual</div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (actual: {(player.bp||0).toLocaleString()})</div>
+              <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={(player.bp||0).toString()} type="number"
+                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (actual: {((player.level||0)/1000).toFixed(1)}k)</div>
+              <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={(player.level||0).toString()} type="number"
+                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+            <button onClick={saveStats} disabled={!newBp && !newLevel} style={{flex:1,padding:"8px",background:(newBp||newLevel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel)?"pointer":"default",fontWeight:"bold"}}>
+              💾 Guardar{(newBp||newLevel)?" (+"+(newBp&&newLevel?5:2)+" pts)":""}
+            </button>
+            {(newBp||newLevel) && <button onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
+          </div>
+          {statsMsg && <div style={{fontSize:"11px",color:statsMsg.includes("⚠")||statsMsg.includes("Error")?"#FF6B6B":"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>{statsMsg}</div>}
         </div>
 
         {/* Current war breakdown */}
@@ -206,15 +266,20 @@ function PlayerProfile({ player, onBack }) {
           }
         </div>
 
-        {/* Stats evolution */}
+        {/* Stats evolution with revert */}
         {statsList.length > 0 && (
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-            <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📈 Evolución de stats</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
+              <div style={{color:"#40E0FF",fontSize:"13px",fontFamily:"serif"}}>📈 Evolución de stats</div>
+              {statsList.length >= 2 && (
+                <button onClick={revertStats} style={{padding:"3px 10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:"6px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer"}}>↩ Revertir</button>
+              )}
+            </div>
             {statsList.map((s, i) => (
               <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",marginBottom:"3px",background:"rgba(255,255,255,0.02)",borderRadius:"4px",borderLeft:"2px solid "+(s.updated_by==="jugador"?"#A8FF78":"#40E0FF")}}>
                 <div>
                   <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>💀 {(s.bp||0).toLocaleString()} BP · ⚔ {((s.level||0)/1000).toFixed(1)}k</span>
-                  <span style={{fontSize:"9px",color:s.updated_by==="jugador"?"#A8FF78":"#40E0FF",marginLeft:"8px"}}>{s.updated_by==="jugador"?"por jugador":"por admin"}</span>
+                  <span style={{fontSize:"9px",color:s.updated_by==="jugador"?"#A8FF78":"#40E0FF",marginLeft:"8px"}}>{s.updated_by==="jugador"?"por jugador":s.updated_by==="revert"?"↩ revertido":"por admin"}</span>
                 </div>
                 <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{new Date(s.created_at).toLocaleDateString()}</span>
               </div>
