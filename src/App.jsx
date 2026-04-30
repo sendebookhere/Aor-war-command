@@ -146,6 +146,42 @@ function getWarWeek() {
   return `${year}-W${week}`;
 }
 
+
+function getEarlyRegistrationBonus(availability) {
+  // Bonus for registering early: before Wednesday 23:59 Spain time (CEST = UTC+2)
+  const now   = new Date();
+  const spain = new Date(now.getTime() + 2*60*60*1000); // Spain CEST = UTC+2
+  const day   = spain.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  const hour  = spain.getHours();
+  const min   = spain.getMinutes();
+  // Early window: Mon(1), Tue(2), or Wed(3) before 23:59 Spain
+  const isEarly = (day === 1 || day === 2 || (day === 3 && (hour < 23 || (hour === 23 && min <= 59))));
+  if (!isEarly) return 0;
+  if (availability === "siempre")      return 5;
+  if (availability === "intermitente") return 2;
+  if (availability === "solo_una")     return 2;
+  return 0;
+}
+
+function earlyBonusTimeLeft() {
+  // Returns human-readable time left in early window
+  const now   = new Date();
+  const spain = new Date(now.getTime() + 2*60*60*1000);
+  const day   = spain.getDay();
+  const hour  = spain.getHours();
+  // Wednesday 23:59 Spain = day 3, 23:59
+  if (day > 3 || (day === 3 && hour >= 24)) return null;
+  if (day === 0 || day > 5) return null; // Sun/Sat
+  const wedEnd = new Date(spain);
+  wedEnd.setDate(spain.getDate() + (3 - day));
+  wedEnd.setHours(23, 59, 0, 0);
+  const diff = wedEnd - spain;
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h >= 24) { const d = Math.floor(h/24); return `${d}d ${h%24}h`; }
+  return `${h}h ${m}m`;
+}
 function isRegistrationOpen() {
   // Open Mon(1)–Thu(4) all day + Fri(5) before 7am Ecuador (UTC-5)
   // Closed: Fri 7am+ (war starts), Sat(6), Sun(0)
@@ -267,6 +303,7 @@ function RegistrationForm({onRegistered}) {
       availability: avail, timezone: tz, hour_mx: hour, task_period1: task1+(task2?"→"+task2:""),
       registered_form: true, registered_week: currentWeek,
       pt_registro: av.pts, pt_disponibilidad_declarada: 0,
+      pt_registro_temprano: getEarlyRegistrationBonus(avail),
       ...(statsPts > 0 ? {pt_stats: (player.pt_stats||0) + statsPts, stats_updated_week: getWarWeek()} : {}),
     };
     if (hasBp)    updates.bp    = parseInt(newBp);
@@ -381,6 +418,13 @@ function RegistrationForm({onRegistered}) {
 
         {/* Availability with inline tasks */}
         <div style={{marginBottom:"16px"}}>
+          {earlyBonusTimeLeft() && (
+            <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"8px",padding:"8px 12px",marginBottom:"8px",fontSize:"10px"}}>
+              ⭐ <strong style={{color:"#FFD700"}}>¡Bonus por registro anticipado!</strong>
+              <span style={{color:"rgba(255,255,255,0.5)"}}> Quedan <strong style={{color:"#FFD700"}}>{earlyBonusTimeLeft()}</strong> para el cierre anticipado (mié 23:59 España)</span>
+              <div style={{marginTop:"4px",color:"rgba(255,255,255,0.5)"}}>Conquistador <strong style={{color:"#A8FF78"}}>+5 pts</strong> · Refuerzos <strong style={{color:"#FFD700"}}>+2 pts</strong> · Reserva <strong style={{color:"#FFD700"}}>+2 pts</strong></div>
+            </div>
+          )}
           <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>DISPONIBILIDAD</label>
           <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
             {Object.entries(AVAILABILITY).filter(([k])=>k!=="pendiente").map(([key,av])=>(
@@ -678,12 +722,137 @@ function MensajesTab({players}) {
         </div>
       )}
 
-      <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>🔥 Mensajes de reclutamiento externo</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Para el chat general del juego — atraer nuevos jugadores. Sin link de la app (uso solo para miembros)</div>
+      <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>🔥 Reclutamiento externo — Español</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Chat general del juego · Sin link de la app · Máx 250 caracteres</div>
       <GameCard title="📣 Reclutamiento general [ES]" initialValue={"<color=#FFD700>━━ [AOR] RECLUTA ━━</color>\n¿Buscas clan activo y organizado?\n<color=#40E0FF>⚔ Batallas · 🏰 Castillos · 🌟 Rangos</color>\n<color=#A8FF78>Antigua Orden [AOR]</color> — únete."}/>
-      <GameCard title="📣 Reclutamiento corto" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>¡Únete a Antigua Orden!</color>\nClan activo · guerras semanales.\n<color=#A8FF78>Escríbenos para ingresar.</color>"}/>
-      <GameCard title="📣 Reclutamiento estilo élite" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Clan de élite · [AOR]</color>\nBuscamos guerreros comprometidos.\n<color=#A8FF78>¿Listo para la batalla?</color>"}/>
-      <GameCard title="📣 Reclutamiento post-victoria" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nSomos <color=#40E0FF>Antigua Orden</color> y buscamos\nnuevos guerreros. <color=#FFD700>¡Únete al clan!</color>"}/>
+      <GameCard title="📣 Reclutamiento corto [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>¡Únete a Antigua Orden!</color>\nClan activo · guerras semanales.\n<color=#A8FF78>Escríbenos para ingresar.</color>"}/>
+      <GameCard title="📣 Élite [ES]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Clan de élite · [AOR]</color>\nBuscamos guerreros comprometidos.\n<color=#A8FF78>¿Listo para la batalla?</color>"}/>
+      <GameCard title="📣 Post-victoria [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nSomos <color=#40E0FF>Antigua Orden</color> y buscamos\nnuevos guerreros. <color=#FFD700>¡Únete al clan!</color>"}/>
+
+      <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>🔥 Recruitment — English</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>For general game chat · No app link · Max 250 chars</div>
+      <GameCard title="📣 General recruitment [EN]" initialValue={"<color=#FFD700>━━ [AOR] RECRUIT ━━</color>\nLooking for an active organized clan?\n<color=#40E0FF>⚔ Wars · 🏰 Castles · 🌟 Ranks</color>\n<color=#A8FF78>Antigua Orden [AOR]</color> — join us."}/>
+      <GameCard title="📣 Short recruitment [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Join Antigua Orden!</color>\nActive clan · weekly wars.\n<color=#A8FF78>Message us to join.</color>"}/>
+      <GameCard title="📣 Elite style [EN]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Elite clan · [AOR]</color>\nSeeking committed warriors.\n<color=#A8FF78>Ready for battle?</color>"}/>
+      <GameCard title="📣 Post-victory [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>WAR WON!</color> 🏆\nWe are <color=#40E0FF>Antigua Orden</color>. Looking\nfor new warriors. <color=#FFD700>Join the clan!</color>"}/>
+
+      <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>📨 Mensajes múltiples (hasta 4 seguidos)</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Pega uno por uno con pausa breve entre cada uno para que no se fusionen en un solo globo · Máx 250 c/u</div>
+
+      <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+        <div style={{fontSize:"12px",color:"#FF9F43",fontWeight:"bold",marginBottom:"10px"}}>🇪🇸 Reclutamiento 4 partes (ES)</div>
+        <GameCard title="Parte 1/4 [ES]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Somos [AOR], clan organizado</color>\ncon guerras semanales y sistema\nde rangos y puntos."}/>
+        <GameCard title="Parte 2/4 [ES]" initialValue={"<color=#FFD700>[AOR]</color> Buscamos jugadores activos\n<color=#A8FF78>comprometidos con la guerra.</color>\nCada batalla cuenta para\ntu rango en el clan."}/>
+        <GameCard title="Parte 3/4 [ES]" initialValue={"<color=#40E0FF>¿Qué ofrecemos?</color>\n<color=#FFD700>⚔ Estrategia coordinada</color>\n<color=#A8FF78>🏰 Defensa organizada</color>\n<color=#FF9F43>🌟 Sistema de rangos</color>"}/>
+        <GameCard title="Parte 4/4 [ES]" initialValue={"<color=#A8FF78>¿Listo para unirte?</color>\n<color=#FFD700>Escríbenos o únete directamente.</color>\n<color=#40E0FF>Antigua Orden [AOR]</color>\nTe esperamos en batalla."}/>
+      </div>
+
+      <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+        <div style={{fontSize:"12px",color:"#FF9F43",fontWeight:"bold",marginBottom:"10px"}}>🇬🇧 Recruitment 4 parts (EN)</div>
+        <GameCard title="Part 1/4 [EN]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>We are [AOR], an organized clan</color>\nwith weekly wars and a\nranking and points system."}/>
+        <GameCard title="Part 2/4 [EN]" initialValue={"<color=#FFD700>[AOR]</color> We seek active players\n<color=#A8FF78>committed to war.</color>\nEvery battle counts toward\nyour rank in the clan."}/>
+        <GameCard title="Part 3/4 [EN]" initialValue={"<color=#40E0FF>What we offer:</color>\n<color=#FFD700>⚔ Coordinated strategy</color>\n<color=#A8FF78>🏰 Organized defense</color>\n<color=#FF9F43>🌟 Rank system</color>"}/>
+        <GameCard title="Part 4/4 [EN]" initialValue={"<color=#A8FF78>Ready to join?</color>\n<color=#FFD700>Message us or join directly.</color>\n<color=#40E0FF>Antigua Orden [AOR]</color>\nSee you on the battlefield."}/>
+      </div>
+    </div>
+  );
+}
+
+
+// ── Visits Tab ──────────────────────────────────────────────────────────────
+function VisitsTab() {
+  const [visits, setVisits]   = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from("page_visits")
+      .select("*")
+      .order("visited_at", {ascending: false})
+      .limit(500)
+      .then(({data}) => {
+        setVisits(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div style={{padding:"20px",color:"rgba(255,255,255,0.4)"}}>Cargando visitas...</div>;
+
+  if (visits.length === 0) return (
+    <div style={{padding:"20px",fontSize:"12px",color:"rgba(255,255,255,0.4)",textAlign:"center"}}>
+      <div style={{marginBottom:"8px"}}>Sin datos todavía.</div>
+      <div style={{fontSize:"10px"}}>Las visitas se registran automáticamente cuando alguien abre cualquier página de la app.</div>
+    </div>
+  );
+
+  // Group by page
+  const pages = ["/registro","/reporte","/puntos","/"];
+  const pageLabels = {"/registro":"📋 Registro","/reporte":"📊 Reporte","/puntos":"❓ Puntos","/":"⚙ Admin"};
+  const pageColors = {"/registro":"#A8FF78","/reporte":"#40E0FF","/puntos":"#FFD700","/":"#FF9F43"};
+
+  // Total by page
+  const byPage = {};
+  const byDay  = {};
+  visits.forEach(v => {
+    const pg  = v.page || "/";
+    const day = v.visited_at ? v.visited_at.slice(0,10) : "?";
+    byPage[pg] = (byPage[pg]||0) + 1;
+    if (!byDay[day]) byDay[day] = {};
+    byDay[day][pg] = (byDay[day][pg]||0) + 1;
+  });
+
+  const total = visits.length;
+  const days  = Object.keys(byDay).sort().reverse().slice(0,14);
+
+  return (
+    <div style={{padding:"0 16px"}}>
+      <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>👁 Visitas a la app</div>
+
+      {/* Totals by page */}
+      <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"16px"}}>
+        {pages.map(pg => (
+          <div key={pg} style={{flex:1,minWidth:"80px",background:(pageColors[pg]||"#888")+"0A",border:"1px solid "+(pageColors[pg]||"#888")+"33",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
+            <div style={{fontSize:"11px",color:pageColors[pg]||"#888",fontWeight:"bold",marginBottom:"4px"}}>{pageLabels[pg]||pg}</div>
+            <div style={{fontSize:"22px",color:pageColors[pg]||"#888",fontWeight:"bold"}}>{byPage[pg]||0}</div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>visitas totales</div>
+          </div>
+        ))}
+        <div style={{flex:1,minWidth:"80px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontWeight:"bold",marginBottom:"4px"}}>🌐 Total</div>
+          <div style={{fontSize:"22px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>{total}</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>todas las páginas</div>
+        </div>
+      </div>
+
+      {/* By day table */}
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Últimas 2 semanas por día</div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:"11px"}}>
+          <thead>
+            <tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+              <th style={{textAlign:"left",color:"rgba(255,255,255,0.4)",padding:"4px 8px",fontWeight:"normal"}}>Fecha</th>
+              {pages.map(pg=><th key={pg} style={{textAlign:"center",color:pageColors[pg]||"#888",padding:"4px 8px",fontWeight:"normal"}}>{pageLabels[pg]}</th>)}
+              <th style={{textAlign:"center",color:"rgba(255,255,255,0.4)",padding:"4px 8px",fontWeight:"normal"}}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {days.map(day => {
+              const dayTotal = Object.values(byDay[day]).reduce((s,v)=>s+v,0);
+              return (
+                <tr key={day} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <td style={{color:"rgba(255,255,255,0.5)",padding:"5px 8px"}}>{day}</td>
+                  {pages.map(pg=>(
+                    <td key={pg} style={{textAlign:"center",color:byDay[day][pg]?(pageColors[pg]||"#888"):"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:byDay[day][pg]?"bold":"normal"}}>
+                      {byDay[day][pg]||"—"}
+                    </td>
+                  ))}
+                  <td style={{textAlign:"center",color:"rgba(255,255,255,0.5)",padding:"5px 8px",fontWeight:"bold"}}>{dayTotal}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"12px",textAlign:"center"}}>Nota: Visitas aproximadas — sin login no se distinguen usuarios únicos. Una visita = una carga de página.</div>
     </div>
   );
 }
@@ -734,7 +903,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     setTimeout(()=>setCopiedMsg(false), 2000);
   }
 
-  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"},{id:"links",label:"🔗 Links"}];
+  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"},{id:"links",label:"🔗 Links"},{id:"visitas",label:"👁 Visitas"}];
 
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
@@ -1311,6 +1480,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
         {/* MENSAJES TAB */}
         {activeTab==="mensajes" && <MensajesTab players={players}/>}
+        {activeTab==="visitas" && <VisitsTab/>}
         {activeTab==="links" && (
           <div style={{padding:"0 16px"}}>
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"16px"}}>🔗 Links de la app</div>
@@ -1420,7 +1590,14 @@ export default function App() {
   const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
   const path = window.location.pathname;
 
-  useEffect(()=>{ loadPlayers(); },[]);
+  useEffect(()=>{
+    loadPlayers();
+    // Track page visit
+    supabase.from("page_visits").insert({
+      page: window.location.pathname,
+      visited_at: new Date().toISOString(),
+    }).then(()=>{});
+  },[]);
 
   async function loadPlayers() {
     setLoading(true);
