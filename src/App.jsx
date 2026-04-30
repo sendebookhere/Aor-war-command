@@ -540,7 +540,7 @@ Pide el enlace a un oficial.`,
   const noWaMsgs = noWaPlayers.map(p=>({
     key:"nowa_"+p.id,
     name:p.name,
-    default:`<color=#FFD700>[AOR] ${p.name}</color> unete al whatsapp del clan escribiendole a <color=#A8FF78>Punk'z: +52 771 140 4402</color>. Confirma asistencia: https://aor-war-command.vercel.app/registro`
+    default:`<color=#FFD700>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma en <color=#FFD700>aor-war-command.vercel.app/registro</color>`
   }));
   const [nowaMsgs, setNowaMsgs] = useState(
     Object.fromEntries(noWaMsgs.map(m=>[m.key,m.default]))
