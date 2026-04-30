@@ -47,6 +47,9 @@ function PlayerProfile({player, onBack}) {
   const [history, setHistory] = useState([]);
   const [stats, setStats]     = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newBp, setNewBp]       = useState("");
+  const [newLevel, setNewLevel] = useState("");
+  const [statsMsg, setStatsMsg] = useState("");
 
   async function updateStats() {
     if (!newBp && !newLevel) return;
