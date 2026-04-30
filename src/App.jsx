@@ -1345,6 +1345,74 @@ function AdminPanel({players, update, loading, saving, reload}) {
 }
 
 // ── Main App ───────────────────────────────────────────────────────────────
+
+// ── Admin Auth ──────────────────────────────────────────────────────────────
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "AOR2026";
+
+function AdminAuth({onAuth}) {
+  const [pin, setPin]     = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  function tryPin() {
+    if (pin === ADMIN_PIN) {
+      sessionStorage.setItem("aor_auth", "1");
+      onAuth();
+    } else {
+      setError(true);
+      setShake(true);
+      setPin("");
+      setTimeout(()=>setShake(false), 500);
+    }
+  }
+
+  return (
+    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif"}}>
+      <div style={{width:"100%",maxWidth:"340px",padding:"32px 24px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"16px",textAlign:"center"}}>
+        <div style={{fontSize:"36px",marginBottom:"8px"}}>⚔</div>
+        <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700",marginBottom:"4px"}}>[AOR] Antigua Orden</div>
+        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)",marginBottom:"28px"}}>Panel de administración — acceso restringido</div>
+        <div style={{
+          animation: shake ? "shake 0.4s ease" : "none",
+        }}>
+          <input
+            value={pin}
+            onChange={e=>{ setPin(e.target.value); setError(false); }}
+            onKeyDown={e=>e.key==="Enter"&&tryPin()}
+            type="password"
+            placeholder="PIN de acceso"
+            autoFocus
+            style={{
+              width:"100%", boxSizing:"border-box",
+              background:"rgba(255,255,255,0.05)",
+              border:"1px solid "+(error?"rgba(255,107,107,0.6)":"rgba(255,255,255,0.12)"),
+              borderRadius:"8px", color:"#fff", padding:"12px 16px",
+              fontSize:"18px", letterSpacing:"0.3em", textAlign:"center",
+              outline:"none", marginBottom:"8px"
+            }}
+          />
+          {error && <div style={{fontSize:"11px",color:"#FF6B6B",marginBottom:"8px"}}>PIN incorrecto</div>}
+        </div>
+        <button onClick={tryPin} style={{
+          width:"100%", padding:"12px",
+          background:"rgba(255,215,0,0.15)",
+          border:"1px solid rgba(255,215,0,0.3)",
+          borderRadius:"8px", color:"#FFD700",
+          fontSize:"13px", cursor:"pointer", fontWeight:"bold", marginBottom:"20px"
+        }}>
+          Entrar
+        </button>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"16px",display:"flex",gap:"12px",justifyContent:"center"}}>
+          <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none"}}>📋 Registro</a>
+          <a href="/reporte"  style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none"}}>📊 Reporte</a>
+          <a href="/puntos"   style={{fontSize:"11px",color:"#FFD700",textDecoration:"none"}}>❓ Puntos</a>
+        </div>
+      </div>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+}
+
 export default function App() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1376,5 +1444,9 @@ export default function App() {
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
   if (path === "/reporte")  return <PublicReport />;
   if (path === "/puntos")   return <Puntos onBack={()=>window.history.back()}/>;
+
+  // Admin requires PIN
+  const [authed, setAuthed] = useState(!!sessionStorage.getItem("aor_auth"));
+  if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
