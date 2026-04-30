@@ -373,8 +373,9 @@ export default function PublicReport() {
   const totalReg  = players.filter(p => p.registered_form).length;
 
   function copyWeekly() {
-    const sorted = [...players].sort((a,b) => totalPts(b)-totalPts(a));
-    let m = "*[AOR] Reporte Semanal* ⚔\n\n";
+    const waOnly = players.filter(p=>p.whatsapp);
+    const sorted = [...waOnly].sort((a,b) => totalPts(b)-totalPts(a));
+    let m = "*[AOR] Reporte Semanal — Grupo WA* ⚔\n\n";
     sorted.forEach((p, i) => {
       const pts = totalPts(p);
       const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
@@ -386,8 +387,9 @@ export default function PublicReport() {
   }
 
   function copyAccum() {
-    const sorted = [...players].sort((a,b) => (b.pts_acumulados||0)-(a.pts_acumulados||0));
-    let m = "*[AOR] Ranking Acumulado* 🏆\n_Sin bonificaciones de rango_\n\n";
+    const waOnly = players.filter(p=>p.whatsapp);
+    const sorted = [...waOnly].sort((a,b) => (b.pts_acumulados||0)-(a.pts_acumulados||0));
+    let m = "*[AOR] Ranking Acumulado — Grupo WA* 🏆\n_Sin bonificaciones de rango_\n\n";
     sorted.forEach((p, i) => {
       const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
       m += `${medal} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;
@@ -414,10 +416,7 @@ export default function PublicReport() {
             <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>📋 Ir a registro →</a>
             <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Cómo funciona</a>
           </div>
-          <div style={{marginTop:"8px",display:"flex",gap:"8px",justifyContent:"center"}}>
-            <button onClick={copyWeekly} style={{fontSize:"11px",color:"#25D366",padding:"6px 12px",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"20px",background:"rgba(37,211,102,0.08)",cursor:"pointer"}}>📊 Reporte semanal WA</button>
-            <button onClick={copyAccum}  style={{fontSize:"11px",color:"#25D366",padding:"6px 12px",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"20px",background:"rgba(37,211,102,0.08)",cursor:"pointer"}}>📅 Acumulado WA</button>
-          </div>
+
         </div>
 
         {/* Ranks table */}
