@@ -906,6 +906,143 @@ function VisitsTab() {
         ))}
       </div>
 
+      {/* ── Journey analytics ─────────────────────────────────────── */}
+      {(() => {
+        // Reconstruct ordered paths per session using sorted visits
+        const sorted = [...visits].sort((a,b)=>(a.visited_at||"").localeCompare(b.visited_at||""));
+        const sessionPaths = {}; // sid -> [page, page, ...]
+        sorted.forEach(v => {
+          const sid = v.session_id || ("anon_"+(v.visited_at||"").slice(0,10));
+          const pg  = v.page || "/";
+          if (!sessionPaths[sid]) sessionPaths[sid] = [];
+          const last = sessionPaths[sid][sessionPaths[sid].length-1];
+          if (last !== pg) sessionPaths[sid].push(pg); // deduplicate consecutive same-page
+        });
+
+        const paths = Object.values(sessionPaths).filter(p=>p.length>0);
+
+        // Entry points
+        const entries = {};
+        paths.forEach(path => { entries[path[0]] = (entries[path[0]]||0)+1; });
+        const entriesTotal = Object.values(entries).reduce((s,v)=>s+v,0);
+        const entriesSorted = Object.entries(entries).sort((a,b)=>b[1]-a[1]);
+
+        // Exit points
+        const exits = {};
+        paths.forEach(path => { const last=path[path.length-1]; exits[last]=(exits[last]||0)+1; });
+        const exitsSorted = Object.entries(exits).sort((a,b)=>b[1]-a[1]);
+
+        // 2-step transitions
+        const trans2 = {};
+        paths.forEach(path => {
+          for (let i=0; i<path.length-1; i++) {
+            const key = path[i]+" → "+path[i+1];
+            trans2[key] = (trans2[key]||0)+1;
+          }
+        });
+        const trans2Sorted = Object.entries(trans2).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+        // 3-step paths (full journeys)
+        const paths3 = {};
+        paths.filter(p=>p.length>=2).forEach(path => {
+          const key = path.slice(0,3).join(" → ");
+          paths3[key] = (paths3[key]||0)+1;
+        });
+        const paths3Sorted = Object.entries(paths3).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+        const pLabel = pg => pageLabels[pg] || pg;
+        const pColor = pg => pageColors[pg] || "#888";
+        const pct = (v,t) => t>0 ? Math.round(v/t*100) : 0;
+
+        return (
+          <>
+            {/* Entry points */}
+            <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px",marginTop:"4px"}}>
+              🚪 Punto de entrada — ¿por dónde llegan?
+            </div>
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
+              {entriesSorted.map(([pg,n])=>(
+                <div key={pg} style={{marginBottom:"8px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:"11px",marginBottom:"3px"}}>
+                    <span style={{color:pColor(pg),fontWeight:"bold"}}>{pLabel(pg)}</span>
+                    <span style={{color:"rgba(255,255,255,0.5)"}}>{n} sesiones · <strong style={{color:pColor(pg)}}>{pct(n,entriesTotal)}%</strong></span>
+                  </div>
+                  <div style={{height:"6px",background:"rgba(255,255,255,0.06)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",width:pct(n,entriesTotal)+"%",background:pColor(pg),borderRadius:"3px",transition:"width 0.4s"}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Common transitions */}
+            {trans2Sorted.length > 0 && (
+              <>
+                <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>
+                  🔀 Transiciones más comunes — de dónde a dónde van
+                </div>
+                <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
+                  {trans2Sorted.map(([key,n])=>{
+                    const [from,to] = key.split(" → ");
+                    return (
+                      <div key={key} style={{display:"flex",alignItems:"center",gap:"6px",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                        <span style={{fontSize:"11px",color:pColor(from),fontWeight:"bold",minWidth:"80px"}}>{pLabel(from)}</span>
+                        <span style={{fontSize:"12px",color:"rgba(255,255,255,0.2)"}}>→</span>
+                        <span style={{fontSize:"11px",color:pColor(to),fontWeight:"bold",flex:1}}>{pLabel(to)}</span>
+                        <span style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.05)",padding:"2px 8px",borderRadius:"10px",flexShrink:0}}>{n}x</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Full journeys */}
+            {paths3Sorted.length > 0 && (
+              <>
+                <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>
+                  🗺 Recorridos más frecuentes (top 6)
+                </div>
+                <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
+                  {paths3Sorted.map(([key,n],i)=>{
+                    const steps = key.split(" → ");
+                    return (
+                      <div key={key} style={{display:"flex",alignItems:"center",gap:"4px",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",flexWrap:"wrap"}}>
+                        <span style={{fontSize:"10px",color:"rgba(255,255,255,0.2)",minWidth:"16px"}}>{i+1}.</span>
+                        {steps.map((pg,j)=>(
+                          <span key={j} style={{display:"flex",alignItems:"center",gap:"4px"}}>
+                            <span style={{fontSize:"10px",color:pColor(pg),background:pColor(pg)+"15",border:"1px solid "+pColor(pg)+"30",padding:"2px 7px",borderRadius:"10px",fontWeight:"bold"}}>{pLabel(pg)}</span>
+                            {j<steps.length-1 && <span style={{fontSize:"10px",color:"rgba(255,255,255,0.2)"}}>→</span>}
+                          </span>
+                        ))}
+                        <span style={{marginLeft:"auto",fontSize:"11px",color:"rgba(255,255,255,0.4)",flexShrink:0}}>{n}x</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Exit points */}
+            <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>
+              🏁 Página de salida — dónde terminan la sesión
+            </div>
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
+              {exitsSorted.map(([pg,n])=>(
+                <div key={pg} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <span style={{fontSize:"11px",color:pColor(pg),fontWeight:"bold"}}>{pLabel(pg)}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                    <div style={{width:"60px",height:"4px",background:"rgba(255,255,255,0.06)",borderRadius:"2px",overflow:"hidden"}}>
+                      <div style={{height:"100%",width:pct(n,paths.length)+"%",background:pColor(pg),borderRadius:"2px"}}/>
+                    </div>
+                    <span style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",minWidth:"30px",textAlign:"right"}}>{n}x</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
+
       {/* Daily table: visits + sessions per day */}
       <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Últimas 2 semanas</div>
       <div style={{overflowX:"auto"}}>
