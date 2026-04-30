@@ -117,12 +117,10 @@ export default function Comunicaciones() {
           <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(64,224,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
           <div style={{fontSize:"22px",color:"#FFD700",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)"}}>Mensajes preaprobados por el comando. Cópialos y pégalos en el chat general del juego.</div>
-          <div style={{display:"flex",gap:"8px",marginTop:"10px"}}>
-            <a href="/registro" style={{fontSize:"10px",color:"#A8FF78",textDecoration:"none"}}>Registro</a>
-            <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
-            <a href="/reporte" style={{fontSize:"10px",color:"#40E0FF",textDecoration:"none"}}>Ranking</a>
-            <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
-            <a href="/puntos" style={{fontSize:"10px",color:"#FFD700",textDecoration:"none"}}>Puntos</a>
+          <div style={{display:"flex",gap:"8px",marginTop:"12px",flexWrap:"wrap"}}>
+            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px",background:"rgba(168,255,120,0.05)"}}>Registro</a>
+            <a href="/reporte"  style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px",background:"rgba(64,224,255,0.05)"}}>Ranking</a>
+            <a href="/puntos"   style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px",background:"rgba(255,215,0,0.05)"}}>Puntos</a>
           </div>
         </div>
       </div>
