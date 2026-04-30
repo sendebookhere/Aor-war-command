@@ -131,6 +131,39 @@ export default function Puntos({onBack}) {
           ))}
         </div>
 
+
+        {/* PROPAGANDA */}
+        <div style={{background:"rgba(200,162,255,0.06)",border:"2px solid rgba(200,162,255,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#C8A2FF",fontWeight:"bold",marginBottom:"8px"}}>📡 PROPAGANDA DE GUERRA — Difusión del Clan</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
+            Los miembros del clan pueden difundir mensajes preaprobados en el chat general del juego para atraer nuevos guerreros.
+            Accede en <strong style={{color:"#C8A2FF"}}>aor-war-command.vercel.app/propaganda</strong>
+          </div>
+          {[
+            {label:"Publicar un mensaje aprobado en el chat",pts:"+Reputación",color:"#C8A2FF",desc:"Hasta el límite diario establecido por el comando"},
+            {label:"Límite diario de publicaciones",pts:"Variable",color:"#C8A2FF",desc:"El comando ajusta el límite desde el panel de control"},
+            {label:"Publicación falsa detectada en auditoría",pts:"-50",color:"#FF6B6B",desc:"Confirmar envío sin haber pegado el mensaje en el chat"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
+              <div style={{flex:1}}>
+                <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
+                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div>
+              </div>
+              <span style={{fontSize:"15px",color:r.pts.startsWith("-")?"#FF6B6B":r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
+            </div>
+          ))}
+          <div style={{marginTop:"10px",padding:"8px 10px",background:"rgba(200,162,255,0.05)",borderRadius:"6px",borderLeft:"3px solid rgba(200,162,255,0.3)"}}>
+            <div style={{fontSize:"10px",color:"rgba(200,162,255,0.7)",marginBottom:"4px",fontWeight:"bold"}}>¿Cómo funciona?</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",lineHeight:"1.6"}}>
+              1. Entra a <strong style={{color:"#C8A2FF"}}>/propaganda</strong> e identifícate con tu nombre<br/>
+              2. Copia uno de los 4 mensajes preaprobados<br/>
+              3. Pégalo en el chat general del juego<br/>
+              4. Confirma que lo publicaste — queda registrado con timestamp en tu perfil<br/>
+              5. El comando hace auditorías para verificar las publicaciones reales
+            </div>
+          </div>
+        </div>
+
         {/* ASCENSOS */}
         <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>⚜️ ASCENSOS Y DESCENSOS DE RANGO</div>
