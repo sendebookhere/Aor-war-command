@@ -1417,6 +1417,7 @@ export default function App() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
   const path = window.location.pathname;
 
   useEffect(()=>{ loadPlayers(); },[]);
@@ -1444,9 +1445,6 @@ export default function App() {
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
   if (path === "/reporte")  return <PublicReport />;
   if (path === "/puntos")   return <Puntos onBack={()=>window.history.back()}/>;
-
-  // Admin requires PIN
-  const [authed, setAuthed] = useState(!!sessionStorage.getItem("aor_auth"));
   if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }

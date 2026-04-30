@@ -12,7 +12,7 @@ export default function Puntos({onBack}) {
         {/* REGISTRO */}
         <div style={{background:"rgba(64,224,255,0.08)",border:"2px solid #40E0FF",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>📋 PASO 1 — Regístrate antes del jueves</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cierra jueves 12am hora México.</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cierra el <strong style={{color:"#FFD700"}}>viernes 7:00am Ecuador</strong> · 6:00am México · 14:00h España · una hora antes de que comience la guerra.</div>
           {[
             {label:"Conquistador 🟢",pts:"+10",color:"#A8FF78",desc:"Siempre listo — Disponible toda la guerra"},
             {label:"Refuerzos 🟡",pts:"+5",color:"#FFD700",desc:"Intermitente — Al menos una aparición por periodo"},
