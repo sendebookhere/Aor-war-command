@@ -938,16 +938,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     </div>
                     <div style={{marginLeft:"8px",display:"flex",flexDirection:"column",gap:"4px"}}>
                       <Pill color={getRank(totalPts(p)).color}>{totalPts(p)}pts</Pill>
-                      {p.registered_form && (
-                        <button onClick={()=>update(p.id,{
-                          availability:"pendiente", registered_form:false,
-                          registered_week:"",
-                          hour_mx:"No sé", task_period1:"",
-                          pt_registro:0, pt_disponibilidad_declarada:0
-                        })} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer",whiteSpace:"nowrap"}}>
-                          ↺ Resetear
+                      <button onClick={()=>{
+                          if(!confirm("¿Borrar la inscripción de "+p.name+"?")) return;
+                          update(p.id,{
+                            availability:"pendiente", registered_form:false,
+                            registered_week:"",
+                            hour_mx:"No sé", task_period1:"",
+                            pt_registro:0, pt_disponibilidad_declarada:0
+                          });
+                        }} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:p.registered_form?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(p.registered_form?"rgba(255,107,107,0.3)":"rgba(255,255,255,0.08)"),color:p.registered_form?"#FF6B6B":"rgba(255,255,255,0.3)",cursor:"pointer",whiteSpace:"nowrap"}}>
+                          {p.registered_form?"↺ Borrar inscr.":"— Sin inscripción"}
                         </button>
-                      )}
                     </div>
                   </div>
                 </div>
