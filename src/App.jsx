@@ -698,7 +698,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
     setTimeout(()=>setCopiedMsg(false), 2000);
   }
 
-  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"}];
+  const tabs = [{id:"registro",label:"📋 Registro"},{id:"roster",label:"⚔ Roster"},{id:"puntos",label:"🏆 Puntos"},{id:"admin",label:"⚙ Admin"},{id:"mensajes",label:"💬 Mensajes"},{id:"links",label:"🔗 Links"}];
 
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
