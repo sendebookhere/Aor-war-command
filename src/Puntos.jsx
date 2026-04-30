@@ -4,7 +4,13 @@ export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
-        <a href="/registro" style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0,textDecoration:"none",display:"inline-block"}}>← Volver</a>
+        <div style={{display:"flex",gap:"12px",alignItems:"center",marginBottom:"16px",flexWrap:"wrap"}}>
+          <a href="/registro" style={{color:"#40E0FF",cursor:"pointer",fontSize:"12px",textDecoration:"none"}}>← Registro</a>
+          <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
+          <a href="/reporte" style={{color:"#40E0FF",fontSize:"12px",textDecoration:"none"}}>📊 Ranking</a>
+          <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
+          <a href="/propaganda" style={{color:"#C8A2FF",fontSize:"12px",textDecoration:"none"}}>📡 Propaganda</a>
+        </div>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Sistema de Puntos</div>
