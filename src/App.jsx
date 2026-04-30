@@ -330,7 +330,13 @@ function RegistrationForm({onRegistered}) {
                 <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
-            {(newBp||newLevel) && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"4px"}}>+{newBp&&newLevel?5:2} pts por actualizar stats</div>}
+            {(newBp||newLevel) && (
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"6px"}}>
+                <div style={{fontSize:"10px",color:"#A8FF78"}}>+{newBp&&newLevel?5:2} pts — Guardar para confirmar</div>
+                <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>✕ Limpiar</button>
+              </div>
+            )}
+            {!(newBp||newLevel) && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Completa uno o ambos para ganar puntos extra</div>}
           </div>
         )}
 
@@ -585,11 +591,11 @@ function AdminPanel({players, update, loading, saving, reload}) {
   },[showInactive, activeTab]);
 
   const WAR_PHASES = ["Fase 1: Captura (0-6h)","Fase 2: Defensa (6-24h)","Fase 3: Ataque (24h+)"];
-  const expelled   = players.filter(p=>p.status==="expulsado" || p.flags===-1);
+  const expelled   = players.filter(p=>p.flags===-1);
   const confirmed  = players.filter(p=>p.active&&p.availability!=="pendiente"&&p.availability!=="no_disponible");
   const pending    = players.filter(p=>p.active&&p.availability==="pendiente");
   const notPlaying = players.filter(p=>p.active&&p.availability==="no_disponible");
-  const inactive   = players.filter(p=>!p.active && p.status !== "expulsado" && p.flags !== -1);
+  const inactive   = players.filter(p=>!p.active && (p.flags||0) !== -1);
 
   // Phase-based player filters
   const phaseFilters = [
@@ -681,7 +687,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
   async function removePlayer(id) {
     if (!confirm("¿Expulsar este jugador? Pasará a la lista de expulsados.")) return;
-    await supabase.from("players").update({active: false, status: "expulsado"}).eq("id", id);
+    await supabase.from("players").update({active: false, flags: -1}).eq("id", id);
     await reload();
   }
 
@@ -933,7 +939,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                         <div style={{display:"flex",gap:"10px",fontSize:"11px",color:"rgba(255,255,255,0.4)"}}>
                           <span>⚔ {((p.level||0)/1000).toFixed(1)}k</span>
                           <span>💀 {(p.bp||0).toLocaleString()}</span>
-                          <FlagBar count={p.flags||10}/>
+                          <FlagBar count={computedFlags(p)}/>
                         </div>
                       )}
                     </div>
@@ -1126,15 +1132,6 @@ function AdminPanel({players, update, loading, saving, reload}) {
             </div>
             {showInactive && (
               <div>
-                {inactive.map(p=>(
-                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
-                    <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{p.name} — {p.last_seen}</div>
-                    <div style={{display:"flex",gap:"6px"}}>
-                      <button onClick={()=>update(p.id,{active:true})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Reactivar</button>
-                      <button onClick={()=>removePlayer(p.id)} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>Expulsar</button>
-                    </div>
-                  </div>
-                ))}
                 {inactive.length === 0 && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>No hay jugadores inactivos.</div>}
                 {inactive.map(p=>(
                   <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px"}}>
@@ -1154,6 +1151,20 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 ))}
               </div>
             )}
+
+            {/* Expulsados */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
+              <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px"}}>🚫 Expulsados ({expelled.length})</div>
+            </div>
+            {expelled.length === 0
+              ? <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>Sin expulsados.</div>
+              : expelled.map(p=>(
+                <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",marginBottom:"4px",background:"rgba(255,107,107,0.03)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"6px"}}>
+                  <div style={{fontSize:"12px",color:"rgba(255,100,100,0.7)"}}>{p.name}</div>
+                  <button onClick={()=>update(p.id,{active:true,flags:10})} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"10px",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.2)",color:"#A8FF78",cursor:"pointer"}}>Readmitir</button>
+                </div>
+              ))
+            }
           </div>
         )}
 

@@ -200,6 +200,40 @@ function PlayerProfile({player, onBack}) {
             <span style={{fontSize:"18px",color:h.total<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{h.total>0?"+":""}{h.total}</span>
           </div>
         ))}
+
+        {/* REPORTE GRÁFICO */}
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginTop:"16px"}}>
+          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"13px",marginBottom:"12px"}}>📊 Gráfico de desempeño</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Puntos semanales vs acumulados (top 10)</div>
+          {[...players].sort((a,b)=>totalPts(b)-totalPts(a)).slice(0,10).map((p,i)=>{
+            const pts = totalPts(p);
+            const acc = p.pts_acumulados||0;
+            const maxPts = Math.max(...players.map(x=>totalPts(x)),1);
+            const maxAcc = Math.max(...players.map(x=>x.pts_acumulados||0),1);
+            const ptsW = Math.max(0,(pts/maxPts)*100);
+            const accW = Math.max(0,(acc/maxAcc)*100);
+            return (
+              <div key={p.id} style={{marginBottom:"8px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",color:"rgba(255,255,255,0.6)",marginBottom:"3px"}}>
+                  <span>{i+1}. {p.name}</span>
+                  <span style={{color:"#FFD700"}}>{pts>0?"+":""}{pts} sem · {acc.toLocaleString()} acum</span>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
+                  <div style={{height:"6px",background:"rgba(255,255,255,0.06)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",width:ptsW+"%",background:"#40E0FF",borderRadius:"3px",transition:"width 0.3s"}}/>
+                  </div>
+                  <div style={{height:"6px",background:"rgba(255,255,255,0.06)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",width:accW+"%",background:"#FFD700",borderRadius:"3px",transition:"width 0.3s"}}/>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{display:"flex",gap:"16px",marginTop:"8px",fontSize:"10px"}}>
+            <span style={{color:"#40E0FF"}}>━ Puntos semanales</span>
+            <span style={{color:"#FFD700"}}>━ Puntos acumulados</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -328,6 +362,40 @@ export default function PublicReport() {
             </div>
           );
         })}
+
+        {/* REPORTE GRÁFICO */}
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginTop:"16px"}}>
+          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"13px",marginBottom:"12px"}}>📊 Gráfico de desempeño</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Puntos semanales vs acumulados (top 10)</div>
+          {[...players].sort((a,b)=>totalPts(b)-totalPts(a)).slice(0,10).map((p,i)=>{
+            const pts = totalPts(p);
+            const acc = p.pts_acumulados||0;
+            const maxPts = Math.max(...players.map(x=>totalPts(x)),1);
+            const maxAcc = Math.max(...players.map(x=>x.pts_acumulados||0),1);
+            const ptsW = Math.max(0,(pts/maxPts)*100);
+            const accW = Math.max(0,(acc/maxAcc)*100);
+            return (
+              <div key={p.id} style={{marginBottom:"8px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",color:"rgba(255,255,255,0.6)",marginBottom:"3px"}}>
+                  <span>{i+1}. {p.name}</span>
+                  <span style={{color:"#FFD700"}}>{pts>0?"+":""}{pts} sem · {acc.toLocaleString()} acum</span>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
+                  <div style={{height:"6px",background:"rgba(255,255,255,0.06)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",width:ptsW+"%",background:"#40E0FF",borderRadius:"3px",transition:"width 0.3s"}}/>
+                  </div>
+                  <div style={{height:"6px",background:"rgba(255,255,255,0.06)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",width:accW+"%",background:"#FFD700",borderRadius:"3px",transition:"width 0.3s"}}/>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{display:"flex",gap:"16px",marginTop:"8px",fontSize:"10px"}}>
+            <span style={{color:"#40E0FF"}}>━ Puntos semanales</span>
+            <span style={{color:"#FFD700"}}>━ Puntos acumulados</span>
+          </div>
+        </div>
       </div>
     </div>
   );
