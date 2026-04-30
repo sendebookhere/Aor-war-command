@@ -14,9 +14,9 @@ const ROLES = {
 };
 
 const AVAILABILITY = {
-  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢", pts:10, penalty:15 },
-  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡", pts:5,  penalty:10 },
-  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠", pts:2,  penalty:5  },
+  siempre:      { label:"Conquistador",   sub:"Siempre listo", color:"#A8FF78", icon:"🟢", pts:10, penalty:15 },
+  intermitente: { label:"Refuerzos",      sub:"Intermitente",  color:"#FFD700", icon:"🟡", pts:5,  penalty:10 },
+  solo_una:     { label:"Reserva",        sub:"Solo una vez",  color:"#FF9F43", icon:"🟠", pts:2,  penalty:5  },
   no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴", pts:1,  penalty:0  },
   pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪", pts:0,  penalty:0  },
 };
@@ -97,7 +97,7 @@ const RANKS = [
   { label:"Recluta",       color:"#888888", min:0     },
   { label:"⚠ Vigilado",   color:"#FF6B6B", min:-999  },
 ];
-function getRank(pts) { return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-1]; }
+function getRank(pts) { if(pts<0) return RANKS[RANKS.length-1]; return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-2]; }
 
 function Pill({color,children}) {
   return <span style={{fontSize:"9px",padding:"1px 6px",borderRadius:"10px",background:color+"22",color,border:"1px solid "+color+"44"}}>{children}</span>;
@@ -241,6 +241,7 @@ function RegistrationForm({onRegistered}) {
       registered_form: true, registered_week: currentWeek,
       pt_registro: av.pts, pt_disponibilidad_declarada: 0,
       pt_stats: statsPts,
+      stats_updated_week: getWarWeek(),
     };
     if (hasBp)    updates.bp    = parseInt(newBp);
     if (hasLevel) updates.level = parseInt(newLevel);
@@ -338,12 +339,15 @@ function RegistrationForm({onRegistered}) {
               </div>
             </div>
             {(newBp||newLevel) && (
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"6px"}}>
-                <div style={{fontSize:"10px",color:"#A8FF78"}}>+{newBp&&newLevel?5:2} pts — Guardar para confirmar</div>
-                <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer"}}>✕ Limpiar</button>
+              <div style={{marginTop:"8px"}}>
+                <div style={{fontSize:"10px",color:"#A8FF78",marginBottom:"6px"}}>+{newBp&&newLevel?5:2} pts si actualizas {newBp&&newLevel?"ambos":"uno"} — confirmar antes de salir</div>
+                <div style={{display:"flex",gap:"8px"}}>
+                  <button type="button" onClick={saveStats} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>💾 Guardar stats (+{newBp&&newLevel?5:2} pts)</button>
+                  <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>
+                </div>
               </div>
             )}
-            {!(newBp||newLevel) && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Completa uno o ambos para ganar puntos extra</div>}
+            {!(newBp||newLevel) && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Completa uno o ambos para ganar +2 o +5 pts extra</div>}
           </div>
         )}
 
@@ -358,9 +362,9 @@ function RegistrationForm({onRegistered}) {
                     <span>{av.icon} {av.label}</span>
                     <Pill color={av.color}>+{av.pts} pts</Pill>
                   </div>
-                  {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Disponible para todo — ataque, defensa y espionaje. Sin restricciones.</div>}
-                  {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Al menos una aparición por periodo: primeras 24h y segundas 24h</div>}
-                  {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Una sola participación — tarea según tu nivel</div>}
+                  {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#A8FF78"}}>Conquistador</strong> — Disponible para todo: ataque, defensa y espionaje.</div>}
+                  {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FFD700"}}>Refuerzos</strong> — Al menos una aparición por periodo.</div>}
+                  {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FF9F43"}}>Reserva</strong> — Una sola participación según tu nivel.</div>}
                   {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
                 </button>
                 {avail===key && key==="intermitente" && (
@@ -443,17 +447,10 @@ function RegistrationForm({onRegistered}) {
 
 // ── Mensajes Tab Component ─────────────────────────────────────────────────
 function MensajesTab({players}) {
-  const [copied, setCopied] = useState("");
-
-  function copy(key, text) {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(()=>setCopied(""), 2500);
-  }
-
-  const allActive  = players.filter(p=>p.active);
-  const waPlayers  = allActive.filter(p=>p.whatsapp);
+  const allActive   = players.filter(p=>p.active);
+  const waPlayers   = allActive.filter(p=>p.whatsapp);
   const noWaPlayers = allActive.filter(p=>!p.whatsapp);
+  const avMap = {siempre:"Conquistador",intermitente:"Refuerzos",solo_una:"Reserva",no_disponible:"No disponible"};
 
   function totalPtsLocal(p) {
     const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
@@ -466,175 +463,161 @@ function MensajesTab({players}) {
           -(p.pt_bandido_pre||0);
   }
 
-  // WA report: who in WA has registered
-  const waRegistrado = waPlayers.filter(p=>p.registered_form);
+  const waRegistrado   = waPlayers.filter(p=>p.registered_form);
   const waNoRegistrado = waPlayers.filter(p=>!p.registered_form);
-  const avMap = {siempre:"Siempre listo",intermitente:"Intermitente",solo_una:"Solo una vez",no_disponible:"No disponible"};
 
-  const waRegistroMsg = (() => {
+  // Build initial message texts
+  function buildWaRegistro() {
     let m = "*[AOR] Registro de Guerra — Grupo WA*\n\n";
     m += `*Confirmados del grupo (${waRegistrado.length}/${waPlayers.length}):*\n`;
     waRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{ m += `✅ *${p.name}* | ${avMap[p.availability]||""}\n`; });
-    if (waNoRegistrado.length > 0) {
-      m += `\n*Pendientes del grupo (${waNoRegistrado.length}):*\n`;
-      waNoRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{ m += `⏳ *${p.name}*\n`; });
-    }
-    m += `\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
+    if(waNoRegistrado.length>0){ m+=`\n*Pendientes del grupo (${waNoRegistrado.length}):*\n`; waNoRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{m+=`⏳ *${p.name}*\n`;}); }
+    m+=`\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
     return m;
-  })();
-
-  const registroMsg = (() => {
-    const reg = allActive.filter(p=>p.registered_form).sort((a,b)=>b.bp-a.bp);
-    const noReg = allActive.filter(p=>!p.registered_form).sort((a,b)=>b.bp-a.bp);
-    let m = "*[AOR] Registro de Guerra*\n\n";
-    m += `*Confirmados (${reg.length}):*\n`;
-    reg.forEach(p=>{ m += `- *${p.name}* | ${avMap[p.availability]||""}\n`; });
-    m += `\n*Sin registrar (${noReg.length}):*\n`;
-    noReg.forEach(p=>{ m += `- *${p.name}*\n`; });
-    m += `\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
+  }
+  function buildRegistroCompleto() {
+    const reg=allActive.filter(p=>p.registered_form).sort((a,b)=>b.bp-a.bp);
+    const noReg=allActive.filter(p=>!p.registered_form).sort((a,b)=>b.bp-a.bp);
+    let m="*[AOR] Registro de Guerra*\n\n";
+    m+=`*Confirmados (${reg.length}):*\n`;
+    reg.forEach(p=>{m+=`- *${p.name}* | ${avMap[p.availability]||""}\n`;});
+    m+=`\n*Sin registrar (${noReg.length}):*\n`;
+    noReg.forEach(p=>{m+=`- *${p.name}*\n`;});
+    m+=`\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
     return m;
-  })();
-
-  const semanalmsg = (() => {
-    const sorted = [...allActive].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
-    let m = "*[AOR] Reporte Semanal* ⚔\n\n";
-    sorted.forEach((p,i)=>{ const pts=totalPtsLocal(p); m += `${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`; });
-    m += `\n📊 Ranking: https://aor-war-command.vercel.app/reporte`;
+  }
+  function buildSemanal() {
+    const sorted=[...allActive].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
+    let m="*[AOR] Reporte Semanal* ⚔\n\n";
+    sorted.forEach((p,i)=>{const pts=totalPtsLocal(p);m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
+    m+=`\n📊 Ranking: https://aor-war-command.vercel.app/reporte`;
     return m;
-  })();
-
-  const acumuladoMsg = (() => {
-    const sorted = [...allActive].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
-    let m = "*[AOR] Ranking Acumulado* 🏆\n_Sin bonificaciones de rango_\n\n";
-    sorted.forEach((p,i)=>{ m += `${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`; });
-    m += `\n📊 Ver ranking: https://aor-war-command.vercel.app/reporte`;
+  }
+  function buildAcumulado() {
+    const sorted=[...allActive].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
+    let m="*[AOR] Ranking Acumulado* 🏆\n_Sin bonificaciones de rango_\n\n";
+    sorted.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;});
+    m+=`\n📊 Ver ranking: https://aor-war-command.vercel.app/reporte`;
     return m;
-  })();
+  }
 
-  const waGroups = [
-    {key:"waregistro", title:"📱 Registro del grupo de WA", desc:`${waRegistrado.length}/${waPlayers.length} confirmados`, msg:waRegistroMsg},
-    {key:"registro",   title:"📋 Reporte de registro completo", desc:"Todos los miembros activos", msg:registroMsg},
-    {key:"semanal",    title:"📊 Reporte semanal de puntos", desc:"Ranking guerra actual", msg:semanalmsg},
-    {key:"acumulado",  title:"🏆 Ranking acumulado", desc:"Sin bonus de rango", msg:acumuladoMsg},
-    {key:"aviso",      title:"⚠ Aviso de actividad mínima", desc:"Para jugadores bajo 20 pts",
-      msg:"*[AOR] Aviso de actividad* ⚠\n\nEstás por debajo del mínimo semanal (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"},
-    {key:"bienvenida", title:"👋 Bienvenida nuevo miembro", desc:"Para nuevos reclutas",
-      msg:"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 Regístrate: https://aor-war-command.vercel.app/registro\n📊 Ranking: https://aor-war-command.vercel.app/reporte\n❓ Puntos: https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"},
-  ];
+  // Editable messages state
+  const [msgs, setMsgs] = useState({
+    waregistro: buildWaRegistro(),
+    registro:   buildRegistroCompleto(),
+    semanal:    buildSemanal(),
+    acumulado:  buildAcumulado(),
+    aviso: "*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte",
+    bienvenida: "*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!",
+    defensa: `<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>
+<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>
+Todos los defensores al castillo.
+<color=#40E0FF>¡Ahora!</color>`,
+    guerra: `<color=#FFD700>━━ [AOR] GUERRA ━━</color>
+<color=#A8FF78>¡Comienza la batalla!</color>
+Atacar castillos enemigos primero.
+<color=#FF9F43>¡A por la victoria!</color>`,
+    victoria: `<color=#FFD700>━━ [AOR] VICTORIA ━━</color>
+<color=#A8FF78>¡GUERRA GANADA!</color> 🏆
+Gracias a todos los guerreros.
+<color=#40E0FF>[AOR] Antigua Orden</color>`,
+    registrate: `<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!
+<color=#A8FF78>Gana puntos</color> y sube de rango.
+https://aor-war-command.vercel.app/registro`,
+    aviso_pts: `<color=#FF6B6B>[AOR] AVISO</color>
+<color=#FFD700>Sin registro = -20 puntos.</color>
+<color=#A8FF78>Regístrate ya:</color>
+https://aor-war-command.vercel.app/registro`,
+    sumate_wa: `<color=#FFD700>[AOR]</color> Únete al grupo de WhatsApp.
+<color=#A8FF78>+25 puntos de bono.</color>
+Pide el enlace a un oficial.`,
+  });
+  const [copied, setCopied] = useState("");
 
-  // Game chat messages — NO app links (internal only)
-  const gameGroups = [
-    {key:"defensa", title:"🚨 Alerta de defensa urgente",
-      msg:"<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>\n<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>\nTodos los defensores al castillo.\n<color=#40E0FF>¡Ahora!</color>"},
-    {key:"guerra", title:"⚔ Inicio de guerra",
-      msg:"<color=#FFD700>━━ [AOR] GUERRA ━━</color>\n<color=#A8FF78>¡Comienza la batalla!</color>\nFase 1: Atacar castillos enemigos\n<color=#FF9F43>¡A por la victoria!</color>"},
-    {key:"victoria", title:"🏆 Victoria / Celebración",
-      msg:"<color=#FFD700>━━ [AOR] VICTORIA ━━</color>\n<color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nGracias a todos los guerreros.\n<color=#40E0FF>[AOR] Antigua Orden sigue invicta</color>"},
-    {key:"registrate", title:"📋 Llama a registrarse en la app",
-      msg:"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\n<color=#40E0FF>Regístrate aquí:</color>\nhttps://aor-war-command.vercel.app/registro"},
-    {key:"registrate2", title:"📋 Regístrate o pierde puntos",
-      msg:"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate ya:</color>\nhttps://aor-war-command.vercel.app/registro"},
-    {key:"sumate_wa", title:"📱 Invitación al grupo de WhatsApp",
-      msg:"<color=#FFD700>[AOR]</color> Únete al <color=#A8FF78>grupo de WhatsApp</color> del clan.\n<color=#40E0FF>+25 puntos por unirte.</color>\nPide el enlace a un oficial."},
-  ];
+  function setMsg(k,v){ setMsgs(m=>({...m,[k]:v})); }
+  function copy(k){ navigator.clipboard.writeText(msgs[k]); setCopied(k); setTimeout(()=>setCopied(""),2000); }
 
-  // Individual WA invitations for each non-WA member
-  const invNoWa = noWaPlayers.map(p => ({
+  const noWaMsgs = noWaPlayers.map(p=>({
     key:"nowa_"+p.id,
-    title:"📵 Invitar: "+p.name,
-    msg:"<color=#FFD700>[AOR] "+p.name+"</color>\n<color=#A8FF78>Únete al grupo de WhatsApp</color> del clan y gana <color=#FFD700>+25 puntos</color> de bono.\n<color=#40E0FF>Regístrate:</color> https://aor-war-command.vercel.app/registro"
+    name:p.name,
+    default:`<color=#FFD700>[AOR] ${p.name}</color>
+<color=#A8FF78>Únete al WhatsApp</color> del clan.
+<color=#40E0FF>+25 puntos de bono.</color>
+https://aor-war-command.vercel.app/registro`
   }));
-
-  const CopyBtn = ({k, msg}) => (
-    <button onClick={()=>copy(k,msg)} style={{padding:"4px 12px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
-      {copied===k?"✓ Copiado!":"📋 Copiar"}
-    </button>
+  const [nowaMsgs, setNowaMsgs] = useState(
+    Object.fromEntries(noWaMsgs.map(m=>[m.key,m.default]))
   );
 
-  const CopyBtnBlue = ({k, msg}) => (
-    <button onClick={()=>copy(k,msg)} style={{padding:"4px 12px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
-      {copied===k?"✓ Copiado!":"📋 Copiar"}
-    </button>
+  const WaCard = ({k,title,desc}) => (
+    <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+      <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{title}</div>
+      {desc&&<div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"6px"}}>{desc}</div>}
+      <textarea value={msgs[k]} onChange={e=>setMsg(k,e.target.value)} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"inherit"}}/>
+      <button onClick={()=>copy(k)} style={{padding:"5px 14px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+        {copied===k?"✓ Copiado!":"📋 Copiar"}
+      </button>
+    </div>
   );
+
+  const GameCard = ({k,title}) => {
+    const len = (msgs[k]||"").length;
+    const over = len > 250;
+    return (
+      <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(64,224,255,0.15)"),borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
+          <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{title}</div>
+          <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.35)",fontWeight:over?"bold":"normal"}}>{len}/250{over?" ⚠ EXCEDE":""}</span>
+        </div>
+        <textarea value={msgs[k]} onChange={e=>setMsg(k,e.target.value)} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid "+(over?"rgba(255,107,107,0.3)":"rgba(64,224,255,0.15)"),borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"monospace"}}/>
+        <button onClick={()=>copy(k)} style={{padding:"5px 14px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
+          {copied===k?"✓ Copiado!":"📋 Copiar"}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div style={{padding:"0 16px"}}>
       <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
-      {waGroups.map(m=>(
-        <div key={m.key} style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
-          <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{m.title}</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>{m.desc}</div>
-          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"120px",overflow:"auto"}}>{m.msg}</div>
-          <CopyBtn k={m.key} msg={m.msg}/>
-        </div>
-      ))}
+      <WaCard k="waregistro" title={`📱 Registro del grupo WA (${waRegistrado.length}/${waPlayers.length})`} desc="Solo miembros del grupo de WhatsApp"/>
+      <WaCard k="registro"   title="📋 Registro completo" desc="Todos los miembros activos"/>
+      <WaCard k="semanal"    title="📊 Reporte semanal" desc="Ranking guerra actual"/>
+      <WaCard k="acumulado"  title="🏆 Ranking acumulado" desc="Sin bonus de rango"/>
+      <WaCard k="aviso"      title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales"/>
+      <WaCard k="bienvenida" title="👋 Bienvenida nuevo miembro"/>
 
-      <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>⚔ Mensajes para el chat del juego</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>⚠ Estos mensajes NO incluyen el link de la app (uso exclusivo de miembros)</div>
-      {gameGroups.map(m=>(
-        <div key={m.key} style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
-          <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>{m.title}</div>
-          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",fontFamily:"monospace",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
-          <CopyBtnBlue k={m.key} msg={m.msg}/>
-        </div>
-      ))}
+      <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>⚠ Mensajes externos sin link de app · Internos con link · Máx 250 caracteres</div>
+      <GameCard k="defensa"    title="🚨 Alerta defensa urgente"/>
+      <GameCard k="guerra"     title="⚔ Inicio de guerra"/>
+      <GameCard k="victoria"   title="🏆 Victoria"/>
+      <GameCard k="registrate" title="📋 Llama a registrarse (interno)"/>
+      <GameCard k="aviso_pts"  title="📋 Sin registro = -20 pts (interno)"/>
+      <GameCard k="sumate_wa"  title="📱 Invitar al grupo WhatsApp"/>
 
       {noWaPlayers.length > 0 && (
-        <>
-          <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>📵 Invitaciones WA individuales ({noWaPlayers.length} sin grupo)</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Un mensaje por jugador para invitarlos al grupo de WhatsApp desde el chat del juego</div>
-          {invNoWa.map(m=>(
-            <div key={m.key} style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"8px",padding:"10px 12px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:"10px"}}>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"11px",color:"#FF9F43",marginBottom:"4px"}}>{m.title}</div>
-                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"4px",padding:"6px",fontSize:"10px",color:"#d4c9a8",fontFamily:"monospace"}}>{m.msg}</div>
+        <div style={{marginTop:"16px"}}>
+          <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"13px",marginBottom:"6px"}}>📵 Invitaciones WA individuales ({noWaPlayers.length} sin grupo)</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>Un mensaje por jugador · Editable · Con contador</div>
+          {noWaMsgs.map(m=>{
+            const len=(nowaMsgs[m.key]||"").length;
+            const over=len>250;
+            return (
+              <div key={m.key} style={{background:"rgba(255,159,67,0.04)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(255,159,67,0.2)"),borderRadius:"8px",padding:"10px",marginBottom:"6px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
+                  <div style={{fontSize:"11px",color:"#FF9F43",fontWeight:"bold"}}>📵 {m.name}</div>
+                  <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{len}/250</span>
+                </div>
+                <textarea value={nowaMsgs[m.key]||""} onChange={e=>setNowaMsgs(n=>({...n,[m.key]:e.target.value}))} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"6px",color:"#d4c9a8",fontSize:"10px",padding:"6px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"monospace"}}/>
+                <button onClick={()=>{navigator.clipboard.writeText(nowaMsgs[m.key]||"");setCopied(m.key);setTimeout(()=>setCopied(""),2000);}} style={{padding:"4px 12px",background:copied===m.key?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===m.key?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===m.key?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
+                  {copied===m.key?"✓ Copiado!":"📋 Copiar"}
+                </button>
               </div>
-              <CopyBtnBlue k={m.key} msg={m.msg}/>
-            </div>
-          ))}
-        </>
+            );
+          })}
+        </div>
       )}
-
-      {/* App Links Section */}
-      <div style={{marginTop:"24px",marginBottom:"8px"}}>
-        <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>🔗 Links de la app</div>
-        {[
-          {
-            label:"📊 Ranking / Reporte",
-            url:"https://aor-war-command.vercel.app/reporte",
-            color:"#40E0FF",
-            desc:"Ver posiciones, perfiles y puntos acumulados"
-          },
-          {
-            label:"📋 Registro de Guerra",
-            url:"https://aor-war-command.vercel.app/registro",
-            color:"#A8FF78",
-            desc:"Confirmar participación y ganar puntos antes del jueves"
-          },
-          {
-            label:"❓ Cómo funciona",
-            url:"https://aor-war-command.vercel.app/puntos",
-            color:"#FFD700",
-            desc:"Sistema de puntos, rangos y penalizaciones"
-          },
-        ].map(link=>(
-          <div key={link.url} style={{background:link.color+"08",border:"1px solid "+link.color+"33",borderRadius:"10px",padding:"14px 16px",marginBottom:"10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:"12px"}}>
-            <div style={{flex:1}}>
-              <div style={{fontSize:"13px",color:link.color,fontWeight:"bold",marginBottom:"3px"}}>{link.label}</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>{link.desc}</div>
-              <div style={{fontSize:"10px",color:link.color+"99",fontFamily:"monospace",background:"rgba(0,0,0,0.2)",padding:"3px 8px",borderRadius:"4px",display:"inline-block"}}>{link.url}</div>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
-              <button onClick={()=>{navigator.clipboard.writeText(link.url);}} style={{padding:"5px 12px",background:link.color+"22",border:"1px solid "+link.color+"44",borderRadius:"6px",color:link.color,fontSize:"11px",cursor:"pointer",whiteSpace:"nowrap"}}>
-                📋 Copiar link
-              </button>
-              <a href={link.url} target="_blank" rel="noreferrer" style={{padding:"5px 12px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"11px",cursor:"pointer",textDecoration:"none",textAlign:"center",whiteSpace:"nowrap"}}>
-                🔗 Abrir
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -914,10 +897,10 @@ function AdminPanel({players, update, loading, saving, reload}) {
               if (b.name === "PUNK'Z") return 1;
               const getRankOrder = p => {
                 const total = (p.pts_acumulados||0) + (p.pts_honorificos||0);
-                if (total >= 10000) return 0;
-                if (total >= 1000)  return 1;
-                if (total >= 600)   return 2;
-                if (total >= 300)   return 3;
+                if (total >= 25000) return 0;
+                if (total >= 5000)  return 1;
+                if (total >= 1000)  return 2;
+                if (total >= 500)   return 3;
                 if (total >= 100)   return 4;
                 if (total >= 0)     return 5;
                 return 6;
@@ -1112,7 +1095,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       <span style={{fontSize:"8px",color:"rgba(168,255,120,0.8)"}}>✅ Sin registro pero participó (+3)</span>
                       <div style={{display:"flex",gap:"2px"}}>
                         {[0,1].map(v=>(
-                          <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 1 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)===3)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
+                          <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 3 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
                         ))}
                       </div>
                     </div>
@@ -1236,6 +1219,31 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
         {/* MENSAJES TAB */}
         {activeTab==="mensajes" && <MensajesTab players={players}/>}
+        {activeTab==="links" && (
+          <div style={{padding:"0 16px"}}>
+            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"16px"}}>🔗 Links de la app</div>
+            {[
+              {label:"📊 Ranking / Reporte",url:"https://aor-war-command.vercel.app/reporte",color:"#40E0FF",desc:"Ver posiciones, perfiles y puntos acumulados",icon:"📊"},
+              {label:"📋 Registro de Guerra",url:"https://aor-war-command.vercel.app/registro",color:"#A8FF78",desc:"Confirmar participación — cierra jueves 12am MX",icon:"📋"},
+              {label:"❓ Cómo funciona",url:"https://aor-war-command.vercel.app/puntos",color:"#FFD700",desc:"Sistema de puntos, rangos y penalizaciones",icon:"❓"},
+            ].map(link=>(
+              <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
+                <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
+                  <span style={{fontSize:"28px"}}>{link.icon}</span>
+                  <div>
+                    <div style={{fontSize:"15px",color:link.color,fontWeight:"bold"}}>{link.label}</div>
+                    <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)",marginTop:"2px"}}>{link.desc}</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"monospace",fontSize:"10px",color:link.color+"AA",background:"rgba(0,0,0,0.3)",padding:"5px 10px",borderRadius:"6px",marginBottom:"10px",wordBreak:"break-all"}}>{link.url}</div>
+                <div style={{display:"flex",gap:"8px"}}>
+                  <button onClick={()=>navigator.clipboard.writeText(link.url)} style={{flex:1,padding:"8px",background:link.color+"22",border:"1px solid "+link.color+"44",borderRadius:"8px",color:link.color,fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>📋 Copiar link</button>
+                  <a href={link.url} target="_blank" rel="noreferrer" style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",color:"rgba(255,255,255,0.5)",fontSize:"12px",cursor:"pointer",textDecoration:"none",textAlign:"center",display:"block"}}>🔗 Abrir</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
 
       </div>

@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
 const AVAILABILITY = {
-  siempre:      { label:"Siempre listo",  color:"#A8FF78", icon:"🟢" },
-  intermitente: { label:"Intermitente",   color:"#FFD700", icon:"🟡" },
-  solo_una:     { label:"Solo una vez",   color:"#FF9F43", icon:"🟠" },
-  no_disponible:{ label:"No disponible",  color:"#FF6B6B", icon:"🔴" },
-  pendiente:    { label:"Sin responder",  color:"#888888", icon:"⚪" },
+  siempre:      { label:"Conquistador",  sub:"Siempre listo", color:"#A8FF78", icon:"🟢" },
+  intermitente: { label:"Refuerzos",     sub:"Intermitente",  color:"#FFD700", icon:"🟡" },
+  solo_una:     { label:"Reserva",       sub:"Solo una vez",  color:"#FF9F43", icon:"🟠" },
+  no_disponible:{ label:"No disponible",                      color:"#FF6B6B", icon:"🔴" },
+  pendiente:    { label:"Sin responder",                      color:"#888888", icon:"⚪" },
 };
 
 const RANKS = [
@@ -24,7 +24,7 @@ function getRank(acc, hon, name, clanRole) {
   if (clanRole === "Co-Líder") return RANKS[0];
   if (clanRole === "Oficial")  return RANKS[1];
   const total = (acc||0) + (hon||0);
-  if (total <= 0) return { label:"⚠ Vigilado", color:"#FF6B6B" };
+  if (total < 0)  return { label:"⚠ Vigilado", color:"#FF6B6B" };
   return RANKS.find(r => total >= r.min) || RANKS[RANKS.length-1];
 }
 
@@ -83,6 +83,17 @@ function PlayerProfile({ player, onBack }) {
 
   async function saveStats() {
     if (!newBp && !newLevel) return;
+    // Weekly limit check using last player_stats entry date
+    if (statsList.length > 0) {
+      const last = new Date(statsList[0].created_at);
+      const now  = new Date();
+      const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+      if (diffDays < 7) {
+        const nextUpdate = new Date(last.getTime() + 7*24*60*60*1000);
+        alert(`Ya actualizaste tus stats. Próxima actualización disponible el ${nextUpdate.toLocaleDateString('es-MX')}.`);
+        return;
+      }
+    }
     const hasBp    = newBp.trim() !== "";
     const hasLevel = newLevel.trim() !== "";
     const pts = hasBp && hasLevel ? 5 : 2;
@@ -111,7 +122,7 @@ function PlayerProfile({ player, onBack }) {
   const breakdown = [
     { label:"Registro",                   val: player.pt_registro||0,                 show: (player.pt_registro||0) > 0 },
     { label:"Disponibilidad declarada",   val: player.pt_disponibilidad_declarada||0, show: (player.pt_disponibilidad_declarada||0) > 0 },
-    { label:"Apareció / Participó",       val: player.pt_disponibilidad||0,           show: (player.pt_disponibilidad||0) > 0 },
+    { label:"Apareció / Participó (+3)",  val: player.pt_disponibilidad||0,           show: (player.pt_disponibilidad||0) > 0 },
     { label:"Siguió órdenes",            val: (player.pt_obediencia||0)*2,            show: (player.pt_obediencia||0) > 0 },
     { label:"Batallas ganadas",           val: (player.pt_batallas_ganadas||0)*2,     show: (player.pt_batallas_ganadas||0) > 0 },
     { label:"🌟 Bonus 6+ batallas",      val: 10,                                    show: (player.pt_batallas_ganadas||0) >= 6 },
@@ -332,7 +343,7 @@ export default function PublicReport() {
             <span style={{fontSize:"10px",color:"#FFD700",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"12px",padding:"3px 10px"}}>📋 {totalReg}/{players.length} registrados</span>
           </div>
           <div style={{marginTop:"8px",display:"flex",gap:"8px",justifyContent:"center",flexWrap:"wrap"}}>
-            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>Ir a registro →</a>
+            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>📋 Ir a registro →</a>
             <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Cómo funciona</a>
           </div>
           <div style={{marginTop:"8px",display:"flex",gap:"8px",justifyContent:"center"}}>
@@ -375,7 +386,7 @@ export default function PublicReport() {
                   </div>
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
-                    <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
+                    <Pill color={avail.color}>{avail.icon} {avail.label}{avail.sub ? " ("+avail.sub+")" : ""}</Pill>
                     {hon > 0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
                     {(p.pt_whatsapp||0) > 0 && <Pill color="#25D366">📱 +{p.pt_whatsapp}</Pill>}
                   </div>
