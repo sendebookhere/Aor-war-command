@@ -266,7 +266,8 @@ function RegistrationForm({onRegistered}) {
     const updates = { pt_stats: (selectedPlayer.pt_stats||0) + pts, stats_updated_week: currentWeek2 };
     if (hasBp)    updates.bp    = parseInt(newBp);
     if (hasLevel) updates.level = parseInt(newLevel);
-    await supabase.from("players").update(updates).eq("id", selectedPlayer.id);
+    const {error: statsErr} = await supabase.from("players").update(updates).eq("id", selectedPlayer.id);
+    if (statsErr) { setError("Error al guardar stats: " + (statsErr.message||"DB error")); return; }
     await supabase.from("player_stats").insert({
       player_id: selectedPlayer.id, player_name: selectedPlayer.name,
       bp:    hasBp    ? parseInt(newBp)    : (selectedPlayer.bp||0),
@@ -308,7 +309,13 @@ function RegistrationForm({onRegistered}) {
     };
     if (hasBp)    updates.bp    = parseInt(newBp);
     if (hasLevel) updates.level = parseInt(newLevel);
-    await supabase.from("players").update(updates).eq("id", player.id);
+    const {error: updateError} = await supabase.from("players").update(updates).eq("id", player.id);
+    if (updateError) {
+      console.error("Registration update failed:", updateError);
+      setError("Error al guardar: " + (updateError.message || JSON.stringify(updateError)) + ". Avisa al admin.");
+      setSubmitting(false);
+      return;
+    }
     if (hasBp || hasLevel) {
       await supabase.from("player_stats").insert({
         player_id: player.id, player_name: player.name,
