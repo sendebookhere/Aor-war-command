@@ -18,16 +18,19 @@ export default function Comunicaciones() {
   const [nameSuggestions, setNameSuggestions] = useState([]);
   const [feedback, setFeedback]   = useState({});
   const [loading, setLoading]     = useState(true);
+  const [dailyLimit, setDailyLimit] = useState(2);
 
   useEffect(() => {
     Promise.all([
       supabase.from("players").select("id,name,active").eq("active",true).order("name"),
       supabase.from("comunicaciones_msgs").select("*").order("slot"),
       supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(200),
-    ]).then(([p, m, l]) => {
+      supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single(),
+    ]).then(([p, m, l, s]) => {
       setPlayers(p.data || []);
       setMsgs(m.data || []);
       setLogs(l.data || []);
+      if (s.data?.value) setDailyLimit(parseInt(s.data.value)||2);
       setLoading(false);
     });
   }, []);
@@ -57,8 +60,8 @@ export default function Comunicaciones() {
       return;
     }
     const todayLogs = logsToday(playerId);
-    if (todayLogs.length >= 2) {
-      setFeedback(f=>({...f,[msg.id]:"Ya alcanzaste el límite de 2 publicaciones hoy."}));
+    if (todayLogs.length >= dailyLimit) {
+      setFeedback(f=>({...f,[msg.id]:`Ya alcanzaste el límite de ${dailyLimit} publicaciones hoy.`}));
       return;
     }
 
@@ -131,7 +134,7 @@ export default function Comunicaciones() {
             ? <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
                   <span style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold"}}>{playerName}</span>
-                  <span style={{fontSize:"10px",color:"rgba(64,224,255,0.5)",marginLeft:"8px"}}>— {logsToday(playerId).length}/2 publicaciones hoy</span>
+                  <span style={{fontSize:"10px",color:"rgba(64,224,255,0.5)",marginLeft:"8px"}}>— {logsToday(playerId).length}/{dailyLimit} publicaciones hoy</span>
                 </div>
                 <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",background:"transparent",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer"}}>cambiar</button>
               </div>
