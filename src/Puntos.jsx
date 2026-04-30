@@ -4,7 +4,7 @@ export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0}}>← Volver</button>
+        <a href="/registro" style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0,textDecoration:"none",display:"inline-block"}}>← Volver</a>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Sistema de Puntos</div>
