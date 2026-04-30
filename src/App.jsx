@@ -214,6 +214,33 @@ function RegistrationForm({onRegistered}) {
   }
 
   const tasks = avail ? getTasksForPlayer(avail, 999999) : null;
+  const [statsSaved, setStatsSaved] = useState(false);
+
+  async function saveStats() {
+    if (!selectedPlayer) { setError("Selecciona tu nombre primero."); return; }
+    if (!newBp && !newLevel) return;
+    const currentWeek2 = getWarWeek();
+    if (selectedPlayer.stats_updated_week === currentWeek2) {
+      setError("Ya actualizaste tus stats esta semana.");
+      return;
+    }
+    const hasBp    = newBp.trim() !== "";
+    const hasLevel = newLevel.trim() !== "";
+    const pts = hasBp && hasLevel ? 5 : 2;
+    const updates = { pt_stats: (selectedPlayer.pt_stats||0) + pts, stats_updated_week: currentWeek2 };
+    if (hasBp)    updates.bp    = parseInt(newBp);
+    if (hasLevel) updates.level = parseInt(newLevel);
+    await supabase.from("players").update(updates).eq("id", selectedPlayer.id);
+    await supabase.from("player_stats").insert({
+      player_id: selectedPlayer.id, player_name: selectedPlayer.name,
+      bp:    hasBp    ? parseInt(newBp)    : (selectedPlayer.bp||0),
+      level: hasLevel ? parseInt(newLevel) : (selectedPlayer.level||0),
+      updated_by: "jugador",
+    });
+    setStatsSaved(true);
+    setNewBp(""); setNewLevel("");
+    setTimeout(()=>setStatsSaved(false), 3000);
+  }
 
   async function handleSubmit() {
     if (!name.trim() || !avail) { setError("Completa nombre y disponibilidad."); return; }
@@ -316,9 +343,14 @@ function RegistrationForm({onRegistered}) {
         {/* Stats update - right after name */}
         {selectedPlayer && !alreadyRegistered && (
           <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
-            <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"6px"}}>
-              📊 ACTUALIZA TUS STATS <span style={{color:"rgba(255,255,255,0.4)",fontSize:"10px"}}>(opcional — gana hasta +5 pts)</span>
+            <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"4px"}}>
+              📊 ACTUALIZA TUS STATS
             </label>
+            <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"8px 10px",marginBottom:"8px",fontSize:"10px"}}>
+              <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
+              <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
+              <div style={{color:"#FFD700"}}>💀 BP + ⚔ Poder juntos → <strong>+5 pts</strong> (bonus extra)</div>
+            </div>
             {lastStats ? (
               <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
                 Últimos: 💀 {lastStats.bp?.toLocaleString()} BP · ⚔ {((lastStats.level||0)/1000).toFixed(1)}k · {new Date(lastStats.created_at).toLocaleDateString()}
@@ -338,16 +370,13 @@ function RegistrationForm({onRegistered}) {
                 <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
-            {(newBp||newLevel) && (
-              <div style={{marginTop:"8px"}}>
-                <div style={{fontSize:"10px",color:"#A8FF78",marginBottom:"6px"}}>+{newBp&&newLevel?5:2} pts si actualizas {newBp&&newLevel?"ambos":"uno"} — confirmar antes de salir</div>
-                <div style={{display:"flex",gap:"8px"}}>
-                  <button type="button" onClick={saveStats} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>💾 Guardar stats (+{newBp&&newLevel?5:2} pts)</button>
-                  <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>
-                </div>
-              </div>
-            )}
-            {!(newBp||newLevel) && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Completa uno o ambos para ganar +2 o +5 pts extra</div>}
+            <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+              <button type="button" onClick={saveStats} disabled={!newBp&&!newLevel} style={{flex:1,padding:"8px",background:(newBp||newLevel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel)?"pointer":"default",fontWeight:"bold"}}>
+                💾 Guardar stats{(newBp||newLevel)?" (+"+(newBp&&newLevel?5:2)+" pts)":""}
+              </button>
+              {(newBp||newLevel) && <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
+            </div>
+            {statsSaved && <div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>✓ Stats guardados con éxito</div>}
           </div>
         )}
 

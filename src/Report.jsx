@@ -186,7 +186,12 @@ function PlayerProfile({ player, onBack }) {
 
         {/* Update stats */}
         <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
-          <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"8px"}}>📊 Actualizar mis stats — gana +2 pts c/u o +5 pts si actualizas ambos</div>
+          <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"6px",fontWeight:"bold"}}>📊 Actualizar mis stats</div>
+          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"7px 10px",marginBottom:"8px",fontSize:"10px"}}>
+            <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
+            <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
+            <div style={{color:"#FFD700"}}>💀 BP + ⚔ Poder juntos → <strong>+5 pts</strong> (bonus extra)</div>
+          </div>
           <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
             <div style={{flex:1}}>
               <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points</div>
@@ -197,17 +202,13 @@ function PlayerProfile({ player, onBack }) {
               <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={(player.level||0).toString()} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
             </div>
           </div>
-          <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
-            <button onClick={saveStats} disabled={!newBp && !newLevel} style={{padding:"7px 16px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",opacity:(!newBp&&!newLevel)?0.4:1}}>
-              Guardar (+{newBp&&newLevel?5:2} pts)
+          <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+            <button onClick={saveStats} disabled={!newBp && !newLevel} style={{flex:1,padding:"8px",background:(newBp||newLevel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel)?"pointer":"default",fontWeight:"bold"}}>
+              💾 Guardar stats{(newBp||newLevel)?" (+"+(newBp&&newLevel?5:2)+" pts)":""}
             </button>
-            {(newBp||newLevel) && (
-              <button onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>
-                ✕ Limpiar
-              </button>
-            )}
+            {(newBp||newLevel) && <button onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
           </div>
-          {statsMsg && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"6px"}}>{statsMsg}</div>}
+          {statsMsg && <div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>{statsMsg}</div>}
         </div>
 
         {/* Current war breakdown */}
