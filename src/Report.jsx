@@ -31,6 +31,7 @@ function getRank(acc, hon, name, clanRole) {
 function totalPts(p) {
   const sb = (p.pt_batallas_ganadas||0) >= 6 ? 10 : 0;
   return (p.pt_registro||0)
+    + (p.pt_registro_temprano||0)
     + (p.pt_disponibilidad_declarada||0)
     + (p.pt_disponibilidad||0)
     + (p.pt_obediencia||0)
@@ -121,6 +122,7 @@ function PlayerProfile({ player, onBack }) {
 
   const breakdown = [
     { label:"Registro",                   val: player.pt_registro||0,                 show: (player.pt_registro||0) > 0 },
+    { label:"⭐ Registro anticipado (antes mié 23:59 España)", val: player.pt_registro_temprano||0, show: (player.pt_registro_temprano||0) > 0 },
     { label:"Disponibilidad declarada",   val: player.pt_disponibilidad_declarada||0, show: (player.pt_disponibilidad_declarada||0) > 0 },
     { label:"Apareció / Participó (+3)",  val: player.pt_disponibilidad||0,           show: (player.pt_disponibilidad||0) > 0 },
     { label:"Siguió órdenes",            val: (player.pt_obediencia||0)*2,            show: (player.pt_obediencia||0) > 0 },
