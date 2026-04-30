@@ -14,9 +14,9 @@ export default function Puntos({onBack}) {
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>📋 PASO 1 — Regístrate antes del jueves</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cierra jueves 12am hora México.</div>
           {[
-            {label:"Siempre listo 🟢",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
-            {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Al menos una aparición por periodo"},
-            {label:"Solo una vez 🟠",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
+            {label:"Conquistador 🟢",pts:"+10",color:"#A8FF78",desc:"Siempre listo — Disponible toda la guerra"},
+            {label:"Refuerzos 🟡",pts:"+5",color:"#FFD700",desc:"Intermitente — Al menos una aparición por periodo"},
+            {label:"Reserva 🟠",pts:"+2",color:"#FF9F43",desc:"Solo una vez — Una sola participación"},
             {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
           ].map(r=>(
             <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:r.color+"11",borderRadius:"6px",border:"1px solid "+r.color+"33",marginBottom:"3px"}}>
@@ -31,7 +31,7 @@ export default function Puntos({onBack}) {
         <div style={{background:"rgba(168,255,120,0.08)",border:"2px solid #A8FF78",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>⚔️ PASO 2 — Participa en la guerra</div>
           {[
-            {label:"Apareciste y participaste",pts:"+1",color:"#A8FF78"},
+            {label:"Apareciste y participaste",pts:"+3",color:"#A8FF78"},
             {label:"Seguiste las órdenes del admin",pts:"+2",color:"#FFD700"},
             {label:"Ganaste una batalla",pts:"+2",color:"#40E0FF"},
             {label:"Declaraste una batalla y la perdiste",pts:"+1",color:"#40E0FF"},
@@ -126,7 +126,7 @@ export default function Puntos({onBack}) {
         </div>
 
         <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"12px",textAlign:"center"}}>
-          <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo semanal: <strong>20 puntos</strong></div>
+          <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo mensual: <strong>20 puntos</strong></div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>-100 pts acumulados → candidato a expulsión</div>
         </div>
       </div>
