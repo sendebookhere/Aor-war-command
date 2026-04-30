@@ -292,7 +292,7 @@ function RegistrationForm({onRegistered}) {
       <div style={{textAlign:"center",maxWidth:"360px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
-        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro cierra los jueves a las 12:00am hora México. Vuelve el viernes cuando comience la nueva guerra.</div>
+        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro cierra los viernes a las 7:00am hora Ecuador cuando comienza la guerra. Vuelve el próximo viernes.</div>
       </div>
     </div>
   );
