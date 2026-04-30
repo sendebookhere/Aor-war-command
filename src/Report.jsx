@@ -21,9 +21,13 @@ const RANKS = [
 ];
 
 function getRank(acc, hon, name, clanRole) {
-  if (name === "PUNK'Z" || clanRole === "Líder") return { label:"Líder 👑", color:"#FFD700" };
-  if (clanRole === "Co-Líder") return RANKS[0];
-  if (clanRole === "Oficial")  return RANKS[1];
+  if (name === "PUNK'Z" || clanRole === "Líder")    return { label:"Líder 👑",    color:"#FFD700" };
+  if (clanRole === "Co-Líder")  return RANKS.find(r=>r.min===25000)||RANKS[0];
+  if (clanRole === "Oficial")   return RANKS.find(r=>r.min===5000) ||RANKS[1];
+  if (clanRole === "Veterano")  return RANKS.find(r=>r.min===1000) ||RANKS[2];
+  if (clanRole === "Guerrero")  return RANKS.find(r=>r.min===500)  ||RANKS[3];
+  if (clanRole === "Soldado")   return RANKS.find(r=>r.min===100)  ||RANKS[4];
+  if (clanRole === "⚠ Vigilado") return { label:"⚠ Vigilado", color:"#FF6B6B" };
   const total = (acc||0) + (hon||0);
   if (total < 0)  return { label:"⚠ Vigilado", color:"#FF6B6B" };
   return RANKS.find(r => total >= r.min) || RANKS[RANKS.length-1];
@@ -450,7 +454,7 @@ export default function PublicReport() {
                   </div>
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
-                    <Pill color={avail.color}>{avail.icon} {avail.label}{avail.sub ? " ("+avail.sub+")" : ""}</Pill>
+                    {p.availability && p.availability !== "pendiente" && <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>}
                     {hon > 0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
                     {(p.pt_whatsapp||0) > 0 && <Pill color="#25D366">📱 +{p.pt_whatsapp}</Pill>}
                   </div>

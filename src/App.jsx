@@ -1071,6 +1071,8 @@ function SeguridadTab({players}) {
   }
 
   async function saveSnapshot() {
+    const code = prompt("Código de seguridad:");
+    if (code !== "AORSEGURO") { setMsg("Código incorrecto"); return; }
     if (!confirm("¿Guardar snapshot del estado actual?")) return;
     setSaving(true);
     const {error} = await supabase.from("player_snapshots").insert({
@@ -1085,6 +1087,8 @@ function SeguridadTab({players}) {
   }
 
   async function restoreSnapshot(snap) {
+    const code = prompt("Código de seguridad para restaurar:");
+    if (code !== "AORSEGURO") { setMsg("Código incorrecto"); return; }
     if (!confirm("¿Restaurar a \"" + snap.label + "\"? Esto sobreescribirá todos los datos actuales.")) return;
     setRestoring(snap.id);
     const {data} = await supabase.from("player_snapshots").select("data").eq("id",snap.id).single();
@@ -1101,6 +1105,8 @@ function SeguridadTab({players}) {
   }
 
   async function deleteSnapshot(id) {
+    const code = prompt("Código de seguridad para borrar:");
+    if (code !== "AORSEGURO") { setMsg("Código incorrecto"); return; }
     if (!confirm("¿Borrar este snapshot?")) return;
     await supabase.from("player_snapshots").delete().eq("id",id);
     await loadSnapshots();
