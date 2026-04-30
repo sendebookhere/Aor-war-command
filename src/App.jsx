@@ -149,14 +149,12 @@ function getWarWeek() {
 }
 
 function isRegistrationOpen() {
-  // Closes Thursday 12:00am Mexico time (UTC-6)
+  // Closes Friday at 7:00am Ecuador time (UTC-5)
   const now = new Date();
-  const mx = new Date(now.getTime() - 6*60*60*1000);
-  const day = mx.getDay(); // 4 = Thursday
-  const hour = mx.getHours();
-  // Closed: Thursday after midnight (00:00) until Friday 00:00
-  if (day === 4 && hour >= 0) return false;
-  // Also closed Friday before war starts (optional: keep open all week except Thu)
+  const ec = new Date(now.getTime() - 5*60*60*1000);
+  const day  = ec.getDay();
+  const hour = ec.getHours();
+  if (day === 5 && hour >= 7) return false;
   return true;
 }
 
