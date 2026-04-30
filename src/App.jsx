@@ -474,6 +474,111 @@ function RegistrationForm({onRegistered}) {
 
 
 
+// ── Message Card components (defined OUTSIDE MensajesTab to prevent focus loss) ─
+function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(initialValue);
+  const [saved, setSaved]     = useState(initialValue);
+  const [copied, setCopied]   = useState(false);
+  function guardar()  { setSaved(draft); setEditing(false); }
+  function cancelar() { setDraft(saved); setEditing(false); }
+  function copiar()   { navigator.clipboard.writeText(saved); setCopied(true); setTimeout(()=>setCopied(false),2000); }
+  return (
+    <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px"}}>
+        <div>
+          <div style={{fontSize:"12px",color:titleColor,fontWeight:"bold"}}>{title}</div>
+          {desc&&<div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"1px"}}>{desc}</div>}
+        </div>
+        {!editing && <button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer",marginLeft:"8px",whiteSpace:"nowrap"}}>✏ Editar</button>}
+      </div>
+      {editing ? (
+        <><textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={5} autoFocus
+            style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"8px",fontFamily:"inherit"}}/>
+          <div style={{display:"flex",gap:"8px"}}>
+            <button onClick={guardar} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>💾 Guardar</button>
+            <button onClick={cancelar} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕ Cancelar</button>
+          </div>
+        </>
+      ) : (
+        <><div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto",fontFamily:"inherit"}}>{saved}</div>
+          <button onClick={copiar} style={{padding:"5px 14px",background:copied?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.1)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.25)"),borderRadius:"20px",color:copied?"#A8FF78":titleColor,fontSize:"11px",cursor:"pointer"}}>{copied?"✓ Copiado!":"📋 Copiar"}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function GameCard({title, initialValue}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(initialValue);
+  const [saved, setSaved]     = useState(initialValue);
+  const [copied, setCopied]   = useState(false);
+  function guardar()  { setSaved(draft); setEditing(false); }
+  function cancelar() { setDraft(saved); setEditing(false); }
+  function copiar()   { navigator.clipboard.writeText(saved); setCopied(true); setTimeout(()=>setCopied(false),2000); }
+  const len = draft.length; const over = len > 250;
+  return (
+    <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid "+(over&&editing?"rgba(255,107,107,0.5)":"rgba(64,224,255,0.15)"),borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
+        <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{title}</div>
+        <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+          {editing && <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.4)",fontWeight:over?"bold":"normal"}}>{len}/250{over?" ⚠":""}</span>}
+          {!editing && <><span style={{fontSize:"10px",color:"rgba(255,255,255,0.25)"}}>{saved.length}/250</span><button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏ Editar</button></>}
+        </div>
+      </div>
+      {editing ? (
+        <><textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={4} autoFocus
+            style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(64,224,255,0.3)"),borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"8px",fontFamily:"monospace"}}/>
+          <div style={{display:"flex",gap:"8px"}}>
+            <button onClick={guardar} disabled={over} style={{flex:1,padding:"7px",background:over?"rgba(255,255,255,0.04)":"rgba(168,255,120,0.15)",border:"1px solid "+(over?"rgba(255,255,255,0.08)":"rgba(168,255,120,0.3)"),borderRadius:"6px",color:over?"rgba(255,255,255,0.3)":"#A8FF78",fontSize:"11px",cursor:over?"default":"pointer",fontWeight:"bold"}}>💾 Guardar{over?" (excede 250)":""}</button>
+            <button onClick={cancelar} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕ Cancelar</button>
+          </div>
+        </>
+      ) : (
+        <><div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"80px",overflow:"auto",fontFamily:"monospace"}}>{saved}</div>
+          <button onClick={copiar} style={{padding:"5px 14px",background:copied?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>{copied?"✓ Copiado!":"📋 Copiar"}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function InviteCard({name, initialValue}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(initialValue);
+  const [saved, setSaved]     = useState(initialValue);
+  const [copied, setCopied]   = useState(false);
+  function guardar()  { setSaved(draft); setEditing(false); }
+  function cancelar() { setDraft(saved); setEditing(false); }
+  function copiar()   { navigator.clipboard.writeText(saved); setCopied(true); setTimeout(()=>setCopied(false),2000); }
+  const len = draft.length; const over = len > 250;
+  return (
+    <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid "+(over&&editing?"rgba(255,107,107,0.4)":"rgba(255,159,67,0.2)"),borderRadius:"8px",padding:"10px",marginBottom:"6px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
+        <div style={{fontSize:"11px",color:"#FF9F43",fontWeight:"bold"}}>📵 {name}</div>
+        <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+          {editing && <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{len}/250</span>}
+          {!editing && <><span style={{fontSize:"10px",color:"rgba(255,255,255,0.25)"}}>{saved.length}/250</span><button onClick={()=>setEditing(true)} style={{padding:"3px 8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏</button></>}
+        </div>
+      </div>
+      {editing ? (
+        <><textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={3} autoFocus
+            style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,159,67,0.3)",borderRadius:"6px",color:"#d4c9a8",fontSize:"10px",padding:"6px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"monospace"}}/>
+          <div style={{display:"flex",gap:"8px"}}>
+            <button onClick={guardar} disabled={over} style={{flex:1,padding:"6px",background:over?"rgba(255,255,255,0.04)":"rgba(168,255,120,0.15)",border:"1px solid "+(over?"rgba(255,255,255,0.08)":"rgba(168,255,120,0.3)"),borderRadius:"6px",color:over?"rgba(255,255,255,0.3)":"#A8FF78",fontSize:"11px",cursor:over?"default":"pointer",fontWeight:"bold"}}>💾 Guardar</button>
+            <button onClick={cancelar} style={{padding:"6px 10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>
+          </div>
+        </>
+      ) : (
+        <><div style={{background:"rgba(0,0,0,0.3)",borderRadius:"4px",padding:"6px",fontSize:"10px",color:"#d4c9a8",fontFamily:"monospace",marginBottom:"6px",wordBreak:"break-all"}}>{saved}</div>
+          <button onClick={copiar} style={{padding:"4px 12px",background:copied?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>{copied?"✓ Copiado!":"📋 Copiar"}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Mensajes Tab Component ─────────────────────────────────────────────────
 function MensajesTab({players}) {
   const allActive   = players.filter(p=>p.active);
@@ -494,17 +599,16 @@ function MensajesTab({players}) {
 
   const waRegistrado   = waPlayers.filter(p=>p.registered_form);
   const waNoRegistrado = waPlayers.filter(p=>!p.registered_form);
+  const NAME_COLORS = ["#FFD700","#40E0FF","#A8FF78","#FF9F43","#FF6B6B","#C8A2FF","#FF79C6","#8BE9FD","#FFB86C","#50FA7B","#F1FA8C","#BD93F9","#FF5555","#7EFFF5"];
 
-  // Build initial message texts
   function buildWaRegistro() {
     let m = "*[AOR] Registro de Guerra — Grupo WA*\n\n";
     m += `*Confirmados del grupo (${waRegistrado.length}/${waPlayers.length}):*\n`;
     waRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{ m += `✅ *${p.name}* | ${avMap[p.availability]||""}\n`; });
     if(waNoRegistrado.length>0){ m+=`\n*Pendientes del grupo (${waNoRegistrado.length}):*\n`; waNoRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{m+=`⏳ *${p.name}*\n`;}); }
-    m+=`\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
-    return m;
+    return m + `\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
   }
-  function buildRegistroCompleto() {
+  function buildRegistro() {
     const reg=allActive.filter(p=>p.registered_form).sort((a,b)=>b.bp-a.bp);
     const noReg=allActive.filter(p=>!p.registered_form).sort((a,b)=>b.bp-a.bp);
     let m="*[AOR] Registro de Guerra*\n\n";
@@ -512,139 +616,48 @@ function MensajesTab({players}) {
     reg.forEach(p=>{m+=`- *${p.name}* | ${avMap[p.availability]||""}\n`;});
     m+=`\n*Sin registrar (${noReg.length}):*\n`;
     noReg.forEach(p=>{m+=`- *${p.name}*\n`;});
-    m+=`\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
-    return m;
+    return m + `\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
   }
   function buildSemanal() {
     const sorted=[...allActive].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
     let m="*[AOR] Reporte Semanal* ⚔\n\n";
     sorted.forEach((p,i)=>{const pts=totalPtsLocal(p);m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
-    m+=`\n📊 Ranking: https://aor-war-command.vercel.app/reporte`;
-    return m;
+    return m + `\n📊 Ranking: https://aor-war-command.vercel.app/reporte`;
   }
   function buildAcumulado() {
     const sorted=[...allActive].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
     let m="*[AOR] Ranking Acumulado* 🏆\n_Sin bonificaciones de rango_\n\n";
     sorted.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;});
-    m+=`\n📊 Ver ranking: https://aor-war-command.vercel.app/reporte`;
-    return m;
+    return m + `\n📊 Ver ranking: https://aor-war-command.vercel.app/reporte`;
   }
-
-  // Editable messages state
-  const [msgs, setMsgs] = useState({
-    waregistro: buildWaRegistro(),
-    registro:   buildRegistroCompleto(),
-    semanal:    buildSemanal(),
-    acumulado:  buildAcumulado(),
-    aviso: "*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte",
-    bienvenida: "*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!",
-    defensa: `<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>
-<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>
-Todos los defensores al castillo.
-<color=#40E0FF>¡Ahora!</color>`,
-    guerra: `<color=#FFD700>━━ [AOR] GUERRA ━━</color>
-<color=#A8FF78>¡Comienza la batalla!</color>
-Atacar castillos enemigos primero.
-<color=#FF9F43>¡A por la victoria!</color>`,
-    victoria: `<color=#FFD700>━━ [AOR] VICTORIA ━━</color>
-<color=#A8FF78>¡GUERRA GANADA!</color> 🏆
-Gracias a todos los guerreros.
-<color=#40E0FF>[AOR] Antigua Orden</color>`,
-    registrate: `<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!
-<color=#A8FF78>Gana puntos</color> y sube de rango.
-https://aor-war-command.vercel.app/registro`,
-    aviso_pts: `<color=#FF6B6B>[AOR] AVISO</color>
-<color=#FFD700>Sin registro = -20 puntos.</color>
-<color=#A8FF78>Regístrate ya:</color>
-https://aor-war-command.vercel.app/registro`,
-    sumate_wa: `<color=#FFD700>[AOR]</color> Únete al grupo de WhatsApp.
-<color=#A8FF78>+25 puntos de bono.</color>
-Pide el enlace a un oficial.`,
-  });
-  const [copied, setCopied] = useState("");
-
-  function setMsg(k,v){ setMsgs(m=>({...m,[k]:v})); }
-  function copy(k){ navigator.clipboard.writeText(msgs[k]); setCopied(k); setTimeout(()=>setCopied(""),2000); }
-
-  const NAME_COLORS = ["#FFD700","#40E0FF","#A8FF78","#FF9F43","#FF6B6B","#C8A2FF","#FF79C6","#8BE9FD","#FFB86C","#50FA7B","#F1FA8C","#BD93F9","#FF5555","#7EFFF5"];
-  const noWaMsgs = noWaPlayers.map((p,i)=>{
-    const nc = NAME_COLORS[i % NAME_COLORS.length];
-    return {
-      key:"nowa_"+p.id,
-      name:p.name,
-      default:`<color=${nc}>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma participacion en guerra de clanes en <color=#FFD700>aor-war-command.vercel.app/registro</color>`
-    };
-  });
-  const [nowaMsgs, setNowaMsgs] = useState(
-    Object.fromEntries(noWaMsgs.map(m=>[m.key,m.default]))
-  );
-
-  const WaCard = ({k,title,desc}) => (
-    <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
-      <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{title}</div>
-      {desc&&<div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"6px"}}>{desc}</div>}
-      <textarea value={msgs[k]} onChange={e=>setMsg(k,e.target.value)} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"inherit"}}/>
-      <button onClick={()=>copy(k)} style={{padding:"5px 14px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
-        {copied===k?"✓ Copiado!":"📋 Copiar"}
-      </button>
-    </div>
-  );
-
-  const GameCard = ({k,title}) => {
-    const len = (msgs[k]||"").length;
-    const over = len > 250;
-    return (
-      <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(64,224,255,0.15)"),borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
-          <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{title}</div>
-          <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.35)",fontWeight:over?"bold":"normal"}}>{len}/250{over?" ⚠ EXCEDE":""}</span>
-        </div>
-        <textarea value={msgs[k]} onChange={e=>setMsg(k,e.target.value)} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid "+(over?"rgba(255,107,107,0.3)":"rgba(64,224,255,0.15)"),borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"monospace"}}/>
-        <button onClick={()=>copy(k)} style={{padding:"5px 14px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
-          {copied===k?"✓ Copiado!":"📋 Copiar"}
-        </button>
-      </div>
-    );
-  };
 
   return (
     <div style={{padding:"0 16px"}}>
       <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
-      <WaCard k="waregistro" title={`📱 Registro del grupo WA (${waRegistrado.length}/${waPlayers.length})`} desc="Solo miembros del grupo de WhatsApp"/>
-      <WaCard k="registro"   title="📋 Registro completo" desc="Todos los miembros activos"/>
-      <WaCard k="semanal"    title="📊 Reporte semanal" desc="Ranking guerra actual"/>
-      <WaCard k="acumulado"  title="🏆 Ranking acumulado" desc="Sin bonus de rango"/>
-      <WaCard k="aviso"      title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales"/>
-      <WaCard k="bienvenida" title="👋 Bienvenida nuevo miembro"/>
+      <WaCard title={`📱 Registro del grupo WA (${waRegistrado.length}/${waPlayers.length})`} desc="Solo miembros del grupo de WhatsApp" initialValue={buildWaRegistro()}/>
+      <WaCard title="📋 Registro completo" desc="Todos los miembros activos" initialValue={buildRegistro()}/>
+      <WaCard title="📊 Reporte semanal" desc="Ranking guerra actual" initialValue={buildSemanal()}/>
+      <WaCard title="🏆 Ranking acumulado" desc="Sin bonus de rango" initialValue={buildAcumulado()}/>
+      <WaCard title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales" initialValue={"*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"}/>
+      <WaCard title="👋 Bienvenida nuevo miembro" initialValue={"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"}/>
 
       <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>⚠ Mensajes externos sin link de app · Internos con link · Máx 250 caracteres</div>
-      <GameCard k="defensa"    title="🚨 Alerta defensa urgente"/>
-      <GameCard k="guerra"     title="⚔ Inicio de guerra"/>
-      <GameCard k="victoria"   title="🏆 Victoria"/>
-      <GameCard k="registrate" title="📋 Llama a registrarse (interno)"/>
-      <GameCard k="aviso_pts"  title="📋 Sin registro = -20 pts (interno)"/>
-      <GameCard k="sumate_wa"  title="📱 Invitar al grupo WhatsApp"/>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Máx 250 caracteres · ✏ Editar para modificar · 💾 Guardar confirma cambios</div>
+      <GameCard title="🚨 Alerta defensa urgente"        initialValue={"<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>\n<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>\nTodos los defensores al castillo.\n<color=#40E0FF>¡Ahora!</color>"}/>
+      <GameCard title="⚔ Inicio de guerra"              initialValue={"<color=#FFD700>━━ [AOR] GUERRA ━━</color>\n<color=#A8FF78>¡Comienza la batalla!</color>\nAtacar castillos enemigos primero.\n<color=#FF9F43>¡A por la victoria!</color>"}/>
+      <GameCard title="🏆 Victoria"                     initialValue={"<color=#FFD700>━━ [AOR] VICTORIA ━━</color>\n<color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nGracias a todos los guerreros.\n<color=#40E0FF>[AOR] Antigua Orden</color>"}/>
+      <GameCard title="📋 Llama a registrarse (interno)" initialValue={"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\nhttps://aor-war-command.vercel.app/registro"}/>
+      <GameCard title="📋 Sin registro = -20 pts"        initialValue={"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate ya:</color>\nhttps://aor-war-command.vercel.app/registro"}/>
+      <GameCard title="📱 Invitar al grupo WhatsApp"     initialValue={"<color=#FFD700>[AOR]</color> Únete al grupo de WhatsApp.\n<color=#A8FF78>+25 puntos de bono.</color>\nPide el enlace a un oficial."}/>
 
       {noWaPlayers.length > 0 && (
         <div style={{marginTop:"16px"}}>
           <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"13px",marginBottom:"6px"}}>📵 Invitaciones WA individuales ({noWaPlayers.length} sin grupo)</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>Un mensaje por jugador · Editable · Con contador</div>
-          {noWaMsgs.map(m=>{
-            const len=(nowaMsgs[m.key]||"").length;
-            const over=len>250;
-            return (
-              <div key={m.key} style={{background:"rgba(255,159,67,0.04)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(255,159,67,0.2)"),borderRadius:"8px",padding:"10px",marginBottom:"6px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
-                  <div style={{fontSize:"11px",color:"#FF9F43",fontWeight:"bold"}}>📵 {m.name}</div>
-                  <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{len}/250</span>
-                </div>
-                <textarea value={nowaMsgs[m.key]||""} onChange={e=>setNowaMsgs(n=>({...n,[m.key]:e.target.value}))} rows={4} style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"6px",color:"#d4c9a8",fontSize:"10px",padding:"6px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"monospace"}}/>
-                <button onClick={()=>{navigator.clipboard.writeText(nowaMsgs[m.key]||"");setCopied(m.key);setTimeout(()=>setCopied(""),2000);}} style={{padding:"4px 12px",background:copied===m.key?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===m.key?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===m.key?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
-                  {copied===m.key?"✓ Copiado!":"📋 Copiar"}
-                </button>
-              </div>
-            );
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>✏ Editar para personalizar · 💾 Guardar confirma</div>
+          {noWaPlayers.map((p,i)=>{
+            const nc = NAME_COLORS[i % NAME_COLORS.length];
+            const def = `<color=${nc}>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma participacion en guerra de clanes en <color=#FFD700>aor-war-command.vercel.app/registro</color>`;
+            return <InviteCard key={p.id} name={p.name} initialValue={def}/>;
           })}
         </div>
       )}
