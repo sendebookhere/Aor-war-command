@@ -1,8 +1,11 @@
+import HomeButton from "./HomeButton";
 import NalguitasFooter from "./NalguitasFooter";
 
 export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+      <HomeButton/>
+      <div style={{height:"32px"}}/>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
         <div style={{display:"flex",gap:"12px",alignItems:"center",marginBottom:"16px",flexWrap:"wrap"}}>
           <a href="/registro" style={{color:"#40E0FF",cursor:"pointer",fontSize:"12px",textDecoration:"none"}}>← Registro</a>

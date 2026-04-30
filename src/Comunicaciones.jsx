@@ -1,3 +1,4 @@
+import HomeButton from "./HomeButton";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NalguitasFooter from "./NalguitasFooter";
@@ -108,6 +109,7 @@ export default function Comunicaciones() {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",paddingBottom:"40px"}}>
+      <HomeButton/>
 
       {/* Header */}
       <div style={{borderBottom:"1px solid rgba(64,224,255,0.1)",padding:"20px 20px 16px"}}>
