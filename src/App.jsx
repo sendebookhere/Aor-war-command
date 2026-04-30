@@ -768,100 +768,173 @@ function VisitsTab() {
     supabase.from("page_visits")
       .select("*")
       .order("visited_at", {ascending: false})
-      .limit(500)
-      .then(({data}) => {
-        setVisits(data || []);
-        setLoading(false);
-      });
+      .limit(2000)
+      .then(({data}) => { setVisits(data || []); setLoading(false); });
   }, []);
 
   if (loading) return <div style={{padding:"20px",color:"rgba(255,255,255,0.4)"}}>Cargando visitas...</div>;
-
   if (visits.length === 0) return (
     <div style={{padding:"20px",fontSize:"12px",color:"rgba(255,255,255,0.4)",textAlign:"center"}}>
       <div style={{marginBottom:"8px"}}>Sin datos todavía.</div>
-      <div style={{fontSize:"10px"}}>Las visitas se registran automáticamente cuando alguien abre cualquier página de la app.</div>
+      <div style={{fontSize:"10px"}}>Las visitas se registran automáticamente al abrir cualquier página.</div>
     </div>
   );
 
-  // Group by page
-  const pages = ["/registro","/reporte","/puntos","/"];
+  const pages      = ["/registro","/reporte","/puntos","/"];
   const pageLabels = {"/registro":"📋 Registro","/reporte":"📊 Reporte","/puntos":"❓ Puntos","/":"⚙ Admin"};
   const pageColors = {"/registro":"#A8FF78","/reporte":"#40E0FF","/puntos":"#FFD700","/":"#FF9F43"};
 
-  // Total by page
-  const byPage = {};
-  const byDay  = {};
+  // ── Aggregate data ──────────────────────────────────────────────────────
+  const today     = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+
+  // Group visits by session_id
+  const sessionMap = {}; // sid -> {pages:Set, count, firstVisit, lastVisit}
+  const byPage  = {};
+  const byDay   = {}; // day -> {page -> {visits, sessions:Set}}
+
   visits.forEach(v => {
     const pg  = v.page || "/";
-    const day = v.visited_at ? v.visited_at.slice(0,10) : "?";
+    const day = (v.visited_at||"").slice(0,10);
+    const sid = v.session_id || "anon_"+day;
+
+    // byPage totals
     byPage[pg] = (byPage[pg]||0) + 1;
+
+    // byDay: track both visit count and unique sessions
     if (!byDay[day]) byDay[day] = {};
-    byDay[day][pg] = (byDay[day][pg]||0) + 1;
+    if (!byDay[day][pg]) byDay[day][pg] = {visits:0, sessions:new Set()};
+    byDay[day][pg].visits++;
+    if (v.session_id) byDay[day][pg].sessions.add(v.session_id);
+
+    // sessionMap
+    if (!sessionMap[sid]) sessionMap[sid] = {pages:new Set(), count:0, first:day, last:day};
+    sessionMap[sid].pages.add(pg);
+    sessionMap[sid].count++;
+    if (day > sessionMap[sid].last) sessionMap[sid].last = day;
   });
 
-  const total    = visits.length;
-  const uniqueSessions = new Set(visits.map(v=>v.session_id).filter(Boolean)).size;
-  const days  = Object.keys(byDay).sort().reverse().slice(0,14);
+  const allSessions   = Object.values(sessionMap);
+  const totalVisits   = visits.length;
+  const uniqueSessions = allSessions.length;
+  const returning     = allSessions.filter(s => s.count > 1).length;
+  const multiPage     = allSessions.filter(s => s.pages.size > 1).length;
+  const avgPerSession = uniqueSessions > 0 ? (totalVisits / uniqueSessions).toFixed(1) : 0;
+
+  // Today vs yesterday
+  const todayVisits  = visits.filter(v=>(v.visited_at||"").slice(0,10)===today).length;
+  const ydayVisits   = visits.filter(v=>(v.visited_at||"").slice(0,10)===yesterday).length;
+  const todaySessions = new Set(visits.filter(v=>(v.visited_at||"").slice(0,10)===today && v.session_id).map(v=>v.session_id)).size;
+
+  // Page unique sessions
+  const pageUniq = {};
+  pages.forEach(pg => {
+    pageUniq[pg] = new Set(visits.filter(v=>(v.page||"/")=== pg && v.session_id).map(v=>v.session_id)).size;
+  });
+
+  // Cross-page journey: how many sessions visited both registration AND report
+  const regAndReport = allSessions.filter(s=>s.pages.has("/registro")&&s.pages.has("/reporte")).length;
+
+  // Days sorted
+  const days = Object.keys(byDay).sort().reverse().slice(0,14);
+
+  const StatCard = ({label, value, sub, color="#FFD700", bg="rgba(255,215,0,0.06)", border="rgba(255,215,0,0.2)"}) => (
+    <div style={{flex:1,minWidth:"70px",background:bg,border:"1px solid "+border,borderRadius:"8px",padding:"10px 8px",textAlign:"center"}}>
+      <div style={{fontSize:"9px",color:color,fontWeight:"bold",marginBottom:"2px",opacity:0.8}}>{label}</div>
+      <div style={{fontSize:"20px",color,fontWeight:"bold",lineHeight:1}}>{value}</div>
+      {sub&&<div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginTop:"3px"}}>{sub}</div>}
+    </div>
+  );
 
   return (
     <div style={{padding:"0 16px"}}>
       <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>👁 Visitas a la app</div>
 
-      {/* Totals by page */}
-      <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"16px"}}>
-        {pages.map(pg => (
-          <div key={pg} style={{flex:1,minWidth:"80px",background:(pageColors[pg]||"#888")+"0A",border:"1px solid "+(pageColors[pg]||"#888")+"33",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
-            <div style={{fontSize:"11px",color:pageColors[pg]||"#888",fontWeight:"bold",marginBottom:"4px"}}>{pageLabels[pg]||pg}</div>
-            <div style={{fontSize:"22px",color:pageColors[pg]||"#888",fontWeight:"bold"}}>{byPage[pg]||0}</div>
-            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>visitas totales</div>
-          </div>
-        ))}
-        <div style={{flex:1,minWidth:"80px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontWeight:"bold",marginBottom:"4px"}}>🌐 Total</div>
-          <div style={{fontSize:"22px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>{total}</div>
-          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>cargas de página</div>
-        </div>
-        <div style={{flex:1,minWidth:"80px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"10px 12px",textAlign:"center"}}>
-          <div style={{fontSize:"11px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px"}}>👤 Sesiones</div>
-          <div style={{fontSize:"22px",color:"#A8FF78",fontWeight:"bold"}}>{uniqueSessions}</div>
-          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)"}}>dispositivos únicos</div>
-        </div>
+      {/* KPI row */}
+      <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"12px"}}>
+        <StatCard label="TOTAL CARGAS" value={totalVisits} sub="todas las páginas"/>
+        <StatCard label="SESIONES ÚNICAS" value={uniqueSessions} sub="dispositivos distintos" color="#A8FF78" bg="rgba(168,255,120,0.06)" border="rgba(168,255,120,0.2)"/>
+        <StatCard label="RECURRENTES" value={returning} sub="volvieron ≥2 veces" color="#40E0FF" bg="rgba(64,224,255,0.06)" border="rgba(64,224,255,0.2)"/>
+        <StatCard label="MULTIPÁGINA" value={multiPage} sub="visitaron 2+ secciones" color="#C8A2FF" bg="rgba(200,162,255,0.06)" border="rgba(200,162,255,0.2)"/>
+        <StatCard label="PROM/SESIÓN" value={avgPerSession} sub="páginas por visita" color="#FF9F43" bg="rgba(255,159,67,0.06)" border="rgba(255,159,67,0.2)"/>
       </div>
 
-      {/* By day table */}
-      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Últimas 2 semanas por día</div>
+      {/* Today highlight */}
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",display:"flex",gap:"16px",alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)"}}>📅 Hoy</div>
+        <div><span style={{fontSize:"16px",color:"#FFD700",fontWeight:"bold"}}>{todayVisits}</span><span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginLeft:"4px"}}>cargas</span></div>
+        <div><span style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold"}}>{todaySessions}</span><span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginLeft:"4px"}}>sesiones únicas</span></div>
+        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>Ayer: {ydayVisits} cargas</div>
+        {regAndReport>0&&<div style={{fontSize:"10px",color:"#40E0FF"}}>🔗 {regAndReport} sesión{regAndReport>1?"es":""} visitó Registro+Reporte</div>}
+      </div>
+
+      {/* Per page: visits + unique sessions */}
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Por página — visitas / sesiones únicas</div>
+      <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"16px"}}>
+        {pages.map(pg=>(
+          <div key={pg} style={{flex:1,minWidth:"80px",background:(pageColors[pg])+"0A",border:"1px solid "+(pageColors[pg])+"33",borderRadius:"8px",padding:"10px 8px",textAlign:"center"}}>
+            <div style={{fontSize:"10px",color:pageColors[pg],fontWeight:"bold",marginBottom:"6px"}}>{pageLabels[pg]}</div>
+            <div style={{fontSize:"18px",color:pageColors[pg],fontWeight:"bold"}}>{byPage[pg]||0}</div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px"}}>cargas</div>
+            <div style={{borderTop:"1px solid "+(pageColors[pg])+"22",paddingTop:"4px"}}>
+              <div style={{fontSize:"14px",color:pageColors[pg],fontWeight:"bold",opacity:0.7}}>{pageUniq[pg]||0}</div>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)"}}>sesiones únicas</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Daily table: visits + sessions per day */}
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Últimas 2 semanas</div>
       <div style={{overflowX:"auto"}}>
-        <table style={{width:"100%",borderCollapse:"collapse",fontSize:"11px"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:"10px"}}>
           <thead>
             <tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-              <th style={{textAlign:"left",color:"rgba(255,255,255,0.4)",padding:"4px 8px",fontWeight:"normal"}}>Fecha</th>
-              {pages.map(pg=><th key={pg} style={{textAlign:"center",color:pageColors[pg]||"#888",padding:"4px 8px",fontWeight:"normal"}}>{pageLabels[pg]}</th>)}
-              <th style={{textAlign:"center",color:"rgba(255,255,255,0.4)",padding:"4px 8px",fontWeight:"normal"}}>Total</th>
+              <th style={{textAlign:"left",color:"rgba(255,255,255,0.4)",padding:"4px 6px",fontWeight:"normal"}}>Fecha</th>
+              {pages.map(pg=>(
+                <th key={pg} style={{textAlign:"center",color:pageColors[pg],padding:"4px 6px",fontWeight:"normal"}}>{pageLabels[pg]}</th>
+              ))}
+              <th style={{textAlign:"center",color:"rgba(255,255,255,0.4)",padding:"4px 6px",fontWeight:"normal"}}>Total</th>
+              <th style={{textAlign:"center",color:"#A8FF78",padding:"4px 6px",fontWeight:"normal"}}>👤 Únicos</th>
             </tr>
           </thead>
           <tbody>
             {days.map(day => {
-              const dayTotal = Object.values(byDay[day]).reduce((s,v)=>s+v,0);
+              const dayVisits  = pages.reduce((s,pg)=>s+(byDay[day][pg]?.visits||0),0);
+              const dayUniq    = new Set(
+                visits.filter(v=>(v.visited_at||"").slice(0,10)===day && v.session_id).map(v=>v.session_id)
+              ).size;
+              const isToday    = day === today;
               return (
-                <tr key={day} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-                  <td style={{color:"rgba(255,255,255,0.5)",padding:"5px 8px"}}>{day}</td>
-                  {pages.map(pg=>(
-                    <td key={pg} style={{textAlign:"center",color:byDay[day][pg]?(pageColors[pg]||"#888"):"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:byDay[day][pg]?"bold":"normal"}}>
-                      {byDay[day][pg]||"—"}
-                    </td>
-                  ))}
-                  <td style={{textAlign:"center",color:"rgba(255,255,255,0.5)",padding:"5px 8px",fontWeight:"bold"}}>{dayTotal}</td>
+                <tr key={day} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:isToday?"rgba(255,215,0,0.04)":"transparent"}}>
+                  <td style={{color:isToday?"#FFD700":"rgba(255,255,255,0.5)",padding:"5px 6px",fontWeight:isToday?"bold":"normal"}}>{day}{isToday?" ●":""}</td>
+                  {pages.map(pg=>{
+                    const v = byDay[day][pg]?.visits || 0;
+                    const u = byDay[day][pg]?.sessions.size || 0;
+                    return (
+                      <td key={pg} style={{textAlign:"center",padding:"5px 6px"}}>
+                        {v>0
+                          ? <><span style={{color:pageColors[pg],fontWeight:"bold"}}>{v}</span><span style={{color:"rgba(255,255,255,0.25)",fontSize:"9px"}}> /{u}</span></>
+                          : <span style={{color:"rgba(255,255,255,0.12)"}}>—</span>
+                        }
+                      </td>
+                    );
+                  })}
+                  <td style={{textAlign:"center",color:"rgba(255,255,255,0.5)",padding:"5px 6px",fontWeight:"bold"}}>{dayVisits}</td>
+                  <td style={{textAlign:"center",color:"#A8FF78",padding:"5px 6px",fontWeight:"bold"}}>{dayUniq||"—"}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"12px",textAlign:"center"}}>Una sesión = un dispositivo/navegador distinto (via localStorage). Una carga de página = una visita.</div>
+      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"10px"}}>
+        Cargas / Únicos · Sesión = un dispositivo/navegador · Recurrente = volvió 2+ veces · Multipágina = visitó 2+ secciones
+      </div>
     </div>
   );
 }
+
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 function AdminPanel({players, update, loading, saving, reload}) {
