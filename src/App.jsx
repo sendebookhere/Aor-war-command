@@ -1,4 +1,5 @@
 import NalguitasFooter from "./NalguitasFooter";
+import Comunicaciones from "./Comunicaciones";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
@@ -129,6 +130,55 @@ function FlagBar({count}) {
         <div key={i} style={{width:"7px",height:"10px",background:i<count?"#FFD700":"rgba(255,215,0,0.12)",borderRadius:"1px"}}/>
       ))}
       <span style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginLeft:"3px"}}>{count}/10</span>
+    </div>
+  );
+}
+
+
+// ── WA Report Buttons (for /registro done screen) ─────────────────────────
+function WaReportButtons() {
+  const [copied, setCopied] = useState("");
+  const [players, setPlayers] = useState([]);
+  useEffect(()=>{
+    supabase.from("players").select("*").eq("active",true).then(({data})=>{ if(data) setPlayers(data); });
+  },[]);
+  function totalPtsLocal(p) {
+    const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
+    return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+          +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
+          +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+          +(p.pt_whatsapp||0)+sb
+          -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+          -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
+          -(p.pt_bandido_pre||0);
+  }
+  const wa = players.filter(p=>p.whatsapp);
+  function copySemanal() {
+    const sorted = [...wa].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
+    let m = "*[AOR] Reporte Semanal — Grupo WA* ⚔\n\n";
+    sorted.forEach((p,i)=>{const pts=totalPtsLocal(p); m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
+    m+=`\n📊 https://aor-war-command.vercel.app/reporte`;
+    navigator.clipboard.writeText(m); setCopied("sem"); setTimeout(()=>setCopied(""),2000);
+  }
+  function copyAcumulado() {
+    const sorted = [...wa].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
+    let m = "*[AOR] Ranking Acumulado — Grupo WA* 🏆\n\n";
+    sorted.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;});
+    m+=`\n📊 https://aor-war-command.vercel.app/reporte`;
+    navigator.clipboard.writeText(m); setCopied("acc"); setTimeout(()=>setCopied(""),2000);
+  }
+  if (!wa.length) return null;
+  return (
+    <div style={{width:"100%",maxWidth:"380px",background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"10px",padding:"14px"}}>
+      <div style={{fontSize:"10px",color:"#25D366",letterSpacing:"0.15em",fontFamily:"monospace",marginBottom:"10px"}}>REPORTES PARA WHATSAPP — {wa.length} MIEMBROS DEL GRUPO</div>
+      <div style={{display:"flex",gap:"8px"}}>
+        <button onClick={copySemanal} style={{flex:1,padding:"8px",background:copied==="sem"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="sem"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="sem"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+          {copied==="sem"?"✓ Copiado":"Reporte semanal WA"}
+        </button>
+        <button onClick={copyAcumulado} style={{flex:1,padding:"8px",background:copied==="acc"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="acc"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="acc"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+          {copied==="acc"?"✓ Copiado":"Ranking acumulado WA"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -353,15 +403,21 @@ function RegistrationForm({onRegistered}) {
   );
 
   if (done) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
-      <div style={{textAlign:"center",maxWidth:"360px"}}>
+    <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+      <div style={{textAlign:"center",maxWidth:"400px",width:"100%",marginBottom:"24px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>⚔</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",marginBottom:"8px"}}>¡Registrado!</div>
         <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"16px"}}>Tu participación ha sido confirmada. El comando de [AOR] ha sido notificado.</div>
-        <div style={{background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"8px",padding:"12px",fontSize:"12px",color:"#A8FF78"}}>
+        <div style={{background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"8px",padding:"12px",fontSize:"12px",color:"#A8FF78",marginBottom:"16px"}}>
           +{5 + (AVAILABILITY[avail]?.declaredPts||0)} puntos acreditados a tu cuenta
         </div>
+        <div style={{display:"flex",gap:"8px",justifyContent:"center",marginBottom:"24px"}}>
+          <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>Ver ranking</a>
+          <a href="/comunicaciones" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>Comunicaciones</a>
+        </div>
       </div>
+      <WaReportButtons/>
+      <NalguitasFooter/>
     </div>
   );
 
@@ -722,6 +778,13 @@ function MensajesTab({players}) {
       <WaCard title="🏆 Ranking acumulado" desc="Sin bonus de rango" initialValue={buildAcumulado()}/>
       <WaCard title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales" initialValue={"*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"}/>
       <WaCard title="👋 Bienvenida nuevo miembro" initialValue={"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"}/>
+
+      <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>📡 Mensajes de Comunicaciones (página pública)</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Estos 4 mensajes aparecen en /comunicaciones para que los miembros los copien y peguen en el chat del juego. Sin iconos — solo texto y color.</div>
+      <WaCard title="Comunicación 1 — Reclutamiento activo" initialValue={"[AOR] Antigua Orden — Clan activo buscando guerreros. Guerras semanales coordinadas, sistema de rangos y puntos. Escribe a un oficial para unirte."} titleColor="#FFD700"/>
+      <WaCard title="Comunicación 2 — Convocatoria de guerra" initialValue={"Antigua Orden [AOR] en guerra. Si buscas clan organizado con estrategia real, este es tu momento. Contacta a un oficial antes del viernes."} titleColor="#FFD700"/>
+      <WaCard title="Comunicación 3 — Post victoria" initialValue={"Antigua Orden [AOR] sigue invicta. Clan de guerreros comprometidos busca refuerzos para la siguiente batalla. Habla con un oficial."} titleColor="#FFD700"/>
+      <WaCard title="Comunicación 4 — Invitación élite" initialValue={"[AOR] Antigua Orden — no somos el clan más grande, somos el mejor organizado. Si quieres guerra de verdad, escríbenos."} titleColor="#FFD700"/>
 
       <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Máx 250 caracteres · ✏ Editar para modificar · 💾 Guardar confirma cambios</div>
@@ -1964,6 +2027,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               {label:"📊 Ranking / Reporte",url:"https://aor-war-command.vercel.app/reporte",color:"#40E0FF",desc:"Ver posiciones, perfiles y puntos acumulados",icon:"📊"},
               {label:"📋 Registro de Guerra",url:"https://aor-war-command.vercel.app/registro",color:"#A8FF78",desc:"Confirmar participación — cierra jueves 12am MX",icon:"📋"},
               {label:"❓ Cómo funciona",url:"https://aor-war-command.vercel.app/puntos",color:"#FFD700",desc:"Sistema de puntos, rangos y penalizaciones",icon:"❓"},
+              {label:"📡 Comunicaciones",url:"https://aor-war-command.vercel.app/comunicaciones",color:"#C8A2FF",desc:"Mensajes de difusión preaprobados para el clan",icon:"📡"},
             ].map(link=>(
               <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
@@ -2143,7 +2207,8 @@ export default function App() {
 
   if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
   if (path === "/reporte")  return <PublicReport />;
-  if (path === "/puntos")   return <Puntos onBack={()=>window.history.back()}/>;
+  if (path === "/puntos")         return <Puntos onBack={()=>window.history.back()}/>;
+  if (path === "/comunicaciones")  return <Comunicaciones/>;
   if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
