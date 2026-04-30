@@ -1,3 +1,25 @@
+
+function NalguitasFooter() {
+  return (
+    <div style={{
+      position:"fixed",bottom:0,left:0,right:0,height:"28px",
+      background:"linear-gradient(90deg,rgba(13,13,15,0.97),rgba(20,20,26,0.97),rgba(13,13,15,0.97))",
+      borderTop:"1px solid rgba(64,224,255,0.08)",
+      display:"flex",alignItems:"center",justifyContent:"center",
+      zIndex:999,backdropFilter:"blur(8px)",
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+        <div style={{width:"1px",height:"10px",background:"rgba(64,224,255,0.2)"}}/>
+        <span style={{fontSize:"9px",letterSpacing:"0.25em",color:"rgba(64,224,255,0.25)",fontFamily:"monospace",textTransform:"uppercase",userSelect:"none"}}>Developed by</span>
+        <span style={{fontSize:"9px",letterSpacing:"0.15em",background:"linear-gradient(90deg,rgba(64,224,255,0.5),rgba(255,215,0,0.5))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontFamily:"monospace",fontWeight:"bold",userSelect:"none"}}>NALGUITAS TECH</span>
+        <div style={{width:"1px",height:"10px",background:"rgba(255,215,0,0.2)"}}/>
+      <div style={{height:"36px"}}/>
+      <NalguitasFooter/>
+      </div>
+    </div>
+  );
+}
+
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
@@ -48,7 +70,8 @@ function totalPts(p) {
     - (p.pt_ignoro_orden||0)*2
     - (p.pt_abandono||0)*2
     - (p.pt_inactivo_4h||0)*3
-    - (p.pt_bandido_pre||0);
+    - (p.pt_fuera_castillo||0)*2
+  - (p.pt_bandido_pre||0);
 }
 
 function Pill({ color, children }) {
@@ -174,6 +197,7 @@ function PlayerProfile({ player, onBack }) {
     { label:"Sin registro ni participación", val: -(player.pt_penalizacion||0),      show: (player.pt_penalizacion||0) > 0 },
     { label:"Ignoró órdenes",            val: -(player.pt_ignoro_orden||0)*2,        show: (player.pt_ignoro_orden||0) > 0 },
     { label:"Abandonó defensa",          val: -(player.pt_abandono||0)*2,            show: (player.pt_abandono||0) > 0 },
+    { label:"🏰 Fuera del castillo (-2 c/u)", val: -(player.pt_fuera_castillo||0)*2,     show: (player.pt_fuera_castillo||0) > 0 },
     { label:"Inactivo +12h",             val: -(player.pt_inactivo_4h||0)*3,         show: (player.pt_inactivo_4h||0) > 0 },
     { label:"Bandido pre-guerra",        val: -(player.pt_bandido_pre||0),           show: (player.pt_bandido_pre||0) > 0 },
   ].filter(item => item.show);
@@ -222,7 +246,19 @@ function PlayerProfile({ player, onBack }) {
           )}
         </div>
 
-        {/* Update stats with 30% tolerance */}
+        {/* Update stats — only if session matches this player */}
+        {(()=>{
+          const lockedId = sessionStorage.getItem("aor_player_id");
+          if (lockedId && String(player.id) !== lockedId) {
+            return (
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px"}}>
+                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>🔒 Solo puedes actualizar stats de tu propio perfil. Ve a <a href="/registro" style={{color:"#40E0FF"}}>registro</a> si necesitas cambiar tus datos.</div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+        {(!sessionStorage.getItem("aor_player_id") || String(player.id) === sessionStorage.getItem("aor_player_id")) && (
         <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
           <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"6px",fontWeight:"bold"}}>📊 Actualizar mis stats</div>
           <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"7px 10px",marginBottom:"8px",fontSize:"10px"}}>
@@ -251,6 +287,7 @@ function PlayerProfile({ player, onBack }) {
           </div>
           {statsMsg && <div style={{fontSize:"11px",color:statsMsg.includes("⚠")||statsMsg.includes("Error")?"#FF6B6B":"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>{statsMsg}</div>}
         </div>
+        )}
 
         {/* Current war breakdown */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
@@ -300,6 +337,8 @@ function PlayerProfile({ player, onBack }) {
             <span style={{fontSize:"18px",color:h.total<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{h.total>0?"+":""}{h.total}</span>
           </div>
         ))}
+      <div style={{height:"36px"}}/>
+      <NalguitasFooter/>
       </div>
     </div>
   );
