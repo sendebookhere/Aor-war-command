@@ -425,7 +425,8 @@ function RegistrationForm({onRegistered}) {
     <div style={{minHeight:"100vh",background:"#0d0d0f",backgroundImage:"radial-gradient(ellipse at 10% 0%, rgba(64,224,255,0.05) 0%, transparent 50%)",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}>
-          <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Cómo funciona</a>
+          <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Puntos</a>
+          <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>
           <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>Ver ranking →</a>
         </div>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
@@ -2269,9 +2270,10 @@ function AdminAuth({onAuth}) {
   }
 
   const publicLinks = [
-    {href:"/registro", color:"#A8FF78", icon:"📋", label:"Registro de Guerra",  desc:"Confirma tu participación y suma puntos"},
-    {href:"/reporte",  color:"#40E0FF", icon:"📊", label:"Ranking [AOR]",        desc:"Posiciones, perfiles y puntos del clan"},
-    {href:"/puntos",   color:"#FFD700", icon:"❓", label:"Sistema de Puntos",    desc:"Cómo ganar y perder puntos en cada guerra"},
+    {href:"/registro",   color:"#A8FF78", icon:"📋", label:"Registro de Guerra",  desc:"Confirma tu participación y suma puntos"},
+    {href:"/reporte",    color:"#40E0FF", icon:"📊", label:"Ranking [AOR]",        desc:"Posiciones, perfiles y puntos del clan"},
+    {href:"/puntos",     color:"#FFD700", icon:"❓", label:"Sistema de Puntos",    desc:"Cómo ganar y perder puntos en cada guerra"},
+    {href:"/propaganda", color:"#C8A2FF", icon:"📡", label:"Propaganda de Guerra", desc:"Mensajes aprobados para difundir en el clan"},
   ];
 
   return (
