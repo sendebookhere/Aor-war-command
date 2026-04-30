@@ -217,7 +217,16 @@ function RegistrationForm({onRegistered}) {
   const currentWeek = getWarWeek();
 
   useEffect(()=>{
-    supabase.from("players").select("id,name,level,bp,registered_week,availability").eq("active",true).then(({data})=>{ if(data) setAllPlayers(data); });
+    supabase.from("players").select("id,name,level,bp,registered_week,availability").eq("active",true).then(({data})=>{
+      if(data) {
+        setAllPlayers(data);
+        const lockedId = sessionStorage.getItem("aor_player_id");
+        if (lockedId) {
+          const locked = data.find(p=>String(p.id)===lockedId);
+          if (locked) setSelectedPlayer(locked);
+        }
+      }
+    });
   },[]);
 
   async function loadLastStats(playerId) {
@@ -324,6 +333,8 @@ function RegistrationForm({onRegistered}) {
         updated_by: "jugador",
       });
     }
+    sessionStorage.setItem("aor_player_id", String(player.id));
+    sessionStorage.setItem("aor_player_name", player.name);
     setDone(true);
     setSubmitting(false);
     if (onRegistered) onRegistered();
@@ -368,8 +379,11 @@ function RegistrationForm({onRegistered}) {
 
         {/* Name */}
         <div style={{marginBottom:"16px",position:"relative"}}>
-          <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>NOMBRE EN EL JUEGO</label>
-          <input value={name} onChange={e=>handleNameChange(e.target.value)} placeholder="Escribe tu nombre..." style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}/>
+          <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"4px"}}>
+            NOMBRE EN EL JUEGO
+            {sessionStorage.getItem("aor_player_id") && <span style={{color:"#40E0FF",marginLeft:"6px",fontSize:"9px"}}>🔒 sesión: {sessionStorage.getItem("aor_player_name")}</span>}
+          </label>
+          <input value={name} onChange={e=>{ if(sessionStorage.getItem("aor_player_id")) return; handleNameChange(e.target.value); }} readOnly={!!sessionStorage.getItem("aor_player_id")} placeholder="Escribe tu nombre..." style={{width:"100%",background:sessionStorage.getItem("aor_player_id")?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box",cursor:sessionStorage.getItem("aor_player_id")?"not-allowed":"text"}}/>
           {selectedPlayer && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"3px"}}>✓ {selectedPlayer.name} — {((selectedPlayer.level||0)/1000).toFixed(1)}k</div>}
           {suggestions.length > 0 && (
             <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1a1f",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",zIndex:100,overflow:"hidden",marginTop:"2px"}}>
@@ -661,7 +675,7 @@ function MensajesTab({players}) {
           +(p.pt_whatsapp||0)+sb
           -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
           -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
-          -(p.pt_bandido_pre||0);
+          -(p.pt_fuera_castillo||0)*2-(p.pt_bandido_pre||0);
   }
 
   const waRegistrado   = waPlayers.filter(p=>p.registered_form);
@@ -1267,7 +1281,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
       pt_registro: 0, pt_disponibilidad_declarada: 0, pt_disponibilidad: 0,
       pt_obediencia: 0, pt_batallas_ganadas: 0, pt_batallas_perdidas: 0,
       pt_defensas: 0, pt_bonus: 0, pt_penalizacion: 0, pt_no_aparecio: 0,
-      pt_ignoro_orden: 0, pt_abandono: 0, pt_inactivo_4h: 0,
+      pt_ignoro_orden: 0, pt_abandono: 0, pt_inactivo_4h: 0, pt_fuera_castillo: 0,
     }).eq("active", true);
     // Add weekly points to accumulated for each player
     for (const p of activePlayers) {
@@ -1420,6 +1434,16 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     </div>
                     <div style={{marginLeft:"8px",display:"flex",flexDirection:"column",gap:"4px"}}>
                       <Pill color={getRank(totalPts(p)).color}>{totalPts(p)}pts</Pill>
+                      {(p.pts_acumulados||0) < 0 && p.whatsapp && (
+                        <button onClick={()=>{
+                          const curr = p.pts_acumulados||0;
+                          const reduced = Math.round((curr * 0.1) / 10) * 10;
+                          if (confirm("¿Reducir pts negativos de "+curr+" a "+reduced+" (90% condonación)?"))
+                            update(p.id,{pts_acumulados: reduced});
+                        }} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"8px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.2)",color:"#FFD700",cursor:"pointer",whiteSpace:"nowrap"}}>
+                          ✨ -90%
+                        </button>
+                      )}
                       <button onClick={()=>{
                           if(!confirm("¿Borrar la inscripción de "+p.name+"?")) return;
                           update(p.id,{
@@ -1676,6 +1700,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     {[
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
                       {label:"Abandonó -2",key:"pt_abandono",color:"#FF9F43"},
+                      {label:"🏰 Fuera castillo -2",key:"pt_fuera_castillo",color:"#FF6B6B"},
                       {label:"Inactivo 12h -3",key:"pt_inactivo_4h",color:"#FF6B6B"},
                       {label:"🏴‍☠ Bandido pre-guerra -1",key:"pt_bandido_pre",color:"#FF6B6B"},
                     ].map(cat=>(
@@ -1817,11 +1842,56 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
       </div>
       </div>
+      <div style={{height:"36px"}}/>
+      <NalguitasFooter/>
     </div>
   );
 }
 
 // ── Main App ───────────────────────────────────────────────────────────────
+
+
+// ── Nalguitas Tech Footer ─────────────────────────────────────────────────
+function NalguitasFooter() {
+  return (
+    <div style={{
+      position:"fixed", bottom:0, left:0, right:0,
+      height:"28px",
+      background:"linear-gradient(90deg, rgba(13,13,15,0.97) 0%, rgba(20,20,26,0.97) 50%, rgba(13,13,15,0.97) 100%)",
+      borderTop:"1px solid rgba(64,224,255,0.08)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:999,
+      backdropFilter:"blur(8px)",
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+        <div style={{width:"1px",height:"10px",background:"rgba(64,224,255,0.2)"}}/>
+        <span style={{
+          fontSize:"9px",
+          letterSpacing:"0.25em",
+          color:"rgba(64,224,255,0.25)",
+          fontFamily:"monospace",
+          textTransform:"uppercase",
+          userSelect:"none",
+        }}>
+          Developed by
+        </span>
+        <span style={{
+          fontSize:"9px",
+          letterSpacing:"0.15em",
+          background:"linear-gradient(90deg, rgba(64,224,255,0.5), rgba(255,215,0,0.5))",
+          WebkitBackgroundClip:"text",
+          WebkitTextFillColor:"transparent",
+          fontFamily:"monospace",
+          fontWeight:"bold",
+          userSelect:"none",
+        }}>
+          NALGUITAS TECH
+        </span>
+        <div style={{width:"1px",height:"10px",background:"rgba(255,215,0,0.2)"}}/>
+      </div>
+    </div>
+  );
+}
 
 // ── Admin Auth ──────────────────────────────────────────────────────────────
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "AOR2026";
@@ -1836,56 +1906,93 @@ function AdminAuth({onAuth}) {
       sessionStorage.setItem("aor_auth", "1");
       onAuth();
     } else {
-      setError(true);
-      setShake(true);
-      setPin("");
+      setError(true); setShake(true); setPin("");
       setTimeout(()=>setShake(false), 500);
     }
   }
 
+  const publicLinks = [
+    {href:"/registro", color:"#A8FF78", icon:"📋", label:"Registro de Guerra",  desc:"Confirma tu participación y suma puntos"},
+    {href:"/reporte",  color:"#40E0FF", icon:"📊", label:"Ranking [AOR]",        desc:"Posiciones, perfiles y puntos del clan"},
+    {href:"/puntos",   color:"#FFD700", icon:"❓", label:"Sistema de Puntos",    desc:"Cómo ganar y perder puntos en cada guerra"},
+  ];
+
   return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif"}}>
-      <div style={{width:"100%",maxWidth:"340px",padding:"32px 24px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"16px",textAlign:"center"}}>
-        <div style={{fontSize:"36px",marginBottom:"8px"}}>⚔</div>
-        <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700",marginBottom:"4px"}}>[AOR] Antigua Orden</div>
-        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)",marginBottom:"28px"}}>Panel de administración — acceso restringido</div>
-        <div style={{
-          animation: shake ? "shake 0.4s ease" : "none",
-        }}>
+    <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",paddingBottom:"40px"}}>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+      {/* Header */}
+      <div style={{textAlign:"center",marginBottom:"32px",animation:"fadeIn 0.6s ease"}}>
+        <div style={{fontSize:"10px",color:"rgba(64,224,255,0.4)",letterSpacing:"0.5em",marginBottom:"8px"}}>ANTIGUA ORDEN</div>
+        <div style={{fontSize:"32px",marginBottom:"6px"}}>⚔</div>
+        <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",letterSpacing:"0.05em"}}>[AOR] War Command</div>
+      </div>
+
+      {/* Public links — FIRST, prominent */}
+      <div style={{width:"100%",maxWidth:"360px",marginBottom:"28px",animation:"fadeIn 0.7s ease"}}>
+        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.3em",textAlign:"center",marginBottom:"12px"}}>ACCESO ABIERTO — SIN PIN</div>
+        {publicLinks.map(l=>(
+          <a key={l.href} href={l.href} style={{
+            display:"flex",alignItems:"center",gap:"12px",
+            padding:"13px 16px",marginBottom:"8px",
+            background:l.color+"08",
+            border:"1px solid "+l.color+"30",
+            borderRadius:"10px",
+            textDecoration:"none",
+            transition:"all 0.15s",
+          }}
+          onMouseEnter={e=>{ e.currentTarget.style.background=l.color+"14"; e.currentTarget.style.borderColor=l.color+"55"; }}
+          onMouseLeave={e=>{ e.currentTarget.style.background=l.color+"08"; e.currentTarget.style.borderColor=l.color+"30"; }}>
+            <span style={{fontSize:"20px",flexShrink:0}}>{l.icon}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"13px",color:l.color,fontWeight:"bold",marginBottom:"2px"}}>{l.label}</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>{l.desc}</div>
+            </div>
+            <span style={{fontSize:"12px",color:l.color+"60"}}>›</span>
+          </a>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div style={{width:"100%",maxWidth:"360px",display:"flex",alignItems:"center",gap:"12px",marginBottom:"20px"}}>
+        <div style={{flex:1,height:"1px",background:"rgba(255,255,255,0.06)"}}/>
+        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.18)",letterSpacing:"0.25em"}}>ADMIN</div>
+        <div style={{flex:1,height:"1px",background:"rgba(255,255,255,0.06)"}}/>
+      </div>
+
+      {/* PIN entry — secondary, understated */}
+      <div style={{width:"100%",maxWidth:"360px",animation:"fadeIn 0.9s ease"}}>
+        <div style={{animation:shake?"shake 0.4s ease":"none"}}>
           <input
             value={pin}
             onChange={e=>{ setPin(e.target.value); setError(false); }}
             onKeyDown={e=>e.key==="Enter"&&tryPin()}
             type="password"
-            placeholder="PIN de acceso"
-            autoFocus
+            placeholder="PIN de administración"
+            autoComplete="off"
             style={{
               width:"100%", boxSizing:"border-box",
-              background:"rgba(255,255,255,0.05)",
-              border:"1px solid "+(error?"rgba(255,107,107,0.6)":"rgba(255,255,255,0.12)"),
-              borderRadius:"8px", color:"#fff", padding:"12px 16px",
-              fontSize:"18px", letterSpacing:"0.3em", textAlign:"center",
-              outline:"none", marginBottom:"8px"
+              background:"rgba(255,255,255,0.03)",
+              border:"1px solid "+(error?"rgba(255,107,107,0.4)":"rgba(255,255,255,0.08)"),
+              borderRadius:"8px", color:"rgba(255,255,255,0.7)",
+              padding:"11px 14px", fontSize:"15px",
+              letterSpacing:"0.2em", textAlign:"center",
+              outline:"none", marginBottom:"6px",
             }}
           />
-          {error && <div style={{fontSize:"11px",color:"#FF6B6B",marginBottom:"8px"}}>PIN incorrecto</div>}
         </div>
+        {error && <div style={{fontSize:"10px",color:"rgba(255,107,107,0.7)",textAlign:"center",marginBottom:"6px"}}>PIN incorrecto</div>}
         <button onClick={tryPin} style={{
-          width:"100%", padding:"12px",
-          background:"rgba(255,215,0,0.15)",
-          border:"1px solid rgba(255,215,0,0.3)",
-          borderRadius:"8px", color:"#FFD700",
-          fontSize:"13px", cursor:"pointer", fontWeight:"bold", marginBottom:"20px"
+          width:"100%", padding:"10px",
+          background:"rgba(255,255,255,0.04)",
+          border:"1px solid rgba(255,255,255,0.08)",
+          borderRadius:"8px", color:"rgba(255,255,255,0.4)",
+          fontSize:"12px", cursor:"pointer", letterSpacing:"0.1em",
         }}>
-          Entrar
+          Acceder al panel →
         </button>
-        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"16px",display:"flex",gap:"12px",justifyContent:"center"}}>
-          <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none"}}>📋 Registro</a>
-          <a href="/reporte"  style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none"}}>📊 Reporte</a>
-          <a href="/puntos"   style={{fontSize:"11px",color:"#FFD700",textDecoration:"none"}}>❓ Puntos</a>
-        </div>
       </div>
-      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+      <NalguitasFooter/>
     </div>
   );
 }
