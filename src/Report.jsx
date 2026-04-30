@@ -264,7 +264,11 @@ export default function PublicReport() {
         const sorted = data.sort((a,b)=>{
           const ra = getRankOrder(a), rb = getRankOrder(b);
           if (ra !== rb) return ra - rb;
-          return (b.bp||0) - (a.bp||0); // within same rank: sort by BP
+          // Within same rank: sort by total accumulated pts, then BP as tiebreak
+          const totalA = (a.pts_acumulados||0) + totalPts(a) + (a.pts_honorificos||0);
+          const totalB = (b.pts_acumulados||0) + totalPts(b) + (b.pts_honorificos||0);
+          if (totalB !== totalA) return totalB - totalA;
+          return (b.bp||0) - (a.bp||0);
         });
         setPlayers(sorted);
       }
