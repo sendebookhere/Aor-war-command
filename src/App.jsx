@@ -395,11 +395,13 @@ function RegistrationForm({onRegistered}) {
   // Registration closed screen
   if (!isOpen) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+      <HomeButton/>
       <div style={{textAlign:"center",maxWidth:"360px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
         <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro abre los lunes y cierra el viernes a las 7:00am hora Ecuador cuando comienza la guerra.</div>
       </div>
+      <NalguitasFooter/>
     </div>
   );
 
@@ -1578,6 +1580,7 @@ function DailyLimitSetting() {
           {saved?"✓ Guardado":"Guardar"}
         </button>
       </div>
+    <NalguitasFooter/>
     </div>
   );
 }
