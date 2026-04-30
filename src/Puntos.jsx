@@ -1,18 +1,16 @@
-import HomeButton from "./HomeButton";
 import NalguitasFooter from "./NalguitasFooter";
 
 export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
-      <HomeButton/>
-      <div style={{height:"32px"}}/>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
-        <div style={{display:"flex",gap:"12px",alignItems:"center",marginBottom:"16px",flexWrap:"wrap"}}>
-          <a href="/registro" style={{color:"#40E0FF",cursor:"pointer",fontSize:"12px",textDecoration:"none"}}>← Registro</a>
-          <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
-          <a href="/reporte" style={{color:"#40E0FF",fontSize:"12px",textDecoration:"none"}}>📊 Ranking</a>
-          <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
-          <a href="/propaganda" style={{color:"#C8A2FF",fontSize:"12px",textDecoration:"none"}}>📡 Propaganda</a>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",marginBottom:"20px"}}>
+          <a href="/" style={{fontSize:"12px",color:"#FFD700",textDecoration:"none",padding:"5px 20px",border:"1px solid rgba(255,215,0,0.35)",borderRadius:"20px",background:"rgba(255,215,0,0.06)",letterSpacing:"0.1em"}}>HOME AOR</a>
+          <div style={{display:"flex",gap:"8px",flexWrap:"wrap",justifyContent:"center"}}>
+            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>📋 Registro</a>
+            <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>📊 Ranking</a>
+            <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>
+          </div>
         </div>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
