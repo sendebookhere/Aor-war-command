@@ -1,6 +1,7 @@
-import HomeButton from "./HomeButton";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
+import Inteligencia from "./Inteligencia";
+import Asamblea from "./Asamblea";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
@@ -395,7 +396,6 @@ function RegistrationForm({onRegistered}) {
   // Registration closed screen
   if (!isOpen) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
-      <HomeButton/>
       <div style={{textAlign:"center",maxWidth:"360px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
@@ -426,8 +426,7 @@ function RegistrationForm({onRegistered}) {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",backgroundImage:"radial-gradient(ellipse at 10% 0%, rgba(64,224,255,0.05) 0%, transparent 50%)",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
-      <HomeButton/>
-      <div style={{maxWidth:"560px",margin:"0 auto",paddingTop:"44px"}}>
+      <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}>
           <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Puntos</a>
           <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>
@@ -909,12 +908,12 @@ function MensajesTab({players}) {
 
       <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Máx 250 caracteres · ✏ Editar para modificar · 💾 Guardar confirma cambios</div>
-      <GameCard title="🚨 Alerta defensa urgente"        initialValue={"<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>\n<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>\nTodos los defensores al castillo.\n<color=#40E0FF>¡Ahora!</color>"}/>
-      <GameCard title="⚔ Inicio de guerra"              initialValue={"<color=#FFD700>━━ [AOR] GUERRA ━━</color>\n<color=#A8FF78>¡Comienza la batalla!</color>\nAtacar castillos enemigos primero.\n<color=#FF9F43>¡A por la victoria!</color>"}/>
-      <GameCard title="🏆 Victoria"                     initialValue={"<color=#FFD700>━━ [AOR] VICTORIA ━━</color>\n<color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nGracias a todos los guerreros.\n<color=#40E0FF>[AOR] Antigua Orden</color>"}/>
-      <GameCard title="📋 Llama a registrarse (interno)" initialValue={"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\nhttps://aor-war-command.vercel.app/registro"}/>
-      <GameCard title="📋 Sin registro = -20 pts"        initialValue={"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate ya:</color>\nhttps://aor-war-command.vercel.app/registro"}/>
-      <GameCard title="📱 Invitar al grupo WhatsApp"     initialValue={"<color=#FFD700>[AOR]</color> Únete al grupo de WhatsApp.\n<color=#A8FF78>+25 puntos de bono.</color>\nPide el enlace a un oficial."}/>
+      <GameCard title="Defensa urgente"        initialValue={"<color=#FF6B6B>-- [AOR] ALERTA --</color>\nCastillo bajo ataque. Todos a defender.\n<color=#FFD700>Antigua Orden</color> no cede territorio."}/>
+      <GameCard title="Inicio de guerra"              initialValue={"<color=#FFD700>-- [AOR] GUERRA --</color>\n<color=#40E0FF>Antigua Orden</color> entra en combate.\nFase 1: capturar castillos. Sin descanso."}/>
+      <GameCard title="Victoria"                     initialValue={"<color=#FFD700>-- [AOR] VICTORIA --</color>\n<color=#40E0FF>Antigua Orden</color> domina la guerra.\nGracias a cada guerrero comprometido."}/>
+      <GameCard title="Registrate antes del viernes (interno)" initialValue={"<color=#FFD700>[AOR]</color> Registrate antes del viernes.\n<color=#40E0FF>Antigua Orden</color> cuenta contigo.\nhttps://aor-war-command.vercel.app/registro"}/>
+      <GameCard title="Sin registro pierdes 20 puntos"        initialValue={"<color=#FF6B6B>[AOR] AVISO:</color> Sin registro pierdes 20 puntos.\n<color=#FFD700>Antigua Orden</color> necesita tu compromiso.\nhttps://aor-war-command.vercel.app/registro"}/>
+      <GameCard title="Unirse al grupo WhatsApp"     initialValue={"<color=#FFD700>[AOR]</color> Unete al grupo de <color=#40E0FF>Antigua Orden</color>.\nBonus de 25 puntos al unirte.\nPide el enlace a un oficial."}/>
 
       {extraGame.map(m=><GameCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraGame(prev=>prev.filter(x=>x.id!==m.id))}/>)}
       <button onClick={()=>{setNewType("game");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(64,224,255,0.06)",border:"1px dashed rgba(64,224,255,0.25)",borderRadius:"8px",color:"rgba(64,224,255,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje chat del juego</button>
@@ -933,35 +932,35 @@ function MensajesTab({players}) {
 
       <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>🔥 Reclutamiento externo — Español</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Chat general del juego · Sin link de la app · Máx 250 caracteres</div>
-      <GameCard title="📣 Reclutamiento general [ES]" initialValue={"<color=#FFD700>━━ [AOR] RECLUTA ━━</color>\n¿Buscas clan activo y organizado?\n<color=#40E0FF>⚔ Batallas · 🏰 Castillos · 🌟 Rangos</color>\n<color=#A8FF78>Antigua Orden [AOR]</color> — únete."}/>
-      <GameCard title="📣 Reclutamiento corto [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>¡Únete a Antigua Orden!</color>\nClan activo · guerras semanales.\n<color=#A8FF78>Escríbenos para ingresar.</color>"}/>
-      <GameCard title="📣 Élite [ES]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Clan de élite · [AOR]</color>\nBuscamos guerreros comprometidos.\n<color=#A8FF78>¿Listo para la batalla?</color>"}/>
-      <GameCard title="📣 Post-victoria [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nSomos <color=#40E0FF>Antigua Orden</color> y buscamos\nnuevos guerreros. <color=#FFD700>¡Únete al clan!</color>"}/>
+      <GameCard title="📣 Reclutamiento general [ES]" initialValue={"<color=#FFD700>-- [AOR] CLAN ACTIVO --</color>\nBuscas clan organizado con guerras reales?\n<color=#40E0FF>Antigua Orden</color> tiene rangos y estrategia."}/>
+      <GameCard title="📣 Reclutamiento corto [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Antigua Orden</color>\nClan activo con guerras semanales.\nEscribenos para ingresar."}/>
+      <GameCard title="📣 Élite [ES]" initialValue={"<color=#FFD700>-- ANTIGUA ORDEN --</color>\n<color=#40E0FF>Clan de elite [AOR]</color>\nBuscamos guerreros comprometidos con la victoria."}/>
+      <GameCard title="📣 Post-victoria [ES]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Antigua Orden</color> sigue invicta.\nBuscamos nuevos guerreros para la siguiente batalla.\nEscribe a un oficial."}/>
 
       <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>🔥 Recruitment — English</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>For general game chat · No app link · Max 250 chars</div>
-      <GameCard title="📣 General recruitment [EN]" initialValue={"<color=#FFD700>━━ [AOR] RECRUIT ━━</color>\nLooking for an active organized clan?\n<color=#40E0FF>⚔ Wars · 🏰 Castles · 🌟 Ranks</color>\n<color=#A8FF78>Antigua Orden [AOR]</color> — join us."}/>
-      <GameCard title="📣 Short recruitment [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Join Antigua Orden!</color>\nActive clan · weekly wars.\n<color=#A8FF78>Message us to join.</color>"}/>
-      <GameCard title="📣 Elite style [EN]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Elite clan · [AOR]</color>\nSeeking committed warriors.\n<color=#A8FF78>Ready for battle?</color>"}/>
-      <GameCard title="📣 Post-victory [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>WAR WON!</color> 🏆\nWe are <color=#40E0FF>Antigua Orden</color>. Looking\nfor new warriors. <color=#FFD700>Join the clan!</color>"}/>
+      <GameCard title="📣 General recruitment [EN]" initialValue={"<color=#FFD700>-- [AOR] ACTIVE CLAN --</color>\nLooking for organized clan with real wars?\n<color=#40E0FF>Antigua Orden</color> has ranks and strategy."}/>
+      <GameCard title="📣 Short recruitment [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Antigua Orden</color>\nActive clan - weekly wars.\nMessage us to join."}/>
+      <GameCard title="📣 Elite style [EN]" initialValue={"<color=#FFD700>-- ANTIGUA ORDEN --</color>\n<color=#40E0FF>Elite clan [AOR]</color>\nSeeking committed warriors. Real battles."}/>
+      <GameCard title="📣 Post-victory [EN]" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>Antigua Orden</color> wins again.\nLooking for new warriors. Next battle incoming.\nContact an officer."}/>
 
       <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>📨 Mensajes múltiples (hasta 4 seguidos)</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Pega uno por uno con pausa breve entre cada uno para que no se fusionen en un solo globo · Máx 250 c/u</div>
 
       <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
         <div style={{fontSize:"12px",color:"#FF9F43",fontWeight:"bold",marginBottom:"10px"}}>🇪🇸 Reclutamiento 4 partes (ES)</div>
-        <GameCard title="Parte 1/4 [ES]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Somos [AOR], clan organizado</color>\ncon guerras semanales y sistema\nde rangos y puntos."}/>
-        <GameCard title="Parte 2/4 [ES]" initialValue={"<color=#FFD700>[AOR]</color> Buscamos jugadores activos\n<color=#A8FF78>comprometidos con la guerra.</color>\nCada batalla cuenta para\ntu rango en el clan."}/>
-        <GameCard title="Parte 3/4 [ES]" initialValue={"<color=#40E0FF>¿Qué ofrecemos?</color>\n<color=#FFD700>⚔ Estrategia coordinada</color>\n<color=#A8FF78>🏰 Defensa organizada</color>\n<color=#FF9F43>🌟 Sistema de rangos</color>"}/>
-        <GameCard title="Parte 4/4 [ES]" initialValue={"<color=#A8FF78>¿Listo para unirte?</color>\n<color=#FFD700>Escríbenos o únete directamente.</color>\n<color=#40E0FF>Antigua Orden [AOR]</color>\nTe esperamos en batalla."}/>
+        <GameCard title="Parte 1/4 [ES]" initialValue={"<color=#FFD700>-- ANTIGUA ORDEN [AOR] --</color>\nClan organizado con guerras semanales.\nSistema de rangos y puntos."}/>
+        <GameCard title="Parte 2/4 [ES]" initialValue={"<color=#FFD700>[AOR]</color> Buscamos jugadores activos.\n<color=#40E0FF>Antigua Orden</color> comprometidos con la guerra.\nCada batalla cuenta para tu rango."}/>
+        <GameCard title="Parte 3/4 [ES]" initialValue={"<color=#40E0FF>Que ofrece Antigua Orden:</color>\n<color=#FFD700>Estrategia coordinada</color>\nDefensa organizada y sistema de rangos."}/>
+        <GameCard title="Parte 4/4 [ES]" initialValue={"<color=#40E0FF>Antigua Orden [AOR]</color>\n<color=#FFD700>Listo para unirte?</color>\nEscribenos o habla con un oficial."}/>
       </div>
 
       <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
         <div style={{fontSize:"12px",color:"#FF9F43",fontWeight:"bold",marginBottom:"10px"}}>🇬🇧 Recruitment 4 parts (EN)</div>
-        <GameCard title="Part 1/4 [EN]" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>We are [AOR], an organized clan</color>\nwith weekly wars and a\nranking and points system."}/>
-        <GameCard title="Part 2/4 [EN]" initialValue={"<color=#FFD700>[AOR]</color> We seek active players\n<color=#A8FF78>committed to war.</color>\nEvery battle counts toward\nyour rank in the clan."}/>
-        <GameCard title="Part 3/4 [EN]" initialValue={"<color=#40E0FF>What we offer:</color>\n<color=#FFD700>⚔ Coordinated strategy</color>\n<color=#A8FF78>🏰 Organized defense</color>\n<color=#FF9F43>🌟 Rank system</color>"}/>
-        <GameCard title="Part 4/4 [EN]" initialValue={"<color=#A8FF78>Ready to join?</color>\n<color=#FFD700>Message us or join directly.</color>\n<color=#40E0FF>Antigua Orden [AOR]</color>\nSee you on the battlefield."}/>
+        <GameCard title="Part 1/4 [EN]" initialValue={"<color=#FFD700>-- ANTIGUA ORDEN [AOR] --</color>\nOrganized clan with weekly wars.\nRank and points system."}/>
+        <GameCard title="Part 2/4 [EN]" initialValue={"<color=#FFD700>[AOR]</color> Seeking active players.\n<color=#40E0FF>Antigua Orden</color> committed to war.\nEvery battle counts for your rank."}/>
+        <GameCard title="Part 3/4 [EN]" initialValue={"<color=#40E0FF>What Antigua Orden offers:</color>\n<color=#FFD700>Coordinated strategy</color>\nOrganized defense and rank system."}/>
+        <GameCard title="Part 4/4 [EN]" initialValue={"<color=#40E0FF>Antigua Orden [AOR]</color>\n<color=#FFD700>Ready to join?</color>\nMessage us or contact an officer."}/>
       </div>
     </div>
   );
@@ -1388,10 +1387,14 @@ function SeguridadTab({players}) {
   useEffect(()=>{ loadSnapshots(); },[]);
 
   async function loadSnapshots() {
-    const {data} = await supabase.from("player_snapshots")
-      .select("id,created_at,label,player_count")
-      .order("created_at",{ascending:false}).limit(20);
-    setSnapshots(data||[]); setLoading(false);
+    try {
+      const {data, error} = await supabase.from("player_snapshots")
+        .select("id,created_at,label,player_count")
+        .order("created_at",{ascending:false}).limit(20);
+      if (error) { setMsg("Tabla no encontrada. Créala en Supabase con el SQL del panel."); setLoading(false); return; }
+      setSnapshots(data||[]);
+    } catch(e) { setMsg("Error: "+e.message); }
+    setLoading(false);
   }
 
   async function saveSnapshot() {
@@ -1548,8 +1551,8 @@ function DailyLimitSetting() {
 
   useEffect(()=>{
     supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single()
-      .then(({data})=>{
-        if (data?.value) setLimit(parseInt(data.value)||2);
+      .then(({data, error})=>{
+        if (!error && data?.value) setLimit(parseInt(data.value)||2);
         setLoaded(true);
       });
   },[]);
@@ -1567,7 +1570,7 @@ function DailyLimitSetting() {
       <div style={{fontSize:"11px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>⚙ Configuración de Comunicaciones</div>
       <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
         <div style={{flex:1}}>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Publicaciones máximas por jugador por día en /propaganda</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Máximo de mensajes que cada miembro puede publicar diariamente en el chat general del juego desde <strong style={{color:"#C8A2FF"}}>/propaganda</strong> para reclutar nuevos jugadores al clan</div>
           <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
             <button onClick={()=>setLimit(l=>Math.max(1,l-1))} style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",cursor:"pointer",fontSize:"14px"}}>−</button>
             <input type="number" value={limit} onChange={e=>setLimit(Math.max(1,parseInt(e.target.value)||1))} min="1" max="20"
@@ -1581,6 +1584,157 @@ function DailyLimitSetting() {
         </button>
       </div>
     <NalguitasFooter/>
+    </div>
+  );
+}
+
+
+// ── WA Report Buttons for Admin Registro tab ──────────────────────────────
+function WaReportButtonsAdmin({players}) {
+  const [copied, setCopied] = useState("");
+  function totalPtsLocal(p) {
+    const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
+    return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+          +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
+          +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+          +(p.pt_whatsapp||0)+sb
+          -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+          -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
+          -(p.pt_bandido_pre||0);
+  }
+  const wa = players.filter(p=>p.active&&p.whatsapp);
+  function copySemanal() {
+    const sorted=[...wa].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
+    let m="*[AOR] Reporte Semanal — Grupo WA* \u2694\n\n";
+    sorted.forEach((p,i)=>{const pts=totalPtsLocal(p);m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
+    m+="\n📊 https://aor-war-command.vercel.app/reporte";
+    navigator.clipboard.writeText(m); setCopied("sem"); setTimeout(()=>setCopied(""),2000);
+  }
+  function copyAcumulado() {
+    const sorted=[...wa].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
+    let m="*[AOR] Ranking Acumulado — Grupo WA* 🏆\n\n";
+    sorted.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;});
+    m+="\n📊 https://aor-war-command.vercel.app/reporte";
+    navigator.clipboard.writeText(m); setCopied("acc"); setTimeout(()=>setCopied(""),2000);
+  }
+  return (
+    <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px"}}>
+      <div style={{fontSize:"10px",color:"#25D366",letterSpacing:"0.15em",fontFamily:"monospace",marginBottom:"10px"}}>REPORTES WA — {wa.length} MIEMBROS DEL GRUPO</div>
+      <div style={{display:"flex",gap:"8px"}}>
+        <button onClick={copySemanal} style={{flex:1,padding:"8px",background:copied==="sem"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="sem"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="sem"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+          {copied==="sem"?"✓ Copiado":"Reporte semanal WA"}
+        </button>
+        <button onClick={copyAcumulado} style={{flex:1,padding:"8px",background:copied==="acc"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="acc"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="acc"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+          {copied==="acc"?"✓ Copiado":"Ranking acumulado WA"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ── War Intel Panel ──────────────────────────────────────────────────────────
+function WarIntelPanel({players, reload}) {
+  const [intel,    setIntel]    = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [open,     setOpen]     = useState(false);
+  const [pos,      setPos]      = useState("");
+  const [pts,      setPts]      = useState("");
+  const [rivals,   setRivals]   = useState([{name:"",points:"",note:"",players:[]}]);
+  const [saving,   setSaving]   = useState(false);
+  const [msg,      setMsg]      = useState("");
+  const week = (() => {
+    const now=new Date(); const ec=new Date(now.getTime()-5*60*60*1000);
+    const day=ec.getDay(); const d=(day+2)%7; const fri=new Date(ec);
+    fri.setDate(ec.getDate()-d); const y=fri.getFullYear();
+    const w=Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
+    return `${y}-W${w}`;
+  })();
+
+  useEffect(()=>{
+    supabase.from("war_intel").select("*").order("created_at",{ascending:false}).limit(1).single()
+      .then(({data})=>{ if(data) setIntel(data); setLoading(false); });
+  },[]);
+
+  function addRival() { setRivals(r=>[...r,{name:"",points:"",note:"",players:[]}]); }
+  function removeRival(i) { setRivals(r=>r.filter((_,j)=>j!==i)); }
+  function updateRival(i,field,val) { setRivals(r=>r.map((x,j)=>j===i?{...x,[field]:val}:x)); }
+  function addRivalPlayer(ri) { setRivals(r=>r.map((x,j)=>j===ri?{...x,players:[...x.players,{name:"",bp:"",level:"",note:""}]}:x)); }
+  function updateRivalPlayer(ri,pi,field,val) { setRivals(r=>r.map((x,j)=>j===ri?{...x,players:x.players.map((p,k)=>k===pi?{...p,[field]:val}:p)}:x)); }
+
+  async function save() {
+    setSaving(true);
+    const payload = {week, clan_position:parseInt(pos)||0, clan_points:parseInt(pts)||0,
+      rival_clans: JSON.stringify(rivals.filter(r=>r.name.trim())),
+      notable_players: "[]"};
+    const {error} = await supabase.from("war_intel").insert(payload);
+    if (error) setMsg("Error: "+error.message);
+    else { setMsg("✓ Guardado"); setOpen(false);
+      supabase.from("war_intel").select("*").order("created_at",{ascending:false}).limit(1).single().then(({data})=>{ if(data) setIntel(data); }); }
+    setSaving(false);
+  }
+
+  return (
+    <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}}>
+        <div style={{fontSize:"11px",color:"#FF6B6B",fontWeight:"bold"}}>Resultados de guerra</div>
+        <button onClick={()=>setOpen(!open)} style={{padding:"4px 10px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:"6px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer"}}>
+          {open?"Cerrar":"+ Registrar"}
+        </button>
+      </div>
+      {intel && !open && (
+        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)"}}>
+          Última: {intel.week} — Posición {intel.clan_position} con {(intel.clan_points||0).toLocaleString()} pts
+        </div>
+      )}
+      {open && (
+        <div>
+          <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>POSICIÓN</div>
+              <input value={pos} onChange={e=>setPos(e.target.value)} type="number" placeholder="3"
+                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
+            </div>
+            <div style={{flex:2}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>PUNTOS DEL CLAN</div>
+              <input value={pts} onChange={e=>setPts(e.target.value)} type="number" placeholder="85000"
+                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+          </div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"6px",fontFamily:"monospace"}}>CLANES RIVALES</div>
+          {rivals.map((rival,ri)=>(
+            <div key={ri} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"10px",marginBottom:"8px"}}>
+              <div style={{display:"flex",gap:"6px",marginBottom:"6px"}}>
+                <input value={rival.name} onChange={e=>updateRival(ri,"name",e.target.value)} placeholder="Nombre del clan rival"
+                  style={{flex:2,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"#FF6B6B",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                <input value={rival.points} onChange={e=>updateRival(ri,"points",e.target.value)} placeholder="Pts"
+                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"5px",color:"#fff",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                <button onClick={()=>removeRival(ri)} style={{padding:"5px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"rgba(255,107,107,0.5)",cursor:"pointer",fontSize:"11px"}}>✕</button>
+              </div>
+              <input value={rival.note} onChange={e=>updateRival(ri,"note",e.target.value)} placeholder="Nota sobre este clan (por qué es memorable)"
+                style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"5px",color:"rgba(255,255,255,0.5)",padding:"5px 8px",fontSize:"10px",outline:"none",boxSizing:"border-box",marginBottom:"6px"}}/>
+              {rival.players.map((pl,pi)=>(
+                <div key={pi} style={{display:"flex",gap:"4px",marginBottom:"4px"}}>
+                  <input value={pl.name} onChange={e=>updateRivalPlayer(ri,pi,"name",e.target.value)} placeholder="Jugador notable"
+                    style={{flex:2,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"4px",color:"#FF9F43",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                  <input value={pl.bp} onChange={e=>updateRivalPlayer(ri,pi,"bp",e.target.value)} placeholder="BP"
+                    style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                  <input value={pl.level} onChange={e=>updateRivalPlayer(ri,pi,"level",e.target.value)} placeholder="Poder"
+                    style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              ))}
+              <input value={rival.players[rival.players.length-1]?.note||""} onChange={e=>rival.players.length>0?updateRivalPlayer(ri,rival.players.length-1,"note",e.target.value):null} placeholder="Nota del jugador"
+                style={{width:"100%",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box",marginBottom:"4px",display:rival.players.length>0?"block":"none"}}/>
+              <button onClick={()=>addRivalPlayer(ri)} style={{fontSize:"10px",color:"rgba(255,159,67,0.5)",background:"transparent",border:"1px dashed rgba(255,159,67,0.2)",borderRadius:"4px",padding:"3px 8px",cursor:"pointer"}}>+ Jugador notable</button>
+            </div>
+          ))}
+          <button onClick={addRival} style={{width:"100%",padding:"6px",background:"rgba(255,107,107,0.05)",border:"1px dashed rgba(255,107,107,0.2)",borderRadius:"6px",color:"rgba(255,107,107,0.5)",fontSize:"10px",cursor:"pointer",marginBottom:"8px"}}>+ Añadir clan rival</button>
+          {msg&&<div style={{fontSize:"11px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",marginBottom:"6px"}}>{msg}</div>}
+          <button onClick={save} disabled={saving} style={{width:"100%",padding:"9px",background:"rgba(168,255,120,0.12)",border:"1px solid rgba(168,255,120,0.25)",borderRadius:"6px",color:"#A8FF78",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>
+            {saving?"Guardando...":"Guardar resultados de guerra"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1771,6 +1925,8 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* REGISTRO TAB */}
         {activeTab==="registro" && (
           <div style={{padding:"0 16px"}}>
+            <WaReportButtonsAdmin players={players}/>
+            <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"12px 0"}}/>
             <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px 12px",marginBottom:"10px",fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>
               ⚡ <strong style={{color:"#FFD700"}}>{pending.length} jugadores</strong> sin confirmar · <strong style={{color:"#A8FF78"}}>{confirmed.length} confirmados</strong> · <strong style={{color:"#FF9F43"}}>{notPlaying.length} no disponibles</strong>
             </div>
@@ -2197,6 +2353,10 @@ function AdminPanel({players, update, loading, saving, reload}) {
               </div>
             )}
 
+            {/* War Intel */}
+            <WarIntelPanel players={players} reload={reload}/>
+            <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
+
             {/* Expulsados */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px"}}>🚫 Expulsados ({expelled.length})</div>
@@ -2225,6 +2385,8 @@ function AdminPanel({players, update, loading, saving, reload}) {
               {label:"📋 Registro de Guerra",url:"https://aor-war-command.vercel.app/registro",color:"#A8FF78",desc:"Confirmar participación — cierra jueves 12am MX",icon:"📋"},
               {label:"❓ Cómo funciona",url:"https://aor-war-command.vercel.app/puntos",color:"#FFD700",desc:"Sistema de puntos, rangos y penalizaciones",icon:"❓"},
               {label:"📡 Propaganda",url:"https://aor-war-command.vercel.app/propaganda",color:"#C8A2FF",desc:"Mensajes de difusión preaprobados para el clan",icon:"📡"},
+              {label:"Inteligencia",url:"https://aor-war-command.vercel.app/inteligencia",color:"#FF6B6B",desc:"Resultados de guerra, rivales y votación de dificultad",icon:"🎯"},
+              {label:"Asamblea",url:"https://aor-war-command.vercel.app/asamblea",color:"#FFD700",desc:"Vota al Guerrero Implacable de la semana",icon:"⚔"},
             ].map(link=>(
               <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
@@ -2408,6 +2570,8 @@ export default function App() {
   if (path === "/puntos")         return <Puntos onBack={()=>window.history.back()}/>;
   if (path === "/comunicaciones")  return <Comunicaciones/>;
   if (path === "/propaganda")       return <Comunicaciones/>;
+  if (path === "/inteligencia")     return <Inteligencia/>;
+  if (path === "/asamblea")         return <Asamblea/>;
   if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }

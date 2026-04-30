@@ -1,4 +1,3 @@
-import HomeButton from "./HomeButton";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NalguitasFooter from "./NalguitasFooter";
@@ -109,7 +108,6 @@ export default function Comunicaciones() {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",paddingBottom:"40px"}}>
-      <HomeButton/>
 
       {/* Header */}
       <div style={{borderBottom:"1px solid rgba(64,224,255,0.1)",padding:"20px 20px 16px"}}>
@@ -117,10 +115,13 @@ export default function Comunicaciones() {
           <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(64,224,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
           <div style={{fontSize:"22px",color:"#FFD700",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)"}}>Mensajes preaprobados por el comando. Cópialos y pégalos en el chat general del juego.</div>
-          <div style={{display:"flex",gap:"8px",marginTop:"12px",flexWrap:"wrap"}}>
-            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px",background:"rgba(168,255,120,0.05)"}}>Registro</a>
-            <a href="/reporte"  style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px",background:"rgba(64,224,255,0.05)"}}>Ranking</a>
-            <a href="/puntos"   style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px",background:"rgba(255,215,0,0.05)"}}>Puntos</a>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:"8px",marginTop:"12px"}}>
+            <a href="/" style={{fontSize:"12px",color:"#FFD700",textDecoration:"none",padding:"5px 20px",border:"1px solid rgba(255,215,0,0.35)",borderRadius:"20px",background:"rgba(255,215,0,0.06)",letterSpacing:"0.1em"}}>HOME AOR</a>
+            <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
+              <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px",background:"rgba(168,255,120,0.05)"}}>Registro</a>
+              <a href="/reporte"  style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px",background:"rgba(64,224,255,0.05)"}}>Ranking</a>
+              <a href="/puntos"   style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px",background:"rgba(255,215,0,0.05)"}}>Puntos</a>
+            </div>
           </div>
         </div>
       </div>
