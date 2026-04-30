@@ -25,6 +25,20 @@ export default function Puntos({onBack}) {
             </div>
           ))}
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>📊 Actualizar BP y Poder: +2 pts cada uno, +5 si actualizas ambos</div>
+          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,215,0,0.08)",borderRadius:"6px",border:"1px solid rgba(255,215,0,0.2)"}}>
+            <div style={{fontSize:"11px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⭐ Bonus por Registro Anticipado</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Si te registras antes del <strong style={{color:"#FFD700"}}>miércoles 23:59 España</strong> (18:59 Ecuador · 17:59 México):</div>
+            {[
+              {label:"Conquistador 🟢",pts:"+5 pts",color:"#A8FF78"},
+              {label:"Refuerzos 🟡",pts:"+2 pts",color:"#FFD700"},
+              {label:"Reserva 🟠",pts:"+2 pts",color:"#FF9F43"},
+            ].map(r=>(
+              <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"3px 0"}}>
+                <span style={{fontSize:"10px",color:r.color}}>{r.label}</span>
+                <span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* PARTICIPACION */}
