@@ -391,9 +391,9 @@ function RegistrationForm({onRegistered}) {
                     <span>{av.icon} {av.label}</span>
                     <Pill color={av.color}>+{av.pts} pts</Pill>
                   </div>
-                  {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#A8FF78"}}>Conquistador</strong> — Disponible para todo: ataque, defensa y espionaje.</div>}
-                  {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FFD700"}}>Refuerzos</strong> — Al menos una aparición por periodo.</div>}
-                  {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FF9F43"}}>Reserva</strong> — Una sola participación según tu nivel.</div>}
+                  {key==="siempre" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#A8FF78"}}>Siempre listo</strong> — Disponible para todo: ataque, defensa y espionaje.</div>}
+                  {key==="intermitente" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FFD700"}}>Intermitente</strong> — Al menos una aparición por periodo.</div>}
+                  {key==="solo_una" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}><strong style={{color:"#FF9F43"}}>Solo una vez</strong> — Una sola participación según tu nivel.</div>}
                   {key==="no_disponible" && <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"3px"}}>Avisas con anticipación — +1 punto por responsabilidad</div>}
                 </button>
                 {avail===key && key==="intermitente" && (
