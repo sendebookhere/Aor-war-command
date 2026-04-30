@@ -537,11 +537,15 @@ Pide el enlace a un oficial.`,
   function setMsg(k,v){ setMsgs(m=>({...m,[k]:v})); }
   function copy(k){ navigator.clipboard.writeText(msgs[k]); setCopied(k); setTimeout(()=>setCopied(""),2000); }
 
-  const noWaMsgs = noWaPlayers.map(p=>({
-    key:"nowa_"+p.id,
-    name:p.name,
-    default:`<color=#FFD700>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma participacion en guerra de clanes en <color=#FFD700>aor-war-command.vercel.app/registro</color>`
-  }));
+  const NAME_COLORS = ["#FFD700","#40E0FF","#A8FF78","#FF9F43","#FF6B6B","#C8A2FF","#FF79C6","#8BE9FD","#FFB86C","#50FA7B","#F1FA8C","#BD93F9","#FF5555","#7EFFF5"];
+  const noWaMsgs = noWaPlayers.map((p,i)=>{
+    const nc = NAME_COLORS[i % NAME_COLORS.length];
+    return {
+      key:"nowa_"+p.id,
+      name:p.name,
+      default:`<color=${nc}>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma participacion en guerra de clanes en <color=#FFD700>aor-war-command.vercel.app/registro</color>`
+    };
+  });
   const [nowaMsgs, setNowaMsgs] = useState(
     Object.fromEntries(noWaMsgs.map(m=>[m.key,m.default]))
   );
