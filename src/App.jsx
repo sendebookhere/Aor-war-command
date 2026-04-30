@@ -413,7 +413,7 @@ function RegistrationForm({onRegistered}) {
         </div>
         <div style={{display:"flex",gap:"8px",justifyContent:"center",marginBottom:"24px"}}>
           <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>Ver ranking</a>
-          <a href="/comunicaciones" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>Comunicaciones</a>
+          <a href="/propaganda" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>Propaganda</a>
         </div>
       </div>
       <WaReportButtons/>
@@ -728,6 +728,93 @@ function InviteCard({name, initialValue}) {
   );
 }
 
+
+// ── PropagandaCard — syncs with Supabase comunicaciones_msgs table ─────────
+function PropagandaCard({slot}) {
+  const [title,   setTitle]   = useState("Comunicación "+slot);
+  const [content, setContent] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [draftT,  setDraftT]  = useState("");
+  const [draftC,  setDraftC]  = useState("");
+  const [copied,  setCopied]  = useState(false);
+  const [saving,  setSaving]  = useState(false);
+  const [loaded,  setLoaded]  = useState(false);
+  const [dbId,    setDbId]    = useState(null);
+
+  useEffect(()=>{
+    supabase.from("comunicaciones_msgs").select("*").eq("slot",slot).single()
+      .then(({data})=>{
+        if (data) {
+          setTitle(data.title||"Comunicación "+slot);
+          setContent(data.content||"");
+          setDbId(data.id);
+        }
+        setLoaded(true);
+      });
+  },[slot]);
+
+  function startEdit() {
+    setDraftT(title); setDraftC(content); setEditing(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    const payload = {slot, title:draftT, content:draftC, updated_at:new Date().toISOString()};
+    if (dbId) {
+      await supabase.from("comunicaciones_msgs").update(payload).eq("id",dbId);
+    } else {
+      const {data} = await supabase.from("comunicaciones_msgs").insert(payload).select().single();
+      if (data) setDbId(data.id);
+    }
+    setTitle(draftT); setContent(draftC);
+    setSaving(false); setEditing(false);
+  }
+
+  function cancel() { setEditing(false); }
+  function copy() { navigator.clipboard.writeText(content); setCopied(true); setTimeout(()=>setCopied(false),2000); }
+
+  if (!loaded) return <div style={{padding:"12px",fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>Cargando comunicación {slot}...</div>;
+
+  return (
+    <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px"}}>
+        <div>
+          <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold"}}>{title}</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginTop:"1px"}}>Slot {slot} · aparece en /propaganda</div>
+        </div>
+        {!editing && (
+          <div style={{display:"flex",gap:"4px",marginLeft:"8px"}}>
+            <button onClick={startEdit} style={{padding:"3px 8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏ Editar</button>
+          </div>
+        )}
+      </div>
+      {editing ? (
+        <>
+          <input value={draftT} onChange={e=>setDraftT(e.target.value)} placeholder="Título"
+            style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",color:"#FFD700",fontSize:"11px",padding:"5px 8px",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontWeight:"bold"}}/>
+          <textarea value={draftC} onChange={e=>setDraftC(e.target.value)} rows={4} placeholder="Escribe el mensaje de propaganda. Sin color tags — solo texto. AOR y Antigua Orden se resaltarán automáticamente."
+            style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",outline:"none",boxSizing:"border-box",marginBottom:"8px",resize:"vertical",fontFamily:"Georgia,serif"}}/>
+          <div style={{display:"flex",gap:"8px"}}>
+            <button onClick={save} disabled={saving} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>
+              {saving?"Guardando...":"💾 Guardar en /propaganda"}
+            </button>
+            <button onClick={cancel} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{background:"rgba(0,0,0,0.25)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:content?"#d4c9a8":"rgba(255,255,255,0.2)",whiteSpace:"pre-wrap",marginBottom:"8px",minHeight:"40px",maxHeight:"100px",overflow:"auto",fontFamily:"Georgia,serif"}}>
+            {content || "(sin contenido — haz clic en Editar para agregar el mensaje)"}
+          </div>
+          <button onClick={copy} disabled={!content} style={{padding:"5px 14px",background:copied?"rgba(168,255,120,0.2)":"rgba(255,215,0,0.08)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(255,215,0,0.2)"),borderRadius:"20px",color:copied?"#A8FF78":"#FFD700",fontSize:"11px",cursor:content?"pointer":"default",opacity:content?1:0.4}}>
+            {copied?"✓ Copiado":"📋 Copiar"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Mensajes Tab Component ─────────────────────────────────────────────────
 function MensajesTab({players}) {
   const allActive   = players.filter(p=>p.active);
@@ -808,12 +895,12 @@ function MensajesTab({players}) {
       {extraWa.map(m=><WaCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraWa(prev=>prev.filter(x=>x.id!==m.id))}/>)}
       <button onClick={()=>{setNewType("wa");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(37,211,102,0.06)",border:"1px dashed rgba(37,211,102,0.25)",borderRadius:"8px",color:"rgba(37,211,102,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje WhatsApp</button>
 
-      <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>📡 Mensajes de Comunicaciones (página pública)</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Estos 4 mensajes aparecen en /comunicaciones para que los miembros los copien y peguen en el chat del juego. Sin iconos — solo texto y color.</div>
-      <WaCard title="Comunicación 1 — Reclutamiento activo" initialValue={"[AOR] Antigua Orden — Clan activo buscando guerreros. Guerras semanales coordinadas, sistema de rangos y puntos. Escribe a un oficial para unirte."} titleColor="#FFD700"/>
-      <WaCard title="Comunicación 2 — Convocatoria de guerra" initialValue={"Antigua Orden [AOR] en guerra. Si buscas clan organizado con estrategia real, este es tu momento. Contacta a un oficial antes del viernes."} titleColor="#FFD700"/>
-      <WaCard title="Comunicación 3 — Post victoria" initialValue={"Antigua Orden [AOR] sigue invicta. Clan de guerreros comprometidos busca refuerzos para la siguiente batalla. Habla con un oficial."} titleColor="#FFD700"/>
-      <WaCard title="Comunicación 4 — Invitación élite" initialValue={"[AOR] Antigua Orden — no somos el clan más grande, somos el mejor organizado. Si quieres guerra de verdad, escríbenos."} titleColor="#FFD700"/>
+      <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>📡 Propaganda — Mensajes para la página pública</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Estos 4 mensajes aparecen en <strong style={{color:"#FFD700"}}>/propaganda</strong>. Los miembros los copian y pegan en el chat del juego. Edita y guarda — se actualizan en tiempo real en la página pública.</div>
+      <PropagandaCard slot={1}/>
+      <PropagandaCard slot={2}/>
+      <PropagandaCard slot={3}/>
+      <PropagandaCard slot={4}/>
 
       <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Máx 250 caracteres · ✏ Editar para modificar · 💾 Guardar confirma cambios</div>
@@ -1475,7 +1562,7 @@ function DailyLimitSetting() {
       <div style={{fontSize:"11px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>⚙ Configuración de Comunicaciones</div>
       <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
         <div style={{flex:1}}>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Publicaciones máximas por jugador por día en /comunicaciones</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Publicaciones máximas por jugador por día en /propaganda</div>
           <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
             <button onClick={()=>setLimit(l=>Math.max(1,l-1))} style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",cursor:"pointer",fontSize:"14px"}}>−</button>
             <input type="number" value={limit} onChange={e=>setLimit(Math.max(1,parseInt(e.target.value)||1))} min="1" max="20"
@@ -2131,7 +2218,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               {label:"📊 Ranking / Reporte",url:"https://aor-war-command.vercel.app/reporte",color:"#40E0FF",desc:"Ver posiciones, perfiles y puntos acumulados",icon:"📊"},
               {label:"📋 Registro de Guerra",url:"https://aor-war-command.vercel.app/registro",color:"#A8FF78",desc:"Confirmar participación — cierra jueves 12am MX",icon:"📋"},
               {label:"❓ Cómo funciona",url:"https://aor-war-command.vercel.app/puntos",color:"#FFD700",desc:"Sistema de puntos, rangos y penalizaciones",icon:"❓"},
-              {label:"📡 Comunicaciones",url:"https://aor-war-command.vercel.app/comunicaciones",color:"#C8A2FF",desc:"Mensajes de difusión preaprobados para el clan",icon:"📡"},
+              {label:"📡 Propaganda",url:"https://aor-war-command.vercel.app/propaganda",color:"#C8A2FF",desc:"Mensajes de difusión preaprobados para el clan",icon:"📡"},
             ].map(link=>(
               <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
@@ -2313,6 +2400,7 @@ export default function App() {
   if (path === "/reporte")  return <PublicReport />;
   if (path === "/puntos")         return <Puntos onBack={()=>window.history.back()}/>;
   if (path === "/comunicaciones")  return <Comunicaciones/>;
+  if (path === "/propaganda")       return <Comunicaciones/>;
   if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }

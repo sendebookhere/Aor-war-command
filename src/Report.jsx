@@ -72,6 +72,7 @@ function Pill({ color, children }) {
 function PlayerProfile({ player, onBack }) {
   const [history, setHistory]   = useState([]);
   const [statsList, setStatsList] = useState([]);
+  const [msgLogs,  setMsgLogs]  = useState([]);
   const [loading, setLoading]   = useState(true);
   const [newBp, setNewBp]       = useState("");
   const [newLevel, setNewLevel] = useState("");
@@ -81,9 +82,11 @@ function PlayerProfile({ player, onBack }) {
     Promise.all([
       supabase.from("war_history").select("*").eq("player_id", player.id).order("created_at", {ascending:false}),
       supabase.from("player_stats").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(10),
-    ]).then(([h, s]) => {
+      supabase.from("message_logs").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(50),
+    ]).then(([h, s, m]) => {
       setHistory(h.data || []);
       setStatsList(s.data || []);
+      setMsgLogs(m.data || []);
       setLoading(false);
     });
   }, [player.id]);
@@ -302,6 +305,25 @@ function PlayerProfile({ player, onBack }) {
                   <span style={{fontSize:"9px",color:s.updated_by==="jugador"?"#A8FF78":"#40E0FF",marginLeft:"8px"}}>{s.updated_by==="jugador"?"por jugador":s.updated_by==="revert"?"↩ revertido":"por admin"}</span>
                 </div>
                 <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{new Date(s.created_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Publication history */}
+        {msgLogs.length > 0 && (
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{color:"#C8A2FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📡 Historial de propaganda publicada</div>
+            {msgLogs.map((m,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"6px 8px",marginBottom:"3px",background:"rgba(200,162,255,0.04)",borderRadius:"4px",borderLeft:"2px solid rgba(200,162,255,0.3)"}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"2px"}}>{m.msg_title||"Mensaje"}</div>
+                  <div style={{fontSize:"9px",color:"rgba(200,162,255,0.5)",fontFamily:"monospace"}}>PUBLICADO EN CHAT</div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0}}>
+                  <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>{new Date(m.created_at).toLocaleDateString("es-MX")}</div>
+                  <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)"}}>{new Date(m.created_at).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>
+                </div>
               </div>
             ))}
           </div>

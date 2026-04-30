@@ -112,8 +112,8 @@ export default function Comunicaciones() {
       {/* Header */}
       <div style={{borderBottom:"1px solid rgba(64,224,255,0.1)",padding:"20px 20px 16px"}}>
         <div style={{maxWidth:"560px",margin:"0 auto"}}>
-          <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(64,224,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — COMUNICACIONES</div>
-          <div style={{fontSize:"22px",color:"#FFD700",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Mensajes de Difusión</div>
+          <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(64,224,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
+          <div style={{fontSize:"22px",color:"#FFD700",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)"}}>Mensajes preaprobados por el comando. Cópialos y pégalos en el chat general del juego.</div>
           <div style={{display:"flex",gap:"8px",marginTop:"10px"}}>
             <a href="/registro" style={{fontSize:"10px",color:"#A8FF78",textDecoration:"none"}}>Registro</a>
@@ -261,7 +261,7 @@ export default function Comunicaciones() {
                 </div>
               ))}
             </div>
-            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.15)",marginTop:"6px",fontFamily:"monospace",textAlign:"center"}}>Las auditorías verifican que los mensajes hayan sido publicados. Publicaciones falsas: -50 pts.</div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.15)",marginTop:"6px",fontFamily:"monospace",textAlign:"center"}}>Las auditorías verifican las publicaciones. Publicaciones falsas reportadas: -50 pts acumulados.</div>
           </div>
         )}
 
