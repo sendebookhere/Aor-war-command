@@ -3,180 +3,133 @@ export default function Puntos({onBack}) {
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0}}>← Volver</button>
-
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Sistema de Puntos</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Cómo ganar y perder puntos en cada guerra</div>
         </div>
 
-        {/* PASO 1: Registrate */}
+        {/* REGISTRO */}
         <div style={{background:"rgba(64,224,255,0.08)",border:"2px solid #40E0FF",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>📋 PASO 1 — Regístrate antes del jueves</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Antes de cada guerra (cierra jueves 12am hora México) entra al formulario de registro y confirma tu participación.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-            {[
-              {label:"Siempre listo 🟢",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
-              {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Al menos una aparición por periodo: primeras 24h (expansión) y segundas 24h (conquista)"},
-              {label:"Solo una vez 🟠",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
-              {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:r.color+"11",borderRadius:"6px",border:"1px solid "+r.color+"33"}}>
-                <div>
-                  <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-                  <span style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginLeft:"8px"}}>{r.desc}</span>
-                </div>
-                <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-              </div>
-            ))}
-          </div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cierra jueves 12am hora México.</div>
+          {[
+            {label:"Siempre listo 🟢",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
+            {label:"Intermitente 🟡",pts:"+5",color:"#FFD700",desc:"Al menos una aparición por periodo"},
+            {label:"Solo una vez 🟠",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
+            {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:r.color+"11",borderRadius:"6px",border:"1px solid "+r.color+"33",marginBottom:"3px"}}>
+              <div><span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span><span style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginLeft:"8px"}}>{r.desc}</span></div>
+              <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+            </div>
+          ))}
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>📊 Actualizar BP y Poder: +2 pts cada uno, +5 si actualizas ambos</div>
         </div>
 
-        {/* PASO 2: Participa */}
+        {/* PARTICIPACION */}
         <div style={{background:"rgba(168,255,120,0.08)",border:"2px solid #A8FF78",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>⚔️ PASO 2 — Participa en la guerra</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Cada acción durante la guerra suma puntos. El admin los registra después de cada guerra.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-            {[
-              {label:"Apareciste y participaste",pts:"+1",color:"#A8FF78"},
-              {label:"Seguiste las órdenes del admin",pts:"+2",color:"#FFD700"},
-              {label:"Ganaste una batalla",pts:"+2",color:"#40E0FF"},
-              {label:"Declaraste una batalla y la perdiste",pts:"+1",color:"#40E0FF"},
-              {label:"Defendiste un castillo",pts:"+1",color:"#40E0FF"},
-              {label:"Atacaste bandidos DESPUÉS de ganar",pts:"+1",color:"#A8FF78"},
-              {label:"Cumpliste TODO perfectamente",pts:"+5",color:"#FFD700"},
-              {label:"Participaste sin haberte registrado",pts:"+1",color:"#A8FF78"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
-                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
-                <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-              </div>
-            ))}
-          </div>
+          {[
+            {label:"Apareciste y participaste",pts:"+1",color:"#A8FF78"},
+            {label:"Seguiste las órdenes del admin",pts:"+2",color:"#FFD700"},
+            {label:"Ganaste una batalla",pts:"+2",color:"#40E0FF"},
+            {label:"Declaraste una batalla y la perdiste",pts:"+1",color:"#40E0FF"},
+            {label:"Defendiste un castillo",pts:"+1",color:"#40E0FF"},
+            {label:"6+ batallas ganadas en una guerra",pts:"+10",color:"#FFD700"},
+            {label:"Atacaste bandidos DESPUÉS de ganar",pts:"+1",color:"#A8FF78"},
+            {label:"Cumpliste TODO perfectamente",pts:"+5",color:"#FFD700"},
+            {label:"Participaste sin haberte registrado",pts:"+1",color:"#A8FF78"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px",marginBottom:"2px"}}>
+              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
+              <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+            </div>
+          ))}
         </div>
 
         {/* PENALIZACIONES */}
         <div style={{background:"rgba(255,107,107,0.08)",border:"2px solid #FF6B6B",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>❌ PENALIZACIONES — Lo que te quita puntos</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-            {[
-              {label:"Dijiste Siempre listo y no apareciste",pts:"-15",color:"#FF6B6B"},
-              {label:"Dijiste Intermitente y no apareciste",pts:"-10",color:"#FF6B6B"},
-              {label:"Dijiste Solo una vez y no apareciste",pts:"-5",color:"#FF6B6B"},
-              {label:"No te registraste y tampoco participaste",pts:"-20",color:"#FF6B6B"},
-              {label:"Ignoraste una orden directa del admin",pts:"-2",color:"#FF9F43"},
-              {label:"Abandonaste una defensa sin avisar",pts:"-2",color:"#FF9F43"},
-              {label:"Estuviste inactivo +12h sin justificación",pts:"-3",color:"#FF9F43"},
-              {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1",color:"#FF9F43"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:"rgba(255,107,107,0.05)",borderRadius:"6px"}}>
-                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
-                <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RANGOS */}
-        <div style={{background:"rgba(255,215,0,0.06)",border:"2px solid rgba(255,215,0,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>🏆 RANGOS — Puntos acumulados totales</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Se acumulan guerra tras guerra. No se resetean.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-            {[
-              {label:"Co-Líder 👑",pts:"25,000+",color:"#FFD700"},
-              {label:"Oficial ⚜️",pts:"5,000+",color:"#40E0FF"},
-              {label:"Veterano ★★★",pts:"600+",color:"#A8FF78"},
-              {label:"Guerrero ★★",pts:"300+",color:"#FFD700"},
-              {label:"Soldado ★",pts:"100+",color:"#FF9F43"},
-              {label:"Recluta",pts:"0+",color:"#888"},
-              {label:"⚠ Vigilado",pts:"Negativo",color:"#FF6B6B"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
-                <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-                <span style={{fontSize:"12px",color:r.color}}>{r.pts} pts</span>
-              </div>
-            ))}
-          </div>
+          <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>❌ PENALIZACIONES</div>
+          {[
+            {label:"Dijiste Siempre listo y no apareciste",pts:"-15",color:"#FF6B6B"},
+            {label:"Dijiste Intermitente y no apareciste",pts:"-10",color:"#FF6B6B"},
+            {label:"Dijiste Solo una vez y no apareciste",pts:"-5",color:"#FF6B6B"},
+            {label:"No te registraste y tampoco participaste",pts:"-20",color:"#FF6B6B"},
+            {label:"Ignoraste una orden directa del admin",pts:"-2",color:"#FF9F43"},
+            {label:"Abandonaste una defensa sin avisar",pts:"-2",color:"#FF9F43"},
+            {label:"Estuviste inactivo +12h sin justificación",pts:"-3",color:"#FF9F43"},
+            {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1",color:"#FF9F43"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:"rgba(255,107,107,0.05)",borderRadius:"6px",marginBottom:"2px"}}>
+              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
+              <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+            </div>
+          ))}
         </div>
 
         {/* WHATSAPP */}
         <div style={{background:"rgba(37,211,102,0.06)",border:"2px solid rgba(37,211,102,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#25D366",fontWeight:"bold",marginBottom:"8px"}}>📱 GRUPO DE WHATSAPP [AOR]</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"10px"}}>El grupo de WhatsApp es donde se coordinan las jugadas. Estar en él te da puntos.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-            {[
-              {label:"Ya estabas en el grupo al inicio",pts:"+50",color:"#25D366",desc:"Puntos de fundador"},
-              {label:"Te unes al grupo ahora",pts:"+25",color:"#A8FF78",desc:"El admin lo actualiza en el Roster"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:r.color+"08",borderRadius:"6px",border:"1px solid "+r.color+"22"}}>
-                <div>
-                  <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-                  <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>{r.desc}</div>
-                </div>
-                <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+          {[
+            {label:"Ya estabas en el grupo al lanzar la app",pts:"+50",color:"#25D366",desc:"Puntos de fundador"},
+            {label:"Te unes al grupo ahora",pts:"+25",color:"#A8FF78",desc:"El admin lo actualiza en el Roster"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:r.color+"08",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"3px"}}>
+              <div><span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>{r.desc}</div></div>
+              <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* RANGOS */}
+        <div style={{background:"rgba(255,215,0,0.06)",border:"2px solid rgba(255,215,0,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>🏆 RANGOS — Puntos acumulados totales</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Se acumulan guerra tras guerra. Los rangos con * tienen bonus honorífico por el cargo.</div>
+          {[
+            {label:"Líder 👑",pts:"Designado",color:"#FFD700",hon:"25,000"},
+            {label:"Co-Líder 👑",pts:"25,000+",color:"#FFD700",hon:"25,000"},
+            {label:"Oficial ⚜️",pts:"5,000+",color:"#40E0FF",hon:"5,000"},
+            {label:"Veterano ★★★",pts:"1,000+",color:"#A8FF78",hon:"—"},
+            {label:"Guerrero ★★",pts:"500+",color:"#FFD700",hon:"—"},
+            {label:"Soldado ★",pts:"100+",color:"#FF9F43",hon:"—"},
+            {label:"Recluta",pts:"0+",color:"#888",hon:"—"},
+            {label:"⚠ Vigilado",pts:"Negativo",color:"#FF6B6B",hon:"—"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px",marginBottom:"2px"}}>
+              <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
+              <div style={{textAlign:"right"}}>
+                <span style={{fontSize:"12px",color:r.color}}>{r.pts} pts</span>
+                {r.hon!=="—" && <div style={{fontSize:"9px",color:"rgba(255,215,0,0.6)"}}>⭐ +{r.hon} honoríficos</div>}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
-        {/* REGLA DE ORO */}
-        <div style={{background:"rgba(64,224,255,0.06)",border:"3px solid #40E0FF",borderRadius:"12px",padding:"16px",marginBottom:"12px"}}>
-          <div style={{fontSize:"22px",textAlign:"center",marginBottom:"8px"}}>⚖️</div>
-          <div style={{fontFamily:"serif",fontSize:"15px",color:"#40E0FF",fontWeight:"bold",marginBottom:"10px",textAlign:"center"}}>CÓMO FUNCIONAN TUS PUNTOS</div>
-          
-          <div style={{background:"rgba(168,255,120,0.08)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px",padding:"10px",marginBottom:"8px"}}>
-            <div style={{fontSize:"12px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px"}}>✅ Puntos que GANAS</div>
-            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Se suman a tu cuenta. Pueden bajar si recibes penalizaciones durante la guerra, pero el admin los registra manualmente — nadie te los quita sin razón.</div>
-          </div>
-
-          <div style={{background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px",marginBottom:"8px"}}>
-            <div style={{fontSize:"12px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"4px"}}>❌ Penalizaciones</div>
-            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Si no cumples lo que prometiste o desobedeces órdenes, el admin aplica penalizaciones que restan de tus puntos acumulados.</div>
-          </div>
-
-          <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"10px"}}>
-            <div style={{fontSize:"12px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⭐ Puntos honoríficos de rango</div>
-            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>Son un privilegio del cargo. Si el admin te asciende, los recibes. Si te bajan de rango, los pierdes. Son distintos a los que ganas participando.</div>
-          </div>
-        </div>
+        {/* ASCENSOS */}
         <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>⚜️ ASCENSOS Y DESCENSOS DE RANGO</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"10px"}}>El admin puede cambiar tu rango. Cada rango tiene puntos honoríficos base:</div>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px",marginBottom:"10px"}}>
-            {[
-              {label:"Líder 👑",pts:"25,000",color:"#FFD700"},
-              {label:"Co-Líder 👑",pts:"25,000",color:"#FFD700"},
-              {label:"Oficial ⚜️",pts:"5,000",color:"#40E0FF"},
-              {label:"Veterano y abajo",pts:"0",color:"#888"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"5px 10px",background:r.color+"08",borderRadius:"6px"}}>
-                <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-                <span style={{fontSize:"12px",color:r.color}}>{r.pts} pts honoríficos</span>
-              </div>
-            ))}
-          </div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>📌 Ejemplo de ascenso:</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",marginBottom:"8px"}}>
             Oficial con 960 pts acumulados → ascendido a Co-Líder<br/>
             Puntos honoríficos: 5,000 → 25,000 (+20,000)<br/>
-            <strong style={{color:"#A8FF78"}}>Total nuevo: 24,960 pts</strong>
+            <strong style={{color:"#A8FF78"}}>Total nuevo: 25,960 pts</strong>
           </div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>⚠️ Ejemplo de descenso:</div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",padding:"8px"}}>
-            Co-Líder con 5,960 pts totales → bajado a Oficial<br/>
+            Co-Líder con 960 pts acumulados → bajado a Oficial<br/>
             Puntos honoríficos: 25,000 → 5,000 (-20,000)<br/>
-            <strong style={{color:"#FF6B6B"}}>Total nuevo: -19,040 pts (Vigilado)</strong><br/><br/>
+            <strong style={{color:"#FF6B6B"}}>Total nuevo: 5,960 pts (baja a Oficial)</strong><br/><br/>
             Si se baja a Recluta → honoríficos = 0<br/>
-            <strong style={{color:"#FF6B6B"}}>Total nuevo: -500 pts (en negativo = Vigilado)</strong>
+            <strong style={{color:"#FF6B6B"}}>Total nuevo: -19,040 pts (Vigilado ⚠)</strong>
           </div>
         </div>
+
         <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"12px",textAlign:"center"}}>
-          <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo mensual: <strong>20 puntos</strong></div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Dos meses seguidos bajo 20 pts → expulsión</div>
+          <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo semanal: <strong>20 puntos</strong></div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>-100 pts acumulados → candidato a expulsión</div>
         </div>
       </div>
     </div>
   );
 }
-
