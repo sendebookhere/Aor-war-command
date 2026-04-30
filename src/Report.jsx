@@ -12,8 +12,8 @@ const AVAILABILITY = {
 const RANKS = [
   { label:"Co-Líder 👑",  color:"#FFD700", min:25000, desc:"Leyenda del clan"        },
   { label:"Oficial ⚜️",   color:"#40E0FF", min:5000,  desc:"Pilar de la comunidad"  },
-  { label:"Veterano ★★★", color:"#A8FF78", min:600,   desc:"Guerrero experimentado" },
-  { label:"Guerrero ★★",  color:"#FFD700", min:300,   desc:"Miembro consolidado"    },
+  { label:"Veterano ★★★", color:"#A8FF78", min:1000,   desc:"Guerrero experimentado" },
+  { label:"Guerrero ★★",  color:"#FFD700", min:500,   desc:"Miembro consolidado"    },
   { label:"Soldado ★",    color:"#FF9F43", min:100,   desc:"En camino"              },
   { label:"Recluta",      color:"#888888", min:0,     desc:"Recién llegado"         },
   { label:"⚠ Vigilado",  color:"#FF6B6B", min:-9999, desc:"Bajo observación"       },
@@ -218,8 +218,8 @@ export default function PublicReport() {
           if (p.clan_role === "Co-Líder") return 1;
           if (p.clan_role === "Oficial") return 2;
           const total = (p.pts_acumulados||0) + totalPts(p) + (p.pts_honorificos||0);
-          if (total >= 600) return 3;
-          if (total >= 300) return 4;
+          if (total >= 1000) return 3;
+          if (total >= 500) return 4;
           if (total >= 100) return 5;
           if (total >= 0)   return 6;
           return 7;
@@ -306,7 +306,7 @@ export default function PublicReport() {
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}</span>
                 <div>
-                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px"}}>{p.name} <span style={{fontSize:"12px"}}>{p.whatsapp?"📱":"📵"}</span></div>
+                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px",display:"flex",alignItems:"center",gap:"5px"}}>{p.name} <span style={{fontSize:"12px"}}>{p.whatsapp?"📱":"📵"}</span></div>
                   <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
                     <Pill color={rank.color}>{rank.label}</Pill>
                     <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>

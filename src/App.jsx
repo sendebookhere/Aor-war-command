@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
 import Puntos from "./Puntos";
@@ -91,8 +91,8 @@ function acumulado(p) { return p.pts_acumulados||0; }
 const RANKS = [
   { label:"Co-Líder 👑",   color:"#FFD700", min:25000 },
   { label:"Oficial ⚜",    color:"#40E0FF", min:5000  },
-  { label:"Veterano ★★★",  color:"#A8FF78", min:600   },
-  { label:"Guerrero ★★",   color:"#FFD700", min:300   },
+  { label:"Veterano ★★★",  color:"#A8FF78", min:1000  },
+  { label:"Guerrero ★★",   color:"#FFD700", min:500   },
   { label:"Soldado ★",     color:"#FF9F43", min:100   },
   { label:"Recluta",       color:"#888888", min:0     },
   { label:"⚠ Vigilado",   color:"#FF6B6B", min:-999  },
@@ -427,6 +427,146 @@ function RegistrationForm({onRegistered}) {
 }
 
 
+
+// ── Mensajes Tab Component ─────────────────────────────────────────────────
+function MensajesTab({players}) {
+  const [copied, setCopied] = useState("");
+
+  function copy(key, text) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(()=>setCopied(""), 2500);
+  }
+
+  const waPlayers  = players.filter(p=>p.active&&p.whatsapp);
+  const allActive  = players.filter(p=>p.active);
+
+  function totalPtsLocal(p) {
+    const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
+    return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+          +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
+          +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+          +(p.pt_whatsapp||0)+sb
+          -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+          -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
+          -(p.pt_bandido_pre||0);
+  }
+
+  const registroMsg = (() => {
+    const reg = allActive.filter(p=>p.registered_form).sort((a,b)=>b.bp-a.bp);
+    const noReg = allActive.filter(p=>!p.registered_form).sort((a,b)=>b.bp-a.bp);
+    const avMap = {siempre:"Siempre listo",intermitente:"Intermitente",solo_una:"Solo una vez",no_disponible:"No disponible"};
+    let m = "*[AOR] Registro de Guerra*\n\n";
+    m += `*Confirmados (${reg.length}):*
+`;
+    reg.forEach(p=>{ m += `- *${p.name}* | ${avMap[p.availability]||p.availability}
+`; });
+    m += `
+*Sin registrar (${noReg.length}):*
+`;
+    noReg.forEach(p=>{ m += `- *${p.name}*
+`; });
+    m += `
+📋 Regístrate: https://aor-war-command.vercel.app/registro`;
+    return m;
+  })();
+
+  const semanalmsg = (() => {
+    const sorted = [...allActive].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
+    let m = "*[AOR] Reporte Semanal* ⚔\n\n";
+    sorted.forEach((p,i)=>{
+      const pts = totalPtsLocal(p);
+      const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+      m += `${medal} *${p.name}* — ${pts>0?"+":""}${pts} pts
+`;
+    });
+    m += `
+📊 Ranking: https://aor-war-command.vercel.app/reporte`;
+    return m;
+  })();
+
+  const acumuladoMsg = (() => {
+    const sorted = [...allActive].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
+    let m = "*[AOR] Ranking Acumulado* 🏆\n_Sin bonificaciones de rango_\n\n";
+    sorted.forEach((p,i)=>{
+      const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+      m += `${medal} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts
+`;
+    });
+    m += `
+📊 Ver ranking: https://aor-war-command.vercel.app/reporte`;
+    return m;
+  })();
+
+  const noWaMsg = `<color=#FFD700>[AOR]</color> Únete al <color=#A8FF78>WhatsApp</color> del clan +25 pts. Regístrate: https://aor-war-command.vercel.app/registro`;
+
+  const waGroups = [
+    {key:"registro", title:"📋 Reporte de registro semanal", desc:"Confirmados vs sin registrar", msg:registroMsg},
+    {key:"semanal",  title:"📊 Reporte semanal de puntos",   desc:"Ranking de la guerra actual", msg:semanalmsg},
+    {key:"acumulado",title:"🏆 Ranking acumulado",           desc:"Total histórico sin bonus de rango", msg:acumuladoMsg},
+    {key:"aviso",    title:"⚠ Aviso de actividad mínima",   desc:"Para jugadores bajo 20 pts",
+      msg:"*[AOR] Aviso de actividad* ⚠\n\nEstás por debajo del mínimo semanal (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"},
+    {key:"bienvenida",title:"👋 Bienvenida nuevo miembro",  desc:"Para nuevos reclutas",
+      msg:"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 Regístrate: https://aor-war-command.vercel.app/registro\n📊 Ranking: https://aor-war-command.vercel.app/reporte\n❓ Puntos: https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"},
+  ];
+
+  const gameGroups = [
+    {key:"recluta",  title:"📣 Reclutamiento general",
+      msg:`<color=#FFD700>━━ [AOR] RECLUTA ━━</color>
+<color=#40E0FF>¿Buscas clan activo?</color>
+⚔ Guerras · 🏰 Castillos · 🌟 Rangos
+<color=#A8FF78>[AOR] Antigua Orden</color>
+aor-war-command.vercel.app`},
+    {key:"defensa",  title:"🚨 Alerta de defensa urgente",
+      msg:`<color=#FF6B6B>━━ [AOR] ALERTA ━━</color>
+<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>
+Todos los defensores al castillo.
+<color=#40E0FF>¡Ahora!</color>`},
+    {key:"guerra",   title:"⚔ Inicio de guerra",
+      msg:`<color=#FFD700>━━ [AOR] GUERRA ━━</color>
+<color=#A8FF78>¡Comienza la batalla!</color>
+Fase 1: Atacar castillos enemigos
+<color=#FF9F43>¡A por la victoria!</color>`},
+    {key:"victoria", title:"🏆 Victoria / Celebración",
+      msg:`<color=#FFD700>━━ [AOR] VICTORIA ━━</color>
+<color=#A8FF78>¡GUERRA GANADA!</color> 🏆
+Gracias a todos los guerreros.
+<color=#40E0FF>[AOR] Antigua Orden sigue invicta</color>`},
+    {key:"nowa",     title:"📵 Invitación WhatsApp (chat juego)",
+      msg:noWaMsg},
+  ];
+
+  const BtnCopy = ({k, msg}) => (
+    <button onClick={()=>copy(k,msg)} style={{padding:"4px 12px",background:copied===k?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.1)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.25)"),borderRadius:"20px",color:copied===k?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
+      {copied===k?"✓ Copiado!":"📋 Copiar"}
+    </button>
+  );
+
+  return (
+    <div style={{padding:"0 16px"}}>
+      <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
+      {waGroups.map(m=>(
+        <div key={m.key} style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+          <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{m.title}</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>{m.desc}</div>
+          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"120px",overflow:"auto"}}>{m.msg}</div>
+          <BtnCopy k={m.key} msg={m.msg}/>
+        </div>
+      ))}
+      <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>⚔ Mensajes para el chat del juego</div>
+      {gameGroups.map(m=>(
+        <div key={m.key} style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
+          <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>{m.title}</div>
+          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",fontFamily:"monospace",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
+          <button onClick={()=>copy(m.key,m.msg)} style={{padding:"4px 12px",background:copied===m.key?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied===m.key?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied===m.key?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
+            {copied===m.key?"✓ Copiado!":"📋 Copiar"}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Admin Panel ────────────────────────────────────────────────────────────
 function AdminPanel({players, update, loading, saving, reload}) {
   const [activeTab, setActiveTab] = useState("registro");
@@ -540,8 +680,9 @@ function AdminPanel({players, update, loading, saving, reload}) {
   }
 
   async function removePlayer(id) {
-    if (!confirm("¿Expulsar este jugador?")) return;
-    await update(id, {active: false, status: "expulsado", flags: -1});
+    if (!confirm("¿Expulsar este jugador? Pasará a la lista de expulsados.")) return;
+    await supabase.from("players").update({active: false, status: "expulsado"}).eq("id", id);
+    await reload();
   }
 
   return (
@@ -940,7 +1081,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 ⭐ Asignar 50 pts fundadores
               </button>
             </div>
-            <div style={{background:"rgba(255,107,107,0.05)"}},border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
+            <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
               <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Archiva los puntos de esta guerra en el historial y resetea todos los contadores para la siguiente. Ejecutar cada viernes antes de la nueva guerra.</div>
               <button onClick={weeklyReset} style={{padding:"8px 16px",background:"rgba(255,107,107,0.15)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>
@@ -1017,112 +1158,8 @@ function AdminPanel({players, update, loading, saving, reload}) {
         )}
 
         {/* MENSAJES TAB */}
-        {activeTab==="mensajes" && (
-          <div style={{padding:"0 16px"}}>
-            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
-            {[
-              {
-                title:"Registro de guerra semanal",
-                desc:"Aviso semanal para que se registren",
-                msg:`*[AOR] ¡GUERRA DE CLANES!* ⚔
+        {activeTab==="mensajes" && <MensajesTab players={players}/>}
 
-Registra tu disponibilidad antes del jueves:
-📋 https://aor-war-command.vercel.app/registro
-
-Puntos por registrarte:
-🟢 Siempre listo: +10 pts
-🟡 Intermitente: +5 pts
-🟠 Solo una vez: +2 pts
-🔴 No disponible: +1 pt
-
-Ver ranking: https://aor-war-command.vercel.app/reporte`
-              },
-              {
-                title:"Aviso a jugadores sin WhatsApp",
-                desc:"Para enviar en el chat del juego (con colores)",
-                msg:`<color=#FFD700>[AOR]</color> Únete al <color=#A8FF78>WhatsApp</color> del clan +25 pts. Regístrate: https://aor-war-command.vercel.app/registro`
-              },
-              {
-                title:"Advertencia de inactividad",
-                desc:"Para jugadores bajo el mínimo",
-                msg:`*[AOR] Aviso de actividad* ⚠
-
-Estás por debajo del mínimo semanal (20 pts). Registra tu disponibilidad para la próxima guerra:
-📋 https://aor-war-command.vercel.app/registro
-
-Ver tu posición: https://aor-war-command.vercel.app/reporte`
-              },
-              {
-                title:"Bienvenida nuevo miembro",
-                desc:"Para nuevos reclutas",
-                msg:`*¡Bienvenido a [AOR] Antigua Orden!* ⚔
-
-📋 Regístrate antes de cada guerra: https://aor-war-command.vercel.app/registro
-📊 Ver ranking: https://aor-war-command.vercel.app/reporte
-❓ Cómo funciona: https://aor-war-command.vercel.app/puntos
-
-¡Buena suerte en batalla!`
-              },
-            ].map((m,i)=>{
-              const [copied, setCopied] = React.useState(false);
-              return (
-                <div key={i} style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"10px"}}>
-                  <div style={{fontSize:"12px",color:"#25D366",fontWeight:"bold",marginBottom:"2px"}}>{m.title}</div>
-                  <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>{m.desc}</div>
-                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
-                  <button onClick={()=>{navigator.clipboard.writeText(m.msg);setCopied(true);setTimeout(()=>setCopied(false),2000);}} style={{padding:"4px 12px",background:copied?"rgba(168,255,120,0.2)":"rgba(37,211,102,0.15)",border:"1px solid "+(copied?"rgba(168,255,120,0.4)":"rgba(37,211,102,0.3)"),borderRadius:"20px",color:copied?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
-                    {copied?"✓ Copiado!":"📋 Copiar"}
-                  </button>
-                </div>
-              );
-            })}
-
-            <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"12px",marginTop:"20px"}}>⚔ Mensajes para el chat del juego</div>
-            {[
-              {
-                title:"Reclutamiento general",
-                msg:`<color=#FFD700>━━━━ [AOR] RECLUTA ━━━━</color>
-<color=#40E0FF>¿Buscas clan activo y organizado?</color>
-⚔ Batallas · 🏰 Guerras · 🌟 Rangos
-<color=#A8FF78>Únete a Antigua Orden [AOR]</color>
-Registro: aor-war-command.vercel.app`
-              },
-              {
-                title:"Llamada a defensa urgente",
-                msg:`<color=#FF6B6B>━━━━ [AOR] ALERTA ━━━━</color>
-<color=#FFD700>¡CASTILLO BAJO ATAQUE!</color>
-Todos los defensores al castillo.
-<color=#40E0FF>Defensores: NOMBRE1, NOMBRE2</color>`
-              },
-              {
-                title:"Inicio de guerra",
-                msg:`<color=#FFD700>━━━━ [AOR] GUERRA ━━━━</color>
-<color=#A8FF78>¡Comienza la batalla!</color>
-Fase 1: Atacar castillos enemigos
-<color=#40E0FF>Atacantes: NOMBRE1, NOMBRE2</color>
-<color=#FF9F43>¡A por la victoria!</color>`
-              },
-              {
-                title:"Victoria / Celebración",
-                msg:`<color=#FFD700>━━━━ [AOR] VICTORIA ━━━━</color>
-<color=#A8FF78>¡GUERRA GANADA!</color> 🏆
-Gracias a todos los guerreros.
-<color=#40E0FF>¡Antigua Orden [AOR] sigue invicta!</color>`
-              },
-            ].map((m,i)=>{
-              const [copied2, setCopied2] = React.useState(false);
-              return (
-                <div key={i} style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"10px"}}>
-                  <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>{m.title}</div>
-                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:"6px",padding:"8px",fontSize:"11px",color:"#d4c9a8",whiteSpace:"pre-wrap",marginBottom:"8px",maxHeight:"100px",overflow:"auto"}}>{m.msg}</div>
-                  <button onClick={()=>{navigator.clipboard.writeText(m.msg);setCopied2(true);setTimeout(()=>setCopied2(false),2000);}} style={{padding:"4px 12px",background:copied2?"rgba(168,255,120,0.2)":"rgba(64,224,255,0.1)",border:"1px solid "+(copied2?"rgba(168,255,120,0.4)":"rgba(64,224,255,0.25)"),borderRadius:"20px",color:copied2?"#A8FF78":"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
-                    {copied2?"✓ Copiado!":"📋 Copiar"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
       </div>
       </div>
