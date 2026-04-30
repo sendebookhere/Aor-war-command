@@ -149,12 +149,15 @@ function getWarWeek() {
 }
 
 function isRegistrationOpen() {
-  // Closes Friday at 7:00am Ecuador time (UTC-5)
+  // Open Mon(1)–Thu(4) all day + Fri(5) before 7am Ecuador (UTC-5)
+  // Closed: Fri 7am+ (war starts), Sat(6), Sun(0)
   const now = new Date();
-  const ec = new Date(now.getTime() - 5*60*60*1000);
+  const ec  = new Date(now.getTime() - 5*60*60*1000);
   const day  = ec.getDay();
   const hour = ec.getHours();
-  if (day === 5 && hour >= 7) return false;
+  if (day === 0) return false;                  // Sunday
+  if (day === 6) return false;                  // Saturday
+  if (day === 5 && hour >= 7) return false;     // Friday 7am+ (war in progress)
   return true;
 }
 
@@ -290,7 +293,7 @@ function RegistrationForm({onRegistered}) {
       <div style={{textAlign:"center",maxWidth:"360px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
-        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro cierra los viernes a las 7:00am hora Ecuador cuando comienza la guerra. Vuelve el próximo viernes.</div>
+        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro abre los lunes y cierra el viernes a las 7:00am hora Ecuador cuando comienza la guerra.</div>
       </div>
     </div>
   );
@@ -474,24 +477,29 @@ function RegistrationForm({onRegistered}) {
 
 // ── Message Card components (defined OUTSIDE MensajesTab to prevent focus loss) ─
 function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft]     = useState(initialValue);
-  const [saved, setSaved]     = useState(initialValue);
-  const [copied, setCopied]   = useState(false);
-  function guardar()  { setSaved(draft); setEditing(false); }
-  function cancelar() { setDraft(saved); setEditing(false); }
+  const [editing, setEditing]       = useState(false);
+  const [draft, setDraft]           = useState(initialValue);
+  const [saved, setSaved]           = useState(initialValue);
+  const [draftTitle, setDraftTitle] = useState(title);
+  const [savedTitle, setSavedTitle] = useState(title);
+  const [copied, setCopied]         = useState(false);
+  function guardar()  { setSaved(draft); setSavedTitle(draftTitle); setEditing(false); }
+  function cancelar() { setDraft(saved); setDraftTitle(savedTitle); setEditing(false); }
   function copiar()   { navigator.clipboard.writeText(saved); setCopied(true); setTimeout(()=>setCopied(false),2000); }
   return (
     <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px"}}>
         <div>
-          <div style={{fontSize:"12px",color:titleColor,fontWeight:"bold"}}>{title}</div>
+          <div style={{fontSize:"12px",color:titleColor,fontWeight:"bold"}}>{savedTitle}</div>
           {desc&&<div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"1px"}}>{desc}</div>}
         </div>
         {!editing && <button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer",marginLeft:"8px",whiteSpace:"nowrap"}}>✏ Editar</button>}
       </div>
       {editing ? (
-        <><textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={5} autoFocus
+        <>
+          <input value={draftTitle} onChange={e=>setDraftTitle(e.target.value)} placeholder="Título del mensaje"
+            style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"6px",color:titleColor,fontSize:"11px",padding:"5px 8px",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontWeight:"bold"}}/>
+          <textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={5}
             style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"8px",fontFamily:"inherit"}}/>
           <div style={{display:"flex",gap:"8px"}}>
             <button onClick={guardar} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>💾 Guardar</button>
@@ -507,26 +515,32 @@ function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
   );
 }
 
+
 function GameCard({title, initialValue}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft]     = useState(initialValue);
-  const [saved, setSaved]     = useState(initialValue);
-  const [copied, setCopied]   = useState(false);
-  function guardar()  { setSaved(draft); setEditing(false); }
-  function cancelar() { setDraft(saved); setEditing(false); }
+  const [editing, setEditing]       = useState(false);
+  const [draft, setDraft]           = useState(initialValue);
+  const [saved, setSaved]           = useState(initialValue);
+  const [draftTitle, setDraftTitle] = useState(title);
+  const [savedTitle, setSavedTitle] = useState(title);
+  const [copied, setCopied]         = useState(false);
+  function guardar()  { setSaved(draft); setSavedTitle(draftTitle); setEditing(false); }
+  function cancelar() { setDraft(saved); setDraftTitle(savedTitle); setEditing(false); }
   function copiar()   { navigator.clipboard.writeText(saved); setCopied(true); setTimeout(()=>setCopied(false),2000); }
   const len = draft.length; const over = len > 250;
   return (
     <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid "+(over&&editing?"rgba(255,107,107,0.5)":"rgba(64,224,255,0.15)"),borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
-        <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{title}</div>
+        <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{savedTitle}</div>
         <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
           {editing && <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.4)",fontWeight:over?"bold":"normal"}}>{len}/250{over?" ⚠":""}</span>}
           {!editing && <><span style={{fontSize:"10px",color:"rgba(255,255,255,0.25)"}}>{saved.length}/250</span><button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏ Editar</button></>}
         </div>
       </div>
       {editing ? (
-        <><textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={4} autoFocus
+        <>
+          <input value={draftTitle} onChange={e=>setDraftTitle(e.target.value)} placeholder="Título del mensaje"
+            style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(64,224,255,0.2)",borderRadius:"6px",color:"#40E0FF",fontSize:"11px",padding:"5px 8px",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontWeight:"bold"}}/>
+          <textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={4}
             style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid "+(over?"rgba(255,107,107,0.4)":"rgba(64,224,255,0.3)"),borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",resize:"vertical",outline:"none",boxSizing:"border-box",marginBottom:"8px",fontFamily:"monospace"}}/>
           <div style={{display:"flex",gap:"8px"}}>
             <button onClick={guardar} disabled={over} style={{flex:1,padding:"7px",background:over?"rgba(255,255,255,0.04)":"rgba(168,255,120,0.15)",border:"1px solid "+(over?"rgba(255,255,255,0.08)":"rgba(168,255,120,0.3)"),borderRadius:"6px",color:over?"rgba(255,255,255,0.3)":"#A8FF78",fontSize:"11px",cursor:over?"default":"pointer",fontWeight:"bold"}}>💾 Guardar{over?" (excede 250)":""}</button>
@@ -541,6 +555,7 @@ function GameCard({title, initialValue}) {
     </div>
   );
 }
+
 
 function InviteCard({name, initialValue}) {
   const [editing, setEditing] = useState(false);
@@ -650,8 +665,8 @@ function MensajesTab({players}) {
 
       {noWaPlayers.length > 0 && (
         <div style={{marginTop:"16px"}}>
-          <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"13px",marginBottom:"6px"}}>📵 Invitaciones WA individuales ({noWaPlayers.length} sin grupo)</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>✏ Editar para personalizar · 💾 Guardar confirma</div>
+          <div style={{fontFamily:"serif",color:"#FF9F43",fontSize:"13px",marginBottom:"4px"}}>📵 Invitaciones WA individuales ({noWaPlayers.length} sin grupo)</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>Se actualizan automáticamente según el estado WA en el Roster · ✏ Editar para personalizar</div>
           {noWaPlayers.map((p,i)=>{
             const nc = NAME_COLORS[i % NAME_COLORS.length];
             const def = `<color=${nc}>[AOR] ${p.name}</color> unete al whatsapp del clan, escribe a <color=#40E0FF>Punk'z +52 771 140 4402</color> y confirma participacion en guerra de clanes en <color=#FFD700>aor-war-command.vercel.app/registro</color>`;
@@ -659,6 +674,13 @@ function MensajesTab({players}) {
           })}
         </div>
       )}
+
+      <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px",marginBottom:"6px",marginTop:"24px"}}>🔥 Mensajes de reclutamiento externo</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Para el chat general del juego — atraer nuevos jugadores. Sin link de la app (uso solo para miembros)</div>
+      <GameCard title="📣 Reclutamiento general [ES]" initialValue={"<color=#FFD700>━━ [AOR] RECLUTA ━━</color>\n¿Buscas clan activo y organizado?\n<color=#40E0FF>⚔ Batallas · 🏰 Castillos · 🌟 Rangos</color>\n<color=#A8FF78>Antigua Orden [AOR]</color> — únete."}/>
+      <GameCard title="📣 Reclutamiento corto" initialValue={"<color=#FFD700>[AOR]</color> <color=#40E0FF>¡Únete a Antigua Orden!</color>\nClan activo · guerras semanales.\n<color=#A8FF78>Escríbenos para ingresar.</color>"}/>
+      <GameCard title="📣 Reclutamiento estilo élite" initialValue={"<color=#FFD700>━━━ ANTIGUA ORDEN ━━━</color>\n<color=#40E0FF>Clan de élite · [AOR]</color>\nBuscamos guerreros comprometidos.\n<color=#A8FF78>¿Listo para la batalla?</color>"}/>
+      <GameCard title="📣 Reclutamiento post-victoria" initialValue={"<color=#FFD700>[AOR]</color> <color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nSomos <color=#40E0FF>Antigua Orden</color> y buscamos\nnuevos guerreros. <color=#FFD700>¡Únete al clan!</color>"}/>
     </div>
   );
 }
