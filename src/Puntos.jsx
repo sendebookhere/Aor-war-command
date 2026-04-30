@@ -31,15 +31,17 @@ export default function Puntos({onBack}) {
         <div style={{background:"rgba(168,255,120,0.08)",border:"2px solid #A8FF78",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>⚔️ PASO 2 — Participa en la guerra</div>
           {[
-            {label:"Apareciste y participaste",pts:"+3",color:"#A8FF78"},
-            {label:"Seguiste las órdenes del admin",pts:"+2",color:"#FFD700"},
-            {label:"Ganaste una batalla",pts:"+2",color:"#40E0FF"},
-            {label:"Declaraste una batalla y la perdiste",pts:"+1",color:"#40E0FF"},
-            {label:"Defendiste un castillo",pts:"+1",color:"#40E0FF"},
-            {label:"6+ batallas ganadas en una guerra",pts:"+10",color:"#FFD700"},
-            {label:"Atacaste bandidos DESPUÉS de ganar",pts:"+1",color:"#A8FF78"},
-            {label:"Cumpliste TODO perfectamente",pts:"+5",color:"#FFD700"},
-            {label:"Participaste sin haberte registrado",pts:"+1",color:"#A8FF78"},
+            {label:"Apareciste y participaste (una vez por guerra)",pts:"+3",color:"#A8FF78"},
+            {label:"Seguiste las órdenes del admin (una vez por guerra)",pts:"+2",color:"#FFD700"},
+            {label:"Ganaste una batalla",pts:"+2 c/u",color:"#40E0FF"},
+            {label:"Declaraste una batalla y la perdiste",pts:"+1 c/u",color:"#40E0FF"},
+            {label:"Defendiste un castillo",pts:"+1 c/u",color:"#40E0FF"},
+            {label:"6+ batallas ganadas — bonus automático",pts:"+10",color:"#FFD700"},
+            {label:"Atacaste bandidos DESPUÉS de ganar la guerra",pts:"+1 c/u",color:"#A8FF78"},
+            {label:"Cumpliste TODO perfectamente (una vez por guerra)",pts:"+5",color:"#FFD700"},
+            {label:"Participaste sin haberte registrado antes",pts:"+1",color:"#A8FF78"},
+            {label:"Actualizaste solo BP o solo Poder",pts:"+2",color:"#A8FF78"},
+            {label:"Actualizaste BP y Poder juntos",pts:"+5",color:"#FFD700"},
           ].map(r=>(
             <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px",marginBottom:"2px"}}>
               <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
@@ -52,14 +54,14 @@ export default function Puntos({onBack}) {
         <div style={{background:"rgba(255,107,107,0.08)",border:"2px solid #FF6B6B",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
           <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>❌ PENALIZACIONES</div>
           {[
-            {label:"Dijiste Siempre listo y no apareciste",pts:"-15",color:"#FF6B6B"},
-            {label:"Dijiste Intermitente y no apareciste",pts:"-10",color:"#FF6B6B"},
-            {label:"Dijiste Solo una vez y no apareciste",pts:"-5",color:"#FF6B6B"},
+            {label:"Dijiste Conquistador y no apareciste",pts:"-15",color:"#FF6B6B"},
+            {label:"Dijiste Refuerzos y no apareciste",pts:"-10",color:"#FF6B6B"},
+            {label:"Dijiste Reserva y no apareciste",pts:"-5",color:"#FF6B6B"},
             {label:"No te registraste y tampoco participaste",pts:"-20",color:"#FF6B6B"},
-            {label:"Ignoraste una orden directa del admin",pts:"-2",color:"#FF9F43"},
-            {label:"Abandonaste una defensa sin avisar",pts:"-2",color:"#FF9F43"},
-            {label:"Estuviste inactivo +12h sin justificación",pts:"-3",color:"#FF9F43"},
-            {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1",color:"#FF9F43"},
+            {label:"Ignoraste una orden directa del admin",pts:"-2 c/vez",color:"#FF9F43"},
+            {label:"Abandonaste una defensa sin avisar",pts:"-2 c/vez",color:"#FF9F43"},
+            {label:"Estuviste inactivo +12h sin justificación",pts:"-3 c/vez",color:"#FF9F43"},
+            {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1 c/vez",color:"#FF9F43"},
           ].map(r=>(
             <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:"rgba(255,107,107,0.05)",borderRadius:"6px",marginBottom:"2px"}}>
               <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>

@@ -165,6 +165,7 @@ function RegistrationForm({onRegistered}) {
   const [tz, setTz]                 = useState("mexico");
   const [hour, setHour]             = useState("No sé");
   const [task1, setTask1]           = useState("");
+  const [task2, setTask2]           = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone]             = useState(false);
   const [error, setError]           = useState("");
@@ -263,7 +264,7 @@ function RegistrationForm({onRegistered}) {
     const hasLevel = newLevel.trim() !== "";
     const statsPts = hasBp && hasLevel ? 5 : (hasBp || hasLevel) ? 2 : 0;
     const updates = {
-      availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
+      availability: avail, timezone: tz, hour_mx: hour, task_period1: task1+(task2?"→"+task2:""),
       registered_form: true, registered_week: currentWeek,
       pt_registro: av.pts, pt_disponibilidad_declarada: 0,
       ...(statsPts > 0 ? {pt_stats: (player.pt_stats||0) + statsPts, stats_updated_week: getWarWeek()} : {}),
@@ -397,17 +398,22 @@ function RegistrationForm({onRegistered}) {
                 {avail===key && key==="intermitente" && (
                   <div style={{marginTop:"4px",padding:"10px",background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"6px",borderTop:"none"}}>
                     <div style={{marginBottom:"8px"}}>
-                      <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔ Primeras 24h — Captura de castillos</div>
+                      <div style={{fontSize:"10px",color:"#FFD700",marginBottom:"4px"}}>⚔ Primeras 24h — elige UNA tarea:</div>
                       {["Atacar castillos","Defender castillos"].map(t=>(
                         <button key={t} onClick={()=>setTask1(t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1===t?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1===t?"#FFD700":"rgba(255,255,255,0.08)"),color:task1===t?"#FFD700":"rgba(255,255,255,0.5)"}}>{t}</button>
                       ))}
                     </div>
                     <div>
-                      <div style={{fontSize:"10px",color:"#FF6B6B",marginBottom:"4px"}}>🏰 Segundas 24h — Ataque a ciudades enemigas</div>
+                      <div style={{fontSize:"10px",color:"#FF6B6B",marginBottom:"4px"}}>🏰 Segundas 24h — elige UNA tarea:</div>
                       {["Atacar ciudad enemiga","Defender castillos"].map(t=>(
-                        <button key={t} onClick={()=>setTask1(prev=>prev.includes(t)?prev:prev+"→"+t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task1.includes(t)?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.08)"),color:task1.includes(t)?"#FF6B6B":"rgba(255,255,255,0.5)"}}>{t}</button>
+                        <button key={t} onClick={()=>setTask2(task2===t?"":t)} style={{display:"block",width:"100%",marginBottom:"3px",padding:"6px 10px",borderRadius:"5px",fontSize:"11px",cursor:"pointer",textAlign:"left",background:task2===t?"rgba(255,107,107,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(task2===t?"#FF6B6B":"rgba(255,255,255,0.08)"),color:task2===t?"#FF6B6B":"rgba(255,255,255,0.5)"}}>{t}</button>
                       ))}
                     </div>
+                  {(task1||task2) && (
+                      <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,215,0,0.08)",borderRadius:"5px",fontSize:"10px",color:"#FFD700"}}>
+                        ✓ {task1}{task2?" → "+task2:""}
+                      </div>
+                    )}
                   </div>
                 )}
                 {avail===key && key==="solo_una" && tasks && tasks.period1.length>0 && (
@@ -1107,10 +1113,28 @@ function AdminPanel({players, update, loading, saving, reload}) {
                     <span style={{fontSize:"20px",color:pts<0?"#FF6B6B":"#FFD700",fontWeight:"bold"}}>{pts}</span>
                   </div>
                   <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-                    {[
-                      {label:"✅ Apareció +3",key:"pt_disponibilidad",max:1,color:"#A8FF78"},
-                      {label:"📋 Órdenes +2",key:"pt_obediencia",max:1,color:"#FFD700"},
-                      ].map(()=>null)}
+                    {/* Apareció — toggle */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>✅ Apareció</span>
+                      <button onClick={()=>update(p.id,{pt_disponibilidad:(p.pt_disponibilidad||0)>0?0:3})}
+                        style={{padding:"3px 6px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",fontWeight:"bold",
+                          background:(p.pt_disponibilidad||0)>0?"rgba(168,255,120,0.2)":"rgba(255,255,255,0.04)",
+                          border:"1px solid "+((p.pt_disponibilidad||0)>0?"rgba(168,255,120,0.4)":"rgba(255,255,255,0.1)"),
+                          color:(p.pt_disponibilidad||0)>0?"#A8FF78":"rgba(255,255,255,0.3)"}}>
+                        {(p.pt_disponibilidad||0)>0?"+3 ✓":"0"}
+                      </button>
+                    </div>
+                    {/* Órdenes — toggle */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>📋 Órdenes</span>
+                      <button onClick={()=>update(p.id,{pt_obediencia:(p.pt_obediencia||0)>0?0:2})}
+                        style={{padding:"3px 6px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",fontWeight:"bold",
+                          background:(p.pt_obediencia||0)>0?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.04)",
+                          border:"1px solid "+((p.pt_obediencia||0)>0?"rgba(255,215,0,0.4)":"rgba(255,255,255,0.1)"),
+                          color:(p.pt_obediencia||0)>0?"#FFD700":"rgba(255,255,255,0.3)"}}>
+                        {(p.pt_obediencia||0)>0?"+2 ✓":"0"}
+                      </button>
+                    </div>
                     {/* Batallas ganadas */}
                     <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                       <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>⚔ B.Gan +2{(p.pt_batallas_ganadas||0)>=6?" 🌟":""}</span>
@@ -1125,8 +1149,14 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       <Stepper value={p.pt_defensas||0} onChange={v=>update(p.id,{pt_defensas:v})} color="#40E0FF"/>
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
-                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🌟 Bonus +5</span>
-                      <Stepper value={p.pt_bonus||0} onChange={v=>update(p.id,{pt_bonus:v})} color="#FFD700"/>
+                      <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🌟 Bonus</span>
+                      <button onClick={()=>update(p.id,{pt_bonus:(p.pt_bonus||0)>0?0:5})}
+                        style={{padding:"3px 6px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",fontWeight:"bold",
+                          background:(p.pt_bonus||0)>0?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.04)",
+                          border:"1px solid "+((p.pt_bonus||0)>0?"rgba(255,215,0,0.4)":"rgba(255,255,255,0.1)"),
+                          color:(p.pt_bonus||0)>0?"#FFD700":"rgba(255,255,255,0.3)"}}>
+                        {(p.pt_bonus||0)>0?"+5 ✓":"0"}
+                      </button>
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
                       <span style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>🏴‍☠ Bandido +1</span>
