@@ -1,3 +1,4 @@
+import HomeButton from "./HomeButton";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
 import { useState, useEffect } from "react";
@@ -423,7 +424,8 @@ function RegistrationForm({onRegistered}) {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",backgroundImage:"radial-gradient(ellipse at 10% 0%, rgba(64,224,255,0.05) 0%, transparent 50%)",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
-      <div style={{maxWidth:"560px",margin:"0 auto"}}>
+      <HomeButton/>
+      <div style={{maxWidth:"560px",margin:"0 auto",paddingTop:"44px"}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}>
           <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Puntos</a>
           <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>

@@ -1,3 +1,4 @@
+import HomeButton from "./HomeButton";
 import NalguitasFooter from "./NalguitasFooter";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
@@ -190,6 +191,7 @@ function PlayerProfile({ player, onBack }) {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+      <HomeButton/>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"#40E0FF",cursor:"pointer",fontSize:"13px",marginBottom:"16px",padding:0}}>
           ← Volver al ranking
@@ -423,6 +425,7 @@ export default function PublicReport() {
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+      <HomeButton/>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
 
         {/* Header */}
