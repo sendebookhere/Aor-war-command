@@ -134,15 +134,13 @@ function FlagBar({count}) {
 
 // ── Registration Form (public) ─────────────────────────────────────────────
 function getWarWeek() {
-  // Returns string like "2026-W18" representing current war week (Friday to Thursday)
+  // Returns string like "2026-W18" — war week Fri→Thu, Ecuador time (UTC-5)
   const now = new Date();
-  // Adjust to Mexico time (UTC-6)
-  const mx = new Date(now.getTime() - 6*60*60*1000);
-  const day = mx.getDay(); // 0=Sun, 4=Thu, 5=Fri
-  // War week starts Friday, ends Thursday
+  const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
+  const day = ec.getDay(); // 0=Sun, 4=Thu, 5=Fri
   const daysFromFriday = (day + 2) % 7; // days since last Friday
-  const friday = new Date(mx);
-  friday.setDate(mx.getDate() - daysFromFriday);
+  const friday = new Date(ec);
+  friday.setDate(ec.getDate() - daysFromFriday);
   const year = friday.getFullYear();
   const week = Math.ceil(((friday - new Date(year,0,1)) / 86400000 + 1) / 7);
   return `${year}-W${week}`;
@@ -268,8 +266,7 @@ function RegistrationForm({onRegistered}) {
       availability: avail, timezone: tz, hour_mx: hour, task_period1: task1,
       registered_form: true, registered_week: currentWeek,
       pt_registro: av.pts, pt_disponibilidad_declarada: 0,
-      pt_stats: statsPts,
-      stats_updated_week: getWarWeek(),
+      ...(statsPts > 0 ? {pt_stats: (player.pt_stats||0) + statsPts, stats_updated_week: getWarWeek()} : {}),
     };
     if (hasBp)    updates.bp    = parseInt(newBp);
     if (hasLevel) updates.level = parseInt(newLevel);
@@ -938,6 +935,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                       {p.registered_form && (
                         <button onClick={()=>update(p.id,{
                           availability:"pendiente", registered_form:false,
+                          registered_week:"",
                           hour_mx:"No sé", task_period1:"",
                           pt_registro:0, pt_disponibilidad_declarada:0
                         })} style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",color:"#FF6B6B",cursor:"pointer",whiteSpace:"nowrap"}}>
