@@ -531,9 +531,9 @@ function MensajesTab({players}) {
     {key:"victoria", title:"🏆 Victoria / Celebración",
       msg:"<color=#FFD700>━━ [AOR] VICTORIA ━━</color>\n<color=#A8FF78>¡GUERRA GANADA!</color> 🏆\nGracias a todos los guerreros.\n<color=#40E0FF>[AOR] Antigua Orden sigue invicta</color>"},
     {key:"registrate", title:"📋 Llama a registrarse en la app",
-      msg:"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\n<color=#40E0FF>Habla con un oficial para acceder.</color>"},
+      msg:"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\n<color=#40E0FF>Regístrate aquí:</color>\nhttps://aor-war-command.vercel.app/registro"},
     {key:"registrate2", title:"📋 Regístrate o pierde puntos",
-      msg:"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate antes del jueves.</color>\n<color=#40E0FF>Pide acceso a un oficial.</color>"},
+      msg:"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate ya:</color>\nhttps://aor-war-command.vercel.app/registro"},
     {key:"sumate_wa", title:"📱 Invitación al grupo de WhatsApp",
       msg:"<color=#FFD700>[AOR]</color> Únete al <color=#A8FF78>grupo de WhatsApp</color> del clan.\n<color=#40E0FF>+25 puntos por unirte.</color>\nPide el enlace a un oficial."},
   ];
@@ -542,7 +542,7 @@ function MensajesTab({players}) {
   const invNoWa = noWaPlayers.map(p => ({
     key:"nowa_"+p.id,
     title:"📵 Invitar: "+p.name,
-    msg:"<color=#FFD700>[AOR] "+p.name+"</color>\n<color=#A8FF78>Únete al grupo de WhatsApp</color> del clan y gana <color=#FFD700>+25 puntos</color> de bono.\nPide el enlace a un oficial."
+    msg:"<color=#FFD700>[AOR] "+p.name+"</color>\n<color=#A8FF78>Únete al grupo de WhatsApp</color> del clan y gana <color=#FFD700>+25 puntos</color> de bono.\n<color=#40E0FF>Regístrate:</color> https://aor-war-command.vercel.app/registro"
   }));
 
   const CopyBtn = ({k, msg}) => (
@@ -594,6 +594,47 @@ function MensajesTab({players}) {
           ))}
         </>
       )}
+
+      {/* App Links Section */}
+      <div style={{marginTop:"24px",marginBottom:"8px"}}>
+        <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>🔗 Links de la app</div>
+        {[
+          {
+            label:"📊 Ranking / Reporte",
+            url:"https://aor-war-command.vercel.app/reporte",
+            color:"#40E0FF",
+            desc:"Ver posiciones, perfiles y puntos acumulados"
+          },
+          {
+            label:"📋 Registro de Guerra",
+            url:"https://aor-war-command.vercel.app/registro",
+            color:"#A8FF78",
+            desc:"Confirmar participación y ganar puntos antes del jueves"
+          },
+          {
+            label:"❓ Cómo funciona",
+            url:"https://aor-war-command.vercel.app/puntos",
+            color:"#FFD700",
+            desc:"Sistema de puntos, rangos y penalizaciones"
+          },
+        ].map(link=>(
+          <div key={link.url} style={{background:link.color+"08",border:"1px solid "+link.color+"33",borderRadius:"10px",padding:"14px 16px",marginBottom:"10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:"12px"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"13px",color:link.color,fontWeight:"bold",marginBottom:"3px"}}>{link.label}</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>{link.desc}</div>
+              <div style={{fontSize:"10px",color:link.color+"99",fontFamily:"monospace",background:"rgba(0,0,0,0.2)",padding:"3px 8px",borderRadius:"4px",display:"inline-block"}}>{link.url}</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+              <button onClick={()=>{navigator.clipboard.writeText(link.url);}} style={{padding:"5px 12px",background:link.color+"22",border:"1px solid "+link.color+"44",borderRadius:"6px",color:link.color,fontSize:"11px",cursor:"pointer",whiteSpace:"nowrap"}}>
+                📋 Copiar link
+              </button>
+              <a href={link.url} target="_blank" rel="noreferrer" style={{padding:"5px 12px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"11px",cursor:"pointer",textDecoration:"none",textAlign:"center",whiteSpace:"nowrap"}}>
+                🔗 Abrir
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
