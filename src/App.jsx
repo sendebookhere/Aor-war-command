@@ -601,7 +601,7 @@ function RegistrationForm({onRegistered}) {
 
 
 // ── Message Card components (defined OUTSIDE MensajesTab to prevent focus loss) ─
-function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
+function WaCard({title, desc, initialValue, titleColor="#25D366", onDelete=null}) {
   const [editing, setEditing]       = useState(false);
   const [draft, setDraft]           = useState(initialValue);
   const [saved, setSaved]           = useState(initialValue);
@@ -618,7 +618,12 @@ function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
           <div style={{fontSize:"12px",color:titleColor,fontWeight:"bold"}}>{savedTitle}</div>
           {desc&&<div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"1px"}}>{desc}</div>}
         </div>
-        {!editing && <button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer",marginLeft:"8px",whiteSpace:"nowrap"}}>✏ Editar</button>}
+        {!editing && (
+          <div style={{display:"flex",gap:"4px",marginLeft:"8px",flexShrink:0}}>
+            <button onClick={()=>setEditing(true)} style={{padding:"3px 8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏</button>
+            {onDelete && <button onClick={()=>{ if(confirm("¿Eliminar este mensaje?")) onDelete(); }} style={{padding:"3px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",color:"rgba(255,107,107,0.5)",fontSize:"10px",cursor:"pointer"}}>✕</button>}
+          </div>
+        )}
       </div>
       {editing ? (
         <>
@@ -641,7 +646,7 @@ function WaCard({title, desc, initialValue, titleColor="#25D366"}) {
 }
 
 
-function GameCard({title, initialValue}) {
+function GameCard({title, initialValue, onDelete=null}) {
   const [editing, setEditing]       = useState(false);
   const [draft, setDraft]           = useState(initialValue);
   const [saved, setSaved]           = useState(initialValue);
@@ -658,7 +663,13 @@ function GameCard({title, initialValue}) {
         <div style={{fontSize:"12px",color:"#40E0FF",fontWeight:"bold"}}>{savedTitle}</div>
         <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
           {editing && <span style={{fontSize:"10px",color:over?"#FF6B6B":"rgba(255,255,255,0.4)",fontWeight:over?"bold":"normal"}}>{len}/250{over?" ⚠":""}</span>}
-          {!editing && <><span style={{fontSize:"10px",color:"rgba(255,255,255,0.25)"}}>{saved.length}/250</span><button onClick={()=>setEditing(true)} style={{padding:"3px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏ Editar</button></>}
+          {!editing && (
+            <div style={{display:"flex",gap:"4px",alignItems:"center"}}>
+              <span style={{fontSize:"10px",color:"rgba(255,255,255,0.25)"}}>{saved.length}/250</span>
+              <button onClick={()=>setEditing(true)} style={{padding:"3px 8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer"}}>✏</button>
+              {onDelete && <button onClick={()=>{ if(confirm("¿Eliminar este mensaje?")) onDelete(); }} style={{padding:"3px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",color:"rgba(255,107,107,0.5)",fontSize:"10px",cursor:"pointer"}}>✕</button>}
+            </div>
+          )}
         </div>
       </div>
       {editing ? (
@@ -724,6 +735,22 @@ function MensajesTab({players}) {
   const noWaPlayers = allActive.filter(p=>!p.whatsapp);
   const avMap = {siempre:"Conquistador",intermitente:"Refuerzos",solo_una:"Reserva",no_disponible:"No disponible"};
 
+  // Dynamic extra messages
+  const [extraWa,   setExtraWa]   = useState([]);
+  const [extraGame, setExtraGame] = useState([]);
+  const [addModal,  setAddModal]  = useState(false);
+  const [newTitle,  setNewTitle]  = useState("");
+  const [newContent,setNewContent]= useState("");
+  const [newType,   setNewType]   = useState("wa"); // "wa" or "game"
+
+  function addMessage() {
+    if (!newTitle.trim()) return;
+    const item = {id: Date.now(), title: newTitle.trim(), content: newContent};
+    if (newType === "wa") setExtraWa(prev=>[...prev, item]);
+    else setExtraGame(prev=>[...prev, item]);
+    setNewTitle(""); setNewContent(""); setAddModal(false);
+  }
+
   function totalPtsLocal(p) {
     const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
     return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
@@ -778,6 +805,8 @@ function MensajesTab({players}) {
       <WaCard title="🏆 Ranking acumulado" desc="Sin bonus de rango" initialValue={buildAcumulado()}/>
       <WaCard title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales" initialValue={"*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"}/>
       <WaCard title="👋 Bienvenida nuevo miembro" initialValue={"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"}/>
+      {extraWa.map(m=><WaCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraWa(prev=>prev.filter(x=>x.id!==m.id))}/>)}
+      <button onClick={()=>{setNewType("wa");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(37,211,102,0.06)",border:"1px dashed rgba(37,211,102,0.25)",borderRadius:"8px",color:"rgba(37,211,102,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje WhatsApp</button>
 
       <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>📡 Mensajes de Comunicaciones (página pública)</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Estos 4 mensajes aparecen en /comunicaciones para que los miembros los copien y peguen en el chat del juego. Sin iconos — solo texto y color.</div>
@@ -794,6 +823,9 @@ function MensajesTab({players}) {
       <GameCard title="📋 Llama a registrarse (interno)" initialValue={"<color=#FFD700>[AOR]</color> ¡Regístrate antes del jueves!\n<color=#A8FF78>Gana puntos</color> y sube de rango.\nhttps://aor-war-command.vercel.app/registro"}/>
       <GameCard title="📋 Sin registro = -20 pts"        initialValue={"<color=#FF6B6B>[AOR] AVISO</color>\n<color=#FFD700>Sin registro = -20 puntos.</color>\n<color=#A8FF78>Regístrate ya:</color>\nhttps://aor-war-command.vercel.app/registro"}/>
       <GameCard title="📱 Invitar al grupo WhatsApp"     initialValue={"<color=#FFD700>[AOR]</color> Únete al grupo de WhatsApp.\n<color=#A8FF78>+25 puntos de bono.</color>\nPide el enlace a un oficial."}/>
+
+      {extraGame.map(m=><GameCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraGame(prev=>prev.filter(x=>x.id!==m.id))}/>)}
+      <button onClick={()=>{setNewType("game");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(64,224,255,0.06)",border:"1px dashed rgba(64,224,255,0.25)",borderRadius:"8px",color:"rgba(64,224,255,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje chat del juego</button>
 
       {noWaPlayers.length > 0 && (
         <div style={{marginTop:"16px"}}>
@@ -1386,10 +1418,79 @@ function SeguridadTab({players}) {
           </div>
         </div>
       ))}
+
+      {/* Add message modal */}
+      {addModal && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
+          <div style={{background:"#0d0d0f",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"12px",padding:"20px",width:"100%",maxWidth:"400px"}}>
+            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"15px",marginBottom:"14px"}}>Agregar mensaje</div>
+            <div style={{display:"flex",gap:"6px",marginBottom:"12px"}}>
+              <button onClick={()=>setNewType("wa")} style={{flex:1,padding:"7px",background:newType==="wa"?"rgba(37,211,102,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(newType==="wa"?"rgba(37,211,102,0.4)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:newType==="wa"?"#25D366":"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>WhatsApp</button>
+              <button onClick={()=>setNewType("game")} style={{flex:1,padding:"7px",background:newType==="game"?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(newType==="game"?"rgba(64,224,255,0.4)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:newType==="game"?"#40E0FF":"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>Chat del juego</button>
+            </div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px",letterSpacing:"0.1em"}}>TÍTULO</div>
+            <input value={newTitle} onChange={e=>setNewTitle(e.target.value)} autoFocus placeholder="Ej: Aviso de guerra especial"
+              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",marginBottom:"8px"}}/>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px",letterSpacing:"0.1em"}}>CONTENIDO{newType==="game"?" (máx 250 chars)":""}</div>
+            <textarea value={newContent} onChange={e=>setNewContent(e.target.value)} rows={4} placeholder={newType==="game"?"<color=#FFD700>[AOR]</color> Tu mensaje...":"*[AOR]* Tu mensaje..."}
+              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid "+(newType==="game"&&newContent.length>250?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"),borderRadius:"6px",color:"#d4c9a8",padding:"8px 10px",fontSize:"11px",outline:"none",boxSizing:"border-box",marginBottom:"4px",resize:"vertical",fontFamily:newType==="game"?"monospace":"inherit"}}/>
+            {newType==="game" && <div style={{fontSize:"9px",color:newContent.length>250?"#FF6B6B":"rgba(255,255,255,0.3)",textAlign:"right",marginBottom:"8px"}}>{newContent.length}/250</div>}
+            <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+              <button onClick={addMessage} disabled={!newTitle.trim()||(newType==="game"&&newContent.length>250)} style={{flex:1,padding:"9px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>Agregar</button>
+              <button onClick={()=>setAddModal(false)} style={{padding:"9px 14px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+
+
+// ── Daily Limit Setting ─────────────────────────────────────────────────────
+function DailyLimitSetting() {
+  const [limit, setLimit]   = useState(2);
+  const [saved, setSaved]   = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single()
+      .then(({data})=>{
+        if (data?.value) setLimit(parseInt(data.value)||2);
+        setLoaded(true);
+      });
+  },[]);
+
+  async function save() {
+    await supabase.from("app_settings")
+      .upsert({key:"daily_msg_limit", value:String(limit)}, {onConflict:"key"});
+    setSaved(true);
+    setTimeout(()=>setSaved(false), 2000);
+  }
+
+  if (!loaded) return null;
+  return (
+    <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
+      <div style={{fontSize:"11px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>⚙ Configuración de Comunicaciones</div>
+      <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Publicaciones máximas por jugador por día en /comunicaciones</div>
+          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+            <button onClick={()=>setLimit(l=>Math.max(1,l-1))} style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",cursor:"pointer",fontSize:"14px"}}>−</button>
+            <input type="number" value={limit} onChange={e=>setLimit(Math.max(1,parseInt(e.target.value)||1))} min="1" max="20"
+              style={{width:"48px",textAlign:"center",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#FFD700",padding:"4px",fontSize:"16px",fontWeight:"bold",outline:"none"}}/>
+            <button onClick={()=>setLimit(l=>Math.min(20,l+1))} style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",cursor:"pointer",fontSize:"14px"}}>+</button>
+            <span style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>veces/día</span>
+          </div>
+        </div>
+        <button onClick={save} style={{padding:"8px 14px",background:saved?"rgba(168,255,120,0.15)":"rgba(255,215,0,0.1)",border:"1px solid "+(saved?"rgba(168,255,120,0.3)":"rgba(255,215,0,0.2)"),borderRadius:"6px",color:saved?"#A8FF78":"#FFD700",fontSize:"11px",cursor:"pointer",fontWeight:"bold",flexShrink:0}}>
+          {saved?"✓ Guardado":"Guardar"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 function AdminPanel({players, update, loading, saving, reload}) {
@@ -1930,6 +2031,9 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* ADMIN TAB */}
         {activeTab==="admin" && (
           <div style={{padding:"0 16px"}}>
+            {/* Daily limit setting */}
+            <DailyLimitSetting/>
+            <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
             {/* Weekly reset */}
             <div style={{background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
               <div style={{fontFamily:"serif",color:"#25D366",fontSize:"13px",marginBottom:"8px"}}>📱 WhatsApp</div>
