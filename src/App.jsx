@@ -740,12 +740,20 @@ function PropagandaCard({slot}) {
   const [dbId,    setDbId]    = useState(null);
 
   useEffect(()=>{
+    const defaultContent = {
+      1: "[AOR] Antigua Orden busca guerreros comprometidos. Clan activo con estrategia real, guerras semanales coordinadas y sistema de rangos. Si buscas mas que un clan, escribe a un oficial.",
+      2: "Antigua Orden [AOR] en pie de guerra. Clan organizado, batallas coordinadas y recompensas por cada victoria. Si quieres guerra real, este es tu clan. Habla con un oficial.",
+      3: "<color=#FFD700>Antigua Orden [AOR]</color> sigue invicta. No somos el clan mas grande, somos el mas organizado. Si buscas guerreros y una causa que valga, escribe a un oficial.",
+      4: "<color=#FFD700>-- ANTIGUA ORDEN [AOR] --</color> Clan de elite, guerras reales, sistema de rangos. Aqui cada batalla cuenta. Listo para comprometerte? <color=#40E0FF>Habla con un oficial.</color>",
+    };
     supabase.from("comunicaciones_msgs").select("*").eq("slot",slot).single()
       .then(({data})=>{
         if (data) {
           setTitle(data.title||"Comunicación "+slot);
-          setContent(data.content||"");
+          setContent(data.content||defaultContent[slot]||"");
           setDbId(data.id);
+        } else {
+          setContent(defaultContent[slot]||"");
         }
         setLoaded(true);
       });
@@ -790,7 +798,7 @@ function PropagandaCard({slot}) {
         <>
           <input value={draftT} onChange={e=>setDraftT(e.target.value)} placeholder="Título"
             style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",color:"#FFD700",fontSize:"11px",padding:"5px 8px",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontWeight:"bold"}}/>
-          <textarea value={draftC} onChange={e=>setDraftC(e.target.value)} rows={4} placeholder="Escribe el mensaje de propaganda. Sin color tags — solo texto. AOR y Antigua Orden se resaltarán automáticamente."
+          <textarea value={draftC} onChange={e=>setDraftC(e.target.value)} rows={4} placeholder="Maximo 250 chars. Usa <color=#FFD700>palabra</color> para dorado y <color=#40E0FF>palabra</color> para celeste. Sin iconos. Ejemplo: <color=#FFD700>[AOR]</color> Antigua Orden busca guerreros..."
             style={{width:"100%",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#d4c9a8",fontSize:"11px",padding:"8px",outline:"none",boxSizing:"border-box",marginBottom:"8px",resize:"vertical",fontFamily:"Georgia,serif"}}/>
           <div style={{display:"flex",gap:"8px"}}>
             <button onClick={save} disabled={saving} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontWeight:"bold"}}>
@@ -830,7 +838,15 @@ function MensajesTab({players}) {
     {id:"w5",title:"Aviso actividad minima",content:"*[AOR] Aviso de actividad*\n\nEstas bajo el minimo mensual (20 pts). Registrate: https://aor-war-command.vercel.app/registro"},
     {id:"w6",title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!*\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos"},
   ]);
-  const [extraGame, setExtraGame] = useState([]);
+  const [extraGame,  setExtraGame]  = useState([]);
+  const [gameCards,  setGameCards]  = useState([
+    {id:"g1",title:"Defensa urgente",content:"<color=#FF6B6B>-- [AOR] ALERTA --</color>\nCastillo bajo ataque. Todos a defender.\n<color=#FFD700>Antigua Orden</color> no cede territorio."},
+    {id:"g2",title:"Inicio de guerra",content:"<color=#FFD700>-- [AOR] GUERRA --</color>\n<color=#40E0FF>Antigua Orden</color> entra en combate.\nFase 1: capturar castillos. Sin descanso."},
+    {id:"g3",title:"Victoria",content:"<color=#FFD700>-- [AOR] VICTORIA --</color>\n<color=#40E0FF>Antigua Orden</color> domina la guerra.\nGracias a cada guerrero comprometido."},
+    {id:"g4",title:"Registrate antes del viernes",content:"<color=#FFD700>[AOR]</color> Registrate antes del viernes.\n<color=#40E0FF>Antigua Orden</color> cuenta contigo.\nhttps://aor-war-command.vercel.app/registro"},
+    {id:"g5",title:"Sin registro pierdes 20 puntos",content:"<color=#FF6B6B>[AOR] AVISO:</color> Sin registro pierdes 20 puntos.\n<color=#FFD700>Antigua Orden</color> necesita tu compromiso.\nhttps://aor-war-command.vercel.app/registro"},
+    {id:"g6",title:"Unirse al grupo WhatsApp",content:"<color=#FFD700>[AOR]</color> Unete al grupo de <color=#40E0FF>Antigua Orden</color>.\nBonus de 25 puntos al unirte.\nPide el enlace a un oficial."},
+  ]);
   const [addModal,  setAddModal]  = useState(false);
   const [newTitle,  setNewTitle]  = useState("");
   const [newContent,setNewContent]= useState("");
@@ -912,12 +928,7 @@ function MensajesTab({players}) {
 
       <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"14px",marginBottom:"6px",marginTop:"20px"}}>⚔ Chat del juego</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Máx 250 caracteres · ✏ Editar para modificar · 💾 Guardar confirma cambios</div>
-      <GameCard title="Defensa urgente"        initialValue={"<color=#FF6B6B>-- [AOR] ALERTA --</color>\nCastillo bajo ataque. Todos a defender.\n<color=#FFD700>Antigua Orden</color> no cede territorio."}/>
-      <GameCard title="Inicio de guerra"              initialValue={"<color=#FFD700>-- [AOR] GUERRA --</color>\n<color=#40E0FF>Antigua Orden</color> entra en combate.\nFase 1: capturar castillos. Sin descanso."}/>
-      <GameCard title="Victoria"                     initialValue={"<color=#FFD700>-- [AOR] VICTORIA --</color>\n<color=#40E0FF>Antigua Orden</color> domina la guerra.\nGracias a cada guerrero comprometido."}/>
-      <GameCard title="Registrate antes del viernes (interno)" initialValue={"<color=#FFD700>[AOR]</color> Registrate antes del viernes.\n<color=#40E0FF>Antigua Orden</color> cuenta contigo.\nhttps://aor-war-command.vercel.app/registro"}/>
-      <GameCard title="Sin registro pierdes 20 puntos"        initialValue={"<color=#FF6B6B>[AOR] AVISO:</color> Sin registro pierdes 20 puntos.\n<color=#FFD700>Antigua Orden</color> necesita tu compromiso.\nhttps://aor-war-command.vercel.app/registro"}/>
-      <GameCard title="Unirse al grupo WhatsApp"     initialValue={"<color=#FFD700>[AOR]</color> Unete al grupo de <color=#40E0FF>Antigua Orden</color>.\nBonus de 25 puntos al unirte.\nPide el enlace a un oficial."}/>
+      {gameCards.map((m,i)=><GameCard key={m.id||i} title={m.title} initialValue={m.content} onDelete={()=>setGameCards(prev=>prev.filter((_,j)=>j!==i))}/>)}
 
       {extraGame.map(m=><GameCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraGame(prev=>prev.filter(x=>x.id!==m.id))}/>)}
       <button onClick={()=>{setNewType("game");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(64,224,255,0.06)",border:"1px dashed rgba(64,224,255,0.25)",borderRadius:"8px",color:"rgba(64,224,255,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje chat del juego</button>
@@ -1941,15 +1952,15 @@ function WarIntelPanel({players, reload}) {
           </div>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"6px",fontFamily:"monospace"}}>CLANES RIVALES</div>
           {rivals.map((rival,ri)=>(
-            <div key={ri} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"10px",marginBottom:"8px"}}>
-              <div style={{display:"flex",gap:"6px",marginBottom:"6px"}}>
-                <input value={rival.name} onChange={e=>updateRival(ri,"name",e.target.value)} placeholder="Nombre del clan rival"
-                  style={{flex:3,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"#FF6B6B",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+            <div key={ri} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"10px",marginBottom:"8px",overflow:"hidden",boxSizing:"border-box"}}>
+              <div style={{display:"flex",gap:"4px",marginBottom:"6px",width:"100%",minWidth:0}}>
+                <input value={rival.name} onChange={e=>updateRival(ri,"name",e.target.value)} placeholder="Clan rival"
+                  style={{flex:"1 1 40%",minWidth:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"#FF6B6B",padding:"5px 6px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
                 <input value={rival.abbrev} onChange={e=>updateRival(ri,"abbrev",e.target.value)} placeholder="[ABC]"
-                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"5px",color:"#FF9F43",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                  style={{flex:"0 0 60px",minWidth:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"5px",color:"#FF9F43",padding:"5px 4px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
                 <input value={rival.points} onChange={e=>updateRival(ri,"points",e.target.value)} placeholder="Pts"
-                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"5px",color:"#fff",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
-                <button onClick={()=>removeRival(ri)} style={{padding:"5px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"rgba(255,107,107,0.5)",cursor:"pointer",fontSize:"11px"}}>✕</button>
+                  style={{flex:"0 0 55px",minWidth:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"5px",color:"#fff",padding:"5px 4px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                <button onClick={()=>removeRival(ri)} style={{flex:"0 0 28px",padding:"5px 4px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"rgba(255,107,107,0.5)",cursor:"pointer",fontSize:"11px"}}>✕</button>
               </div>
               <input value={rival.note} onChange={e=>updateRival(ri,"note",e.target.value)} placeholder="Nota sobre este clan (por qué es memorable)"
                 style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"5px",color:"rgba(255,255,255,0.5)",padding:"5px 8px",fontSize:"10px",outline:"none",boxSizing:"border-box",marginBottom:"6px"}}/>
