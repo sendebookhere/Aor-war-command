@@ -187,11 +187,13 @@ const isDouble = isUniqueTop && winner===top.name;
                     const tied = ranked.filter(p=>tp(p)===topPts);
                     return (
                       <div style={{marginBottom:"8px"}}>
-                        <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>3 PUNTOS REPARTIDOS ENTRE:</div>
+                        <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>EMPATE — CADA UNO RECIBE +3 pts:</div>
                         {tied.map(p=>(
-                          <div key={p.id} style={{fontFamily:"serif",fontSize:"16px",color:"#A8FF78",fontWeight:"bold",lineHeight:1.3}}>{p.name}</div>
+                          <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
+                            <span style={{fontFamily:"serif",fontSize:"15px",color:"#A8FF78",fontWeight:"bold"}}>{p.name}</span>
+                            <span style={{fontFamily:"monospace",fontSize:"13px",color:"#A8FF78"}}>+3</span>
+                          </div>
                         ))}
-                        <div style={{fontSize:"14px",color:"#A8FF78",fontFamily:"monospace",marginTop:"4px",marginBottom:"4px"}}>+{topPts} pts (empate)</div>
                       </div>
                     );
                   })()}
