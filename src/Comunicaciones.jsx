@@ -1,3 +1,4 @@
+import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
@@ -116,9 +117,7 @@ export default function Comunicaciones() {
       {/* Header */}
       <div style={{borderBottom:"1px solid rgba(200,162,255,0.1)",padding:"0 20px 16px"}}>
         <div style={{maxWidth:"560px",margin:"0 auto"}}>
-          <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(200,162,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
-          <div style={{fontSize:"22px",color:"#C8A2FF",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)"}}>Mensajes preaprobados por el comando. Cópialos y pégalos en el chat general del juego.</div>
+<PageHeader page="/propaganda"/>
 
         </div>
       </div>

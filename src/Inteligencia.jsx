@@ -1,3 +1,4 @@
+import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NavBar from "./NavBar";
@@ -91,14 +92,7 @@ export default function Inteligencia() {
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/inteligencia"/>
 
-        {/* Header */}
-        <div style={{textAlign:"center",marginBottom:"24px"}}>
-          <div style={{fontSize:"9px",letterSpacing:"0.4em",color:"rgba(255,255,255,0.25)",fontFamily:"monospace",marginBottom:"4px"}}>ANTIGUA ORDEN</div>
-          <div style={{fontSize:"16px",color:"rgba(255,255,255,0.15)",marginBottom:"2px"}}>⚔</div>
-          <div style={{fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",fontFamily:"monospace",marginBottom:"6px"}}>[AOR]</div>
-          <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B"}}>Inteligencia Militar</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Registro de guerras, rivales y análisis táctico</div>
-        </div>
+        <PageHeader page="/inteligencia"/>
 
         {/* War results */}
         {intel ? (
