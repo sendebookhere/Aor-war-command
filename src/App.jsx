@@ -870,8 +870,15 @@ function MensajesTab({players}) {
   function buildWaRegistro() {
     let m = "*[AOR] Registro de Guerra — Grupo WA*\n\n";
     m += `*Confirmados del grupo (${waRegistrado.length}/${waPlayers.length}):*\n`;
-    waRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{ m += `✅ *${p.name}* | ${avMap[p.availability]||""}\n`; });
-    if(waNoRegistrado.length>0){ m+=`\n*Pendientes del grupo (${waNoRegistrado.length}):*\n`; waNoRegistrado.sort((a,b)=>b.bp-a.bp).forEach(p=>{m+=`⏳ *${p.name}*\n`;}); }
+    waRegistrado.sort((a,b)=>(b.level||0)-(a.level||0)).forEach(p=>{
+      m += `✅ *${p.name}* | ${avMap[p.availability]||""} | ${((p.level||0)/1000).toFixed(1)}k poder\n`;
+    });
+    if(waNoRegistrado.length>0){
+      m+=`\n*Sin registrar del grupo (${waNoRegistrado.length}):*\n`;
+      waNoRegistrado.sort((a,b)=>(b.level||0)-(a.level||0)).forEach(p=>{
+        m+=`⏳ *${p.name}* | ${((p.level||0)/1000).toFixed(1)}k poder\n`;
+      });
+    }
     return m + `\n📋 Regístrate: https://aor-war-command.vercel.app/registro`;
   }
   function buildRegistro() {
@@ -1670,6 +1677,8 @@ function DailyLimitSetting() {
 // ── WA Report Buttons for Admin Registro tab ──────────────────────────────
 function WaReportButtonsAdmin({players}) {
   const [copied, setCopied] = useState("");
+  const avMap = {siempre:"Conquistador",intermitente:"Refuerzos",solo_una:"Reserva",no_disponible:"No disponible"};
+
   function totalPtsLocal(p) {
     const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
     return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
@@ -1680,31 +1689,132 @@ function WaReportButtonsAdmin({players}) {
           -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
           -(p.pt_bandido_pre||0);
   }
-  const wa = players.filter(p=>p.active&&p.whatsapp);
+
+  function ptBreakdown(p) {
+    const sb=(p.pt_batallas_ganadas||0)>=6?10:0;
+    const items=[
+      {l:"Registro",v:p.pt_registro||0},
+      {l:"Apareció",v:p.pt_disponibilidad||0},
+      {l:"Órdenes",v:(p.pt_obediencia||0)*2},
+      {l:"Batallas ganadas",v:(p.pt_batallas_ganadas||0)*2},
+      {l:"Bonus 6+",v:sb},
+      {l:"Batallas perdidas",v:p.pt_batallas_perdidas||0},
+      {l:"Defensas",v:p.pt_defensas||0},
+      {l:"Bonus completo",v:(p.pt_bonus||0)*5},
+      {l:"Bandido post",v:p.pt_bandido_post||0},
+      {l:"Stats",v:p.pt_stats||0},
+      {l:"WhatsApp",v:p.pt_whatsapp||0},
+      {l:"Penalizaciones",v:-((p.pt_penalizacion||0)+(p.pt_no_aparecio||0)+(p.pt_ignoro_orden||0)*2+(p.pt_abandono||0)*2+(p.pt_inactivo_4h||0)*3+(p.pt_bandido_pre||0))},
+    ].filter(x=>x.v!==0);
+    return items;
+  }
+
+  const active = players.filter(p=>p.active);
+  const wa = active.filter(p=>p.whatsapp);
+  const waReg = wa.filter(p=>p.registered_form);
+  const waNoReg = wa.filter(p=>!p.registered_form);
+  const noWaReg = active.filter(p=>!p.whatsapp && p.registered_form);
+  const noWaNoReg = active.filter(p=>!p.whatsapp && !p.registered_form);
+
+  function copy(key, text) {
+    navigator.clipboard.writeText(text);
+    setCopied(key); setTimeout(()=>setCopied(""),2500);
+  }
+
+  // ── Report 1: Registro con aporte y poder ──────────────────────────────────
+  function buildRegistroWA() {
+    let m = "*[AOR] Registro de Guerra — Grupo WA*\n\n";
+    m += `*Confirmados del grupo (${waReg.length}/${wa.length}):*\n`;
+    waReg.sort((a,b)=>(b.level||0)-(a.level||0)).forEach(p=>{
+      m += `✅ *${p.name}* | ${avMap[p.availability]||""} | ${((p.level||0)/1000).toFixed(1)}k poder\n`;
+    });
+    if (waNoReg.length>0) {
+      m += `\n*Sin registrar del grupo (${waNoReg.length}):*\n`;
+      waNoReg.sort((a,b)=>(b.level||0)-(a.level||0)).forEach(p=>{
+        m += `⏳ *${p.name}* | ${((p.level||0)/1000).toFixed(1)}k poder\n`;
+      });
+    }
+    if (noWaNoReg.length>0) {
+      m += `\n*Sin registro ni grupo WA (${noWaNoReg.length}):*\n`;
+      noWaNoReg.sort((a,b)=>(b.level||0)-(a.level||0)).forEach(p=>{
+        m += `📵 *${p.name}* | ${((p.level||0)/1000).toFixed(1)}k poder\n`;
+      });
+    }
+    m += `\n📋 https://aor-war-command.vercel.app/registro`;
+    return m;
+  }
+
+  // ── Report 2: Top 5 puntos con desglose ───────────────────────────────────
+  function buildTop5() {
+    const sorted = [...active].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a)).slice(0,5);
+    let m = "*[AOR] Top 5 de la jornada* ⚔\n\n";
+    sorted.forEach((p,i) => {
+      const pts = totalPtsLocal(p);
+      const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+      m += `${medal} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;
+      ptBreakdown(p).forEach(x=>{ m += `    ${x.l}: ${x.v>0?"+":""}${x.v}\n`; });
+      m += "\n";
+    });
+    m += "📊 https://aor-war-command.vercel.app/reporte";
+    return m;
+  }
+
+  // ── Report 3: Votación jornada (placeholder — needs assembly_votes) ────────
+  function buildVotacion() {
+    let m = "*[AOR] Asamblea — Guerrero Implacable* ⭐\n\n";
+    m += "Vota por el jugador mas determinante de la semana:\n";
+    m += "⚔ https://aor-war-command.vercel.app/asamblea\n\n";
+    m += "*Recuerda:* +3 pts por votar. Solo Conquistador, Refuerzos y Reserva pueden votar.";
+    return m;
+  }
+
+  // ── Report 4: GOAT message ─────────────────────────────────────────────────
+  function buildGoat() {
+    const sorted = [...active].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
+    const top = sorted[0];
+    if (!top) return "";
+    const pts = totalPtsLocal(top);
+    const breakdown = ptBreakdown(top).map(x=>`• ${x.l}: ${x.v>0?"+":""}${x.v}`).join("\n");
+    let m = `🏆 *GUERRERO IMPLACABLE* 🏆\n\n`;
+    m += `*${top.name}* lidera la jornada con *${pts>0?"+":""}${pts} puntos*\n\n`;
+    m += `*Desglose:*\n${breakdown}\n\n`;
+    m += `*[AOR] Antigua Orden* — el esfuerzo se reconoce.\n`;
+    m += `📊 https://aor-war-command.vercel.app/reporte`;
+    return m;
+  }
+
+  // ── Report 5: Semanal WA ──────────────────────────────────────────────────
   function copySemanal() {
     const sorted=[...wa].sort((a,b)=>totalPtsLocal(b)-totalPtsLocal(a));
-    let m="*[AOR] Reporte Semanal — Grupo WA* \u2694\n\n";
+    let m="*[AOR] Reporte Semanal — Grupo WA* ⚔\n\n";
     sorted.forEach((p,i)=>{const pts=totalPtsLocal(p);m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${pts>0?"+":""}${pts} pts\n`;});
     m+="\n📊 https://aor-war-command.vercel.app/reporte";
-    navigator.clipboard.writeText(m); setCopied("sem"); setTimeout(()=>setCopied(""),2000);
+    copy("sem",m);
   }
   function copyAcumulado() {
     const sorted=[...wa].sort((a,b)=>(b.pts_acumulados||0)-(a.pts_acumulados||0));
     let m="*[AOR] Ranking Acumulado — Grupo WA* 🏆\n\n";
     sorted.forEach((p,i)=>{m+=`${i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."} *${p.name}* — ${(p.pts_acumulados||0).toLocaleString()} pts\n`;});
     m+="\n📊 https://aor-war-command.vercel.app/reporte";
-    navigator.clipboard.writeText(m); setCopied("acc"); setTimeout(()=>setCopied(""),2000);
+    copy("acc",m);
   }
+
+  const Btn = ({k,label,fn,color="#25D366"}) => (
+    <button onClick={()=>fn?fn():copy(k,"")} style={{flex:1,minWidth:"120px",padding:"8px 6px",background:copied===k?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(copied===k?"rgba(168,255,120,0.35)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:copied===k?"#A8FF78":color,fontSize:"10px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.05em"}}>
+      {copied===k?"✓ COPIADO":label}
+    </button>
+  );
+
   return (
-    <div style={{background:"rgba(37,211,102,0.04)",border:"1px solid rgba(37,211,102,0.15)",borderRadius:"8px",padding:"12px"}}>
-      <div style={{fontSize:"10px",color:"#25D366",letterSpacing:"0.15em",fontFamily:"monospace",marginBottom:"10px"}}>REPORTES WA — {wa.length} MIEMBROS DEL GRUPO</div>
-      <div style={{display:"flex",gap:"8px"}}>
-        <button onClick={copySemanal} style={{flex:1,padding:"8px",background:copied==="sem"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="sem"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="sem"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
-          {copied==="sem"?"✓ Copiado":"Reporte semanal WA"}
-        </button>
-        <button onClick={copyAcumulado} style={{flex:1,padding:"8px",background:copied==="acc"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="acc"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="acc"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
-          {copied==="acc"?"✓ Copiado":"Ranking acumulado WA"}
-        </button>
+    <div style={{background:"rgba(37,211,102,0.03)",border:"1px solid rgba(37,211,102,0.12)",borderRadius:"8px",padding:"12px"}}>
+      <div style={{fontSize:"9px",color:"rgba(37,211,102,0.6)",letterSpacing:"0.2em",fontFamily:"monospace",marginBottom:"10px"}}>REPORTES — {wa.length} EN GRUPO WA · {active.length} TOTAL</div>
+      <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
+        <Btn k="regwa" label="REGISTRO + PODER WA" fn={()=>copy("regwa",buildRegistroWA())} color="#25D366"/>
+        <Btn k="top5"  label="TOP 5 CON DESGLOSE"  fn={()=>copy("top5",buildTop5())}       color="#FFD700"/>
+        <Btn k="vot"   label="CONVOCATORIA ASAMBLEA" fn={()=>copy("vot",buildVotacion())}   color="#C8A2FF"/>
+        <Btn k="goat"  label="MENSAJE GOAT"          fn={()=>copy("goat",buildGoat())}      color="#A8FF78"/>
+        <Btn k="sem"   label="SEMANAL WA"            fn={copySemanal}                        color="#25D366"/>
+        <Btn k="acc"   label="ACUMULADO WA"          fn={copyAcumulado}                     color="#25D366"/>
       </div>
     </div>
   );
