@@ -247,7 +247,7 @@ function PlayerProfile({ player, onBack }) {
           }
           return null;
         })()}
-        {(!sessionStorage.getItem("aor_player_id") || String(player.id) === sessionStorage.getItem("aor_player_id")) && (
+        {(!sessionStorage.getItem("aor_player_id") || String(player.id) === sessionStorage.getItem("aor_player_id")) ? (
         <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
           <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"6px",fontWeight:"bold"}}>📊 Actualizar mis stats</div>
           <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"7px 10px",marginBottom:"8px",fontSize:"10px"}}>
@@ -276,6 +276,10 @@ function PlayerProfile({ player, onBack }) {
           </div>
           {statsMsg && <div style={{fontSize:"11px",color:statsMsg.includes("⚠")||statsMsg.includes("Error")?"#FF6B6B":"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>{statsMsg}</div>}
         </div>
+        ) : (
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px"}}>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>Para actualizar tus stats ve a <a href="/registro" style={{color:"#40E0FF"}}>registro</a> e identifícate como este jugador primero.</div>
+          </div>
         )}
 
         {/* Current war breakdown */}

@@ -20,22 +20,53 @@ export default function Comunicaciones() {
   const [nameSuggestions, setNameSuggestions] = useState([]);
   const [feedback, setFeedback]   = useState({});
   const [loading, setLoading]     = useState(true);
-  const [dailyLimit, setDailyLimit] = useState(2);
+  const [dailyLimit, setDailyLimit]   = useState(2);
+  const [weeklyLimit, setWeeklyLimit] = useState(14); // admin configurable
+  const [blockUntil,  setBlockUntil]  = useState(null); // timestamp when block ends
 
   useEffect(() => {
+    // Load block state from localStorage
+    const blocked = localStorage.getItem("aor_prop_block");
+    if (blocked && parseInt(blocked) > Date.now()) setBlockUntil(parseInt(blocked));
+
     Promise.all([
       supabase.from("players").select("id,name,active").eq("active",true).order("name"),
       supabase.from("comunicaciones_msgs").select("*").order("slot"),
-      supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(200),
+      supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(500),
       supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single(),
-    ]).then(([p, m, l, s]) => {
+      supabase.from("app_settings").select("value").eq("key","weekly_msg_limit").single(),
+    ]).then(([p, m, l, s, sw]) => {
       setPlayers(p.data || []);
       setMsgs(m.data || []);
       setLogs(l.data || []);
       if (s.data?.value) setDailyLimit(parseInt(s.data.value)||2);
+      if (sw.data?.value) setWeeklyLimit(parseInt(sw.data.value)||14);
       setLoading(false);
     });
   }, []);
+
+  // Cooldown helpers
+  function logsThisWeek(pid) {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7*24*60*60*1000);
+    return logs.filter(l=>String(l.player_id)===String(pid) && new Date(l.created_at)>weekAgo);
+  }
+  function lastSentTime(pid) {
+    const myLogs = logs.filter(l=>String(l.player_id)===String(pid));
+    if (!myLogs.length) return null;
+    return new Date(myLogs[0].created_at);
+  }
+  function cooldownRemaining(pid) {
+    const last = lastSentTime(pid);
+    if (!last) return 0;
+    const diff = 2*60*60*1000 - (Date.now() - last.getTime());
+    return diff > 0 ? diff : 0;
+  }
+  function formatTime(ms) {
+    const h = Math.floor(ms/3600000);
+    const m = Math.floor((ms%3600000)/60000);
+    return h>0?`${h}h ${m}m`:`${m}m`;
+  }
 
   function handleNameInput(val) {
     setNameInput(val);
@@ -57,28 +88,29 @@ export default function Comunicaciones() {
   }
 
   async function handleCopy(msg) {
-    if (!playerId) {
-      alert("Identifícate primero con tu nombre del juego.");
+    if (!playerId) { alert("Identifícate primero con tu nombre del juego."); return; }
+    if (blockUntil && blockUntil > Date.now()) {
+      setFeedback(f=>({...f,[msg.id]:"Espera "+formatTime(blockUntil-Date.now())+" para volver a publicar."}));
       return;
     }
-    const todayLogs = logsToday(playerId);
-    if (todayLogs.length >= dailyLimit) {
-      setFeedback(f=>({...f,[msg.id]:`Ya alcanzaste el límite de ${dailyLimit} publicaciones hoy.`}));
+    const cooldown = cooldownRemaining(playerId);
+    if (cooldown > 0) {
+      setFeedback(f=>({...f,[msg.id]:"Cooldown: espera "+formatTime(cooldown)+" desde tu último envío."}));
       return;
     }
-
-    // Copy to clipboard
+    if (logsToday(playerId).length >= dailyLimit) {
+      setFeedback(f=>({...f,[msg.id]:`Límite diario de ${dailyLimit} alcanzado.`}));
+      return;
+    }
+    if (logsThisWeek(playerId).length >= weeklyLimit) {
+      setFeedback(f=>({...f,[msg.id]:`Límite semanal de ${weeklyLimit} alcanzado.`}));
+      return;
+    }
     await navigator.clipboard.writeText(msg.content || "");
-
-    // Ask confirmation
     const confirmed = window.confirm(
-      "¿Ya pegaste este mensaje en el chat general del juego?\n\n" +
-      "(Si confirmas, se registra como publicado. Si no lo pegaste, no confirmes — " +
-      "las auditorías detectan publicaciones falsas y penalizan con -50 pts)"
+      "¿Ya pegaste este mensaje en el chat general del juego?\n\nSi confirmas: se registra como publicado. Publicación falsa = -50 pts."
     );
     if (!confirmed) return;
-
-    // Save log
     const {error} = await supabase.from("message_logs").insert({
       player_id:   parseInt(playerId),
       player_name: playerName,
@@ -86,15 +118,14 @@ export default function Comunicaciones() {
       msg_title:   msg.title,
       created_at:  new Date().toISOString(),
     });
-    if (error) {
-      setFeedback(f=>({...f,[msg.id]:"Error al registrar: "+error.message}));
-      return;
-    }
-    // Refresh logs
-    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(200);
+    if (error) { setFeedback(f=>({...f,[msg.id]:"Error: "+error.message})); return; }
+    const blockEnd = Date.now() + 60*60*1000;
+    setBlockUntil(blockEnd);
+    localStorage.setItem("aor_prop_block", String(blockEnd));
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
     setLogs(data||[]);
-    setFeedback(f=>({...f,[msg.id]:"✓ Registrado — gracias por difundir la palabra de [AOR]"}));
-    setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 4000);
+    setFeedback(f=>({...f,[msg.id]:"✓ Registrado. Próximo envío disponible en 1h."}));
+    setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 5000);
   }
 
   // Ranking: top propagandists
@@ -229,7 +260,7 @@ export default function Comunicaciones() {
                     fontFamily:"monospace",
                     letterSpacing:"0.1em",
                   }}>
-                  {!playerId ? "IDENTIFICATE PRIMERO" : limitReached ? "LIMITE DIARIO ALCANZADO" : alreadyUsed ? "COPIAR DE NUEVO" : "COPIAR Y PUBLICAR"}
+                  {!playerId ? "IDENTIFICATE PRIMERO" : isBlocked ? "BLOQUEADO "+formatTime(blockUntil-Date.now()) : hasCooldown ? "COOLDOWN "+formatTime(cooldownRemaining(playerId)) : limitReached ? "LIMITE DIARIO ALCANZADO" : alreadyUsed ? "COPIAR DE NUEVO" : "COPIAR Y PUBLICAR"}
                 </button>
                 {alreadyUsed && <span style={{fontSize:"9px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace"}}>PUBLICADO HOY</span>}
               </div>
