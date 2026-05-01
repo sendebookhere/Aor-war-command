@@ -232,12 +232,12 @@ const isDouble = isUniqueTop && winner===top.name;
                     const tied = ranked.filter(p=>tp(p)===topPts);
                     return (
                       <div style={{marginBottom:"8px"}}>
-                        <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>EMPATE — CADA UNO RECIBE +3 pts:</div>
+                        <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>EMPATE — CADA JUGADOR RECIBE +3 PUNTOS:</div>
                         {tied.map(p=>(
                           <div key={p.id} style={{padding:"4px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                               <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"#A8FF78",fontWeight:"bold"}}>{p.name}</span>
-                              <span style={{fontFamily:"monospace",fontSize:"11px",color:"#A8FF78"}}>+3 votos</span>
+                              <span style={{fontFamily:"monospace",fontSize:"11px",color:"#A8FF78"}}>+3 pts</span>
                             </div>
                             <div style={{display:"flex",justifyContent:"space-between",fontSize:"9px",color:"rgba(168,255,120,0.5)"}}>
                               <span>{topPts>0?"+":""}{topPts} pts jornada</span>
