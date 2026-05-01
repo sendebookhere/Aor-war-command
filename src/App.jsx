@@ -1,5 +1,7 @@
 import NavBar from "./NavBar";
 import UserAuthGate from "./UserAuth";
+import LoginGate from "./LoginGate";
+import { getCountry } from "./SessionManager";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
@@ -183,6 +185,70 @@ function WaReportButtons() {
         <button onClick={copyAcumulado} style={{flex:1,padding:"8px",background:copied==="acc"?"rgba(168,255,120,0.15)":"rgba(37,211,102,0.08)",border:"1px solid "+(copied==="acc"?"rgba(168,255,120,0.3)":"rgba(37,211,102,0.2)"),borderRadius:"6px",color:copied==="acc"?"#A8FF78":"#25D366",fontSize:"11px",cursor:"pointer"}}>
           {copied==="acc"?"✓ Copiado":"Ranking acumulado WA"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ── Registration Timer ──────────────────────────────────────────────────────
+function RegistrationTimer({warMode="classic"}) {
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [closed, setClosed] = useState(false);
+
+  useEffect(()=>{
+    function calc() {
+      const now = new Date();
+      const ec = new Date(now.getTime()-5*60*60*1000); // Ecuador UTC-5
+      const spain = new Date(now.getTime()+2*60*60*1000); // Spain CEST
+      const day=ec.getDay(); const hour=ec.getHours();
+      // Find next Friday close time
+      const closeHour = warMode==="new" ? 17 : 8; // Ecuador
+      let daysUntilFri = (5-day+7)%7;
+      if (day===5 && hour>=closeHour) { setClosed(true); setTimeLeft(null); return; }
+      if (day===5 && hour<closeHour) daysUntilFri=0;
+      if (day===6||day===0) { setClosed(true); setTimeLeft(null); return; } // Sat/Sun closed
+      const target = new Date(ec);
+      target.setDate(ec.getDate()+daysUntilFri);
+      target.setHours(closeHour,0,0,0);
+      const diff = target-ec;
+      if(diff<=0){setClosed(true);setTimeLeft(null);return;}
+      const d=Math.floor(diff/86400000);
+      const h=Math.floor((diff%86400000)/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      setClosed(false);
+      setTimeLeft({d,h,m,s,totalMs:diff});
+    }
+    calc();
+    const iv=setInterval(calc,1000);
+    return ()=>clearInterval(iv);
+  },[warMode]);
+
+  if (closed) return (
+    <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"12px",textAlign:"center"}}>
+      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.6)",marginBottom:"6px"}}>REGISTRO CERRADO</div>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.5"}}>
+        El siguiente registro se habilita el lunes a las{" "}
+        <strong style={{color:"#A8FF78"}}>9:00h España</strong>
+        <span style={{color:"rgba(255,255,255,0.25)"}}>{" · "}8:00h Ecuador · 7:00h México</span>
+      </div>
+    </div>
+  );
+
+  if (!timeLeft) return null;
+  const urgency = timeLeft.totalMs < 3600000; // last hour
+  return (
+    <div style={{background:urgency?"rgba(255,107,107,0.06)":"rgba(255,255,255,0.02)",border:"1px solid "+(urgency?"rgba(255,107,107,0.2)":"rgba(255,255,255,0.06)"),borderRadius:"8px",padding:"10px 14px",marginBottom:"12px"}}>
+      <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"6px"}}>REGISTRO CIERRA EN</div>
+      <div style={{display:"flex",gap:"8px",alignItems:"baseline"}}>
+        {timeLeft.d>0&&<><span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"#40E0FF",fontWeight:"bold"}}>{timeLeft.d}</span><span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>d </span></>}
+        <span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"#40E0FF",fontWeight:"bold"}}>{String(timeLeft.h).padStart(2,"0")}</span>
+        <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>h </span>
+        <span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"#40E0FF",fontWeight:"bold"}}>{String(timeLeft.m).padStart(2,"0")}</span>
+        <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>m </span>
+        <span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"rgba(255,255,255,0.3)",fontWeight:"bold"}}>{String(timeLeft.s).padStart(2,"0")}</span>
+        <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>s</span>
       </div>
     </div>
   );
@@ -443,6 +509,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/registro"/>
         <PageHeader page="/registro"/>
+        <RegistrationTimer warMode={warMode}/>
 
         {/* Name */}
         <div style={{marginBottom:"16px",position:"relative"}}>
@@ -1090,6 +1157,57 @@ function UserActivityTable({logs}) {
   );
 }
 
+
+// ── Country Stats ───────────────────────────────────────────────────────────
+function CountryStats() {
+  const [logs, setLogs] = useState([]);
+  useEffect(()=>{
+    supabase.from("user_access_logs").select("player_name,method,accessed_at").order("accessed_at",{ascending:false}).limit(500)
+      .then(({data})=>setLogs(data||[]));
+    supabase.from("players").select("name,phone").eq("active",true)
+      .then(({data})=>{
+        if(data){
+          const phoneMap={};
+          data.forEach(p=>{ if(p.phone) phoneMap[p.name]=p.phone; });
+          setPhoneMap(phoneMap);
+        }
+      });
+  },[]);
+  const [phoneMap, setPhoneMap] = useState({});
+  const countryCounts={};
+  Object.entries(phoneMap).forEach(([name,phone])=>{
+    const c=getCountry(phone);
+    if(!countryCounts[c.code]) countryCounts[c.code]={...c,players:[],sessions:0};
+    countryCounts[c.code].players.push(name);
+  });
+  logs.forEach(l=>{
+    if(phoneMap[l.player_name]){
+      const c=getCountry(phoneMap[l.player_name]);
+      if(countryCounts[c.code]) countryCounts[c.code].sessions++;
+    }
+  });
+  const countries=Object.values(countryCounts).sort((a,b)=>b.players.length-a.players.length);
+  if(!countries.length) return null;
+  return (
+    <div style={{marginTop:"20px"}}>
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Origen de conexiones por país</div>
+      <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
+        {countries.map(c=>(
+          <div key={c.code} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"8px 12px",minWidth:"80px"}}>
+            <div style={{fontSize:"20px",marginBottom:"3px"}}>{c.flag}</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"1px"}}>{c.country}</div>
+            <div style={{fontSize:"12px",color:"#FFD700",fontFamily:"monospace",fontWeight:"bold"}}>{c.players.length} jugadores</div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{c.sessions} accesos</div>
+            <div style={{marginTop:"4px"}}>
+              {c.players.map(n=><div key={n} style={{fontSize:"8px",color:"rgba(255,255,255,0.3)"}}>{n}</div>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VisitsTab() {
   const [visits, setVisits]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1398,6 +1516,7 @@ function VisitsTab() {
       <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"10px"}}>
         Cargas / Únicos · Sesión = un dispositivo/navegador · Recurrente = volvió 2+ veces · Multipágina = visitó 2+ secciones
       </div>
+      <CountryStats/>
       {/* Blocked registration attempts */}
       {visits.filter(v=>v.page==="/registro_blocked").length > 0 && (
         <div style={{marginTop:"16px"}}>
@@ -2841,7 +2960,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
 
 // ── Admin Auth ──────────────────────────────────────────────────────────────
-const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "AOR2026";
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "A2O0R26";
 
 function AdminAuth({onAuth}) {
   const [pin, setPin]     = useState("");
