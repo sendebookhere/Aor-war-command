@@ -3103,9 +3103,37 @@ function AdminAuth({onAuth}) {
       {/* Header */}
       <PageHeader page="/"/>
 
-      {/* Same NavBar as all other pages — positioned at top */}
-      <div style={{width:"100%",maxWidth:"480px",marginBottom:"24px",animation:"fadeIn 0.6s ease"}}>
+      {/* NavBar — same system as all pages */}
+      <div style={{width:"100%",maxWidth:"480px",marginBottom:"20px",animation:"fadeIn 0.5s ease"}}>
         <NavBar current="/"/>
+      </div>
+
+      {/* Original page list — minimal redesign */}
+      <div style={{width:"100%",maxWidth:"480px",marginBottom:"24px",animation:"fadeIn 0.7s ease"}}>
+        {[
+          {href:"/registro",     color:"#A8FF78", label:"Registro de Guerra",    desc:"Confirma tu disponibilidad y suma puntos"},
+          {href:"/reporte",      color:"#40E0FF", label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
+          {href:"/puntos",       color:"#FF9F43", label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
+          {href:"/propaganda",   color:"#C8A2FF", label:"Propaganda de Guerra",   desc:"Mensajes aprobados para difundir en el clan"},
+          {href:"/inteligencia", color:"#FF6B6B", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
+          {href:"/asamblea",     color:"#F4D03F", label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
+          {href:"/noticias",     color:"#FF9F43", label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
+        ].map(l=>(
+          <a key={l.href} href={l.href} style={{
+            display:"flex",alignItems:"center",gap:"10px",
+            padding:"10px 14px",marginBottom:"5px",
+            background:"rgba(255,255,255,0.02)",
+            border:"1px solid rgba(255,255,255,0.06)",
+            borderLeft:"3px solid "+l.color+"50",
+            borderRadius:"7px",textDecoration:"none",
+          }}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"12px",color:l.color,fontFamily:"monospace",letterSpacing:"0.05em",marginBottom:"1px"}}>{l.label}</div>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"Georgia,serif"}}>{l.desc}</div>
+            </div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.15)",fontFamily:"monospace"}}>›</div>
+          </a>
+        ))}
       </div>
 
       {/* Divider */}
