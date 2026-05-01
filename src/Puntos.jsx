@@ -2,230 +2,231 @@ import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 
-export default function Puntos({onBack}) {
+const S = {
+  card: (color) => ({
+    background: color+"09",
+    border: "1px solid "+color+"30",
+    borderLeft: "3px solid "+color+"80",
+    borderRadius: "8px",
+    padding: "14px",
+    marginBottom: "10px",
+  }),
+  title: (color) => ({
+    fontFamily: "monospace",
+    fontSize: "9px",
+    letterSpacing: "0.25em",
+    color: color,
+    marginBottom: "10px",
+    opacity: 0.8,
+  }),
+  row: (color, active) => ({
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: "6px 8px",
+    marginBottom: "3px",
+    background: active ? color+"12" : "rgba(255,255,255,0.02)",
+    borderRadius: "5px",
+    border: "1px solid "+(active ? color+"25" : "rgba(255,255,255,0.04)"),
+  }),
+  pts: (color) => ({
+    fontFamily: "monospace",
+    fontSize: "13px",
+    fontWeight: "bold",
+    color: color,
+    flexShrink: 0,
+    marginLeft: "8px",
+  }),
+  link: (color) => ({
+    display: "block",
+    marginTop: "10px",
+    padding: "6px 10px",
+    background: color+"08",
+    border: "1px solid "+color+"20",
+    borderRadius: "5px",
+    color: color,
+    textDecoration: "none",
+    fontFamily: "monospace",
+    fontSize: "9px",
+    letterSpacing: "0.15em",
+    textAlign: "center",
+  }),
+};
+
+function Row({label, pts, desc, color="#40E0FF", active=false}) {
   return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
+    <div style={S.row(color, active)}>
+      <div style={{flex:1}}>
+        <div style={{fontSize:"11px",color:active?color:"rgba(255,255,255,0.65)",fontFamily:"Georgia,serif"}}>{label}</div>
+        {desc && <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginTop:"2px",fontFamily:"monospace"}}>{desc}</div>}
+      </div>
+      <span style={S.pts(color)}>{pts}</span>
+    </div>
+  );
+}
+
+export default function Puntos() {
+  return (
+    <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8",paddingBottom:"50px"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
-<NavBar current="/puntos"/>
+        <NavBar current="/puntos"/>
         <PageHeader page="/puntos"/>
 
-        {/* REGISTRO */}
-        <div style={{background:"rgba(64,224,255,0.08)",border:"2px solid #40E0FF",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>📋 PASO 1 — Regístrate antes del viernes</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"8px"}}>Modo clásico: cierra <strong style={{color:"#FFD700"}}>viernes 7:00am Ecuador</strong> · 6:00am México · 14:00h España.<br/>Modo nuevo (test): cierra <strong style={{color:"#FF9F43"}}>viernes 17:00h Ecuador</strong> · 16:00h México · 23:00h España (guerra a las 18:00h).</div>
-          {[
-            {label:"Conquistador 🟢",pts:"+10",color:"#A8FF78",desc:"Siempre listo — Disponible toda la guerra"},
-            {label:"Refuerzos 🟡",pts:"+5",color:"#FFD700",desc:"Intermitente — Al menos una aparición por periodo"},
-            {label:"Reserva 🟠",pts:"+2",color:"#FF9F43",desc:"Solo una vez — Una sola participación"},
-            {label:"No disponible 🔴",pts:"+1",color:"#FF6B6B",desc:"Avisas con anticipación"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:r.color+"11",borderRadius:"6px",border:"1px solid "+r.color+"33",marginBottom:"3px"}}>
-              <div><span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span><span style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginLeft:"8px"}}>{r.desc}</span></div>
-              <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+        {/* ── PASO 1: REGISTRO ─────────────────────────────────────────── */}
+        <div style={S.card("#40E0FF")}>
+          <div style={S.title("#40E0FF")}>PASO 1 — REGISTRO DE DISPONIBILIDAD</div>
+
+          <div style={{background:"rgba(255,255,255,0.02)",borderRadius:"6px",padding:"8px 10px",marginBottom:"10px",borderLeft:"2px solid rgba(255,255,255,0.08)"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"4px"}}>CIERRE DE REGISTRO</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"2px"}}>
+              <strong style={{color:"#FFD700"}}>Modo clásico:</strong>{" "}viernes{" "}
+              <strong style={{color:"#A8FF78"}}>14:00h España</strong>{" · "}8:00am Ecuador · 7:00am México
             </div>
-          ))}
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"6px"}}>📊 Actualizar BP y Poder: +2 pts cada uno, +5 si actualizas ambos</div>
-          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,215,0,0.08)",borderRadius:"6px",border:"1px solid rgba(255,215,0,0.2)"}}>
-            <div style={{fontSize:"11px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>⭐ Bonus por Registro Anticipado</div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>Si te registras antes del <strong style={{color:"#FFD700"}}>miércoles 23:59 España</strong> (18:59 Ecuador · 17:59 México):</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)"}}>
+              <strong style={{color:"#FFD700"}}>Modo nuevo (test):</strong>{" "}viernes{" "}
+              <strong style={{color:"#FF9F43"}}>23:00h España</strong>{" · "}17:00h Ecuador · 16:00h México
+            </div>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginTop:"4px"}}>
+              Clásico: guerra vie 8h → dom 8h España · Nuevo: guerra vie 18h → sáb 18h España
+            </div>
+          </div>
+
+          {[
+            {label:"Conquistador",pts:"+10",color:"#A8FF78",desc:"Disponible toda la guerra"},
+            {label:"Refuerzos",pts:"+5",color:"#FFD700",desc:"Al menos una aparición por periodo"},
+            {label:"Reserva",pts:"+2",color:"#FF9F43",desc:"Una sola participación"},
+            {label:"No disponible",pts:"+1",color:"rgba(255,107,107,0.7)",desc:"Avisas con anticipación"},
+          ].map(r=><Row key={r.label} {...r}/>)}
+
+          <div style={{background:"rgba(255,215,0,0.06)",borderRadius:"6px",padding:"8px 10px",marginTop:"8px",border:"1px solid rgba(255,215,0,0.15)"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",letterSpacing:"0.1em",marginBottom:"6px"}}>BONUS REGISTRO ANTICIPADO — antes del miércoles 23:59h España</div>
             {[
-              {label:"Conquistador 🟢",pts:"+5 pts",color:"#A8FF78"},
-              {label:"Refuerzos 🟡",pts:"+2 pts",color:"#FFD700"},
-              {label:"Reserva 🟠",pts:"+2 pts",color:"#FF9F43"},
-            ].map(r=>(
-              <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"3px 0"}}>
-                <span style={{fontSize:"10px",color:r.color}}>{r.label}</span>
-                <span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
+              {label:"Conquistador",pts:"+5 bonus",color:"#A8FF78"},
+              {label:"Refuerzos",pts:"+2 bonus",color:"#FFD700"},
+              {label:"Reserva",pts:"+2 bonus",color:"#FF9F43"},
+            ].map(r=><Row key={r.label} {...r}/>)}
+          </div>
+        </div>
+
+        {/* ── PASO 2: DURANTE LA GUERRA ─────────────────────────────────── */}
+        <div style={S.card("#A8FF78")}>
+          <div style={S.title("#A8FF78")}>PASO 2 — DURANTE LA GUERRA</div>
+          <Row label="Apareciste y participaste" pts="+3" color="#A8FF78" desc="Una vez por guerra"/>
+          <Row label="Seguiste las órdenes del admin" pts="+2" color="#A8FF78" desc="Una vez por guerra"/>
+          <Row label="Batalla ganada" pts="+2 c/u" color="#40E0FF"/>
+          <Row label="Batalla perdida" pts="+1 c/u" color="#40E0FF"/>
+          <Row label="Defendiste un castillo" pts="+1 c/u" color="#40E0FF"/>
+          <Row label="6+ batallas ganadas en una guerra" pts="+10" color="#FFD700" desc="Bonus automático"/>
+          <Row label="Atacaste bandidos después de ganar" pts="+1 c/u" color="#A8FF78"/>
+          <Row label="Bonus completo — cumpliste todo" pts="+5" color="#FFD700" desc="Una vez por guerra"/>
+          <Row label="Participaste sin registrarte" pts="+1" color="rgba(255,255,255,0.4)"/>
+          <Row label="Actualizar solo BP o solo Poder" pts="+2" color="#40E0FF"/>
+          <Row label="Actualizar BP y Poder juntos" pts="+5" color="#40E0FF" active/>
+          <Row label="Primer movilizador de tropas" pts="+3" color="#FFD700" desc="Solo el primero"/>
+          <Row label="Fuera del castillo sin defenderlo" pts="-2 c/u" color="#FF6B6B"/>
+        </div>
+
+        {/* ── PENALIZACIONES ────────────────────────────────────────────── */}
+        <div style={S.card("#FF6B6B")}>
+          <div style={S.title("#FF6B6B")}>PENALIZACIONES</div>
+          <Row label="Conquistador — no apareció" pts="-15" color="#FF6B6B"/>
+          <Row label="Refuerzos — no apareció" pts="-10" color="#FF6B6B"/>
+          <Row label="Reserva — no apareció" pts="-5" color="#FF6B6B"/>
+          <Row label="Sin registro y sin participar" pts="-20" color="#FF6B6B" active/>
+          <Row label="Ignorar una orden directa" pts="-2 c/u" color="#FF9F43"/>
+          <Row label="Abandonar defensa sin avisar" pts="-2 c/u" color="#FF9F43"/>
+          <Row label="Fuera del castillo sin defenderlo" pts="-2 c/u" color="#FF9F43"/>
+          <Row label="Inactivo +12h sin justificación" pts="-3 c/vez" color="#FF9F43"/>
+          <Row label="Atacar bandidos antes de ganar" pts="-1 c/vez" color="#FF9F43"/>
+          <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,107,107,0.06)",borderRadius:"4px",fontFamily:"monospace",fontSize:"9px",color:"rgba(255,107,107,0.5)"}}>
+            Mínimo mensual: 20 pts · -100 acumulados = candidato a expulsión
+          </div>
+        </div>
+
+        {/* ── PROPAGANDA ────────────────────────────────────────────────── */}
+        <div style={S.card("#C8A2FF")}>
+          <div style={S.title("#C8A2FF")}>PROPAGANDA DE GUERRA</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"8px",lineHeight:"1.6"}}>
+            Difunde mensajes preaprobados en el chat general del juego para atraer nuevos guerreros.
+          </div>
+          <Row label="Publicar un mensaje aprobado" pts="Reputación" color="#C8A2FF" desc={`Hasta el límite diario. Cooldown: 2h entre envíos`}/>
+          <Row label="Publicación falsa detectada" pts="-50" color="#FF6B6B" desc="Confirmar sin haber enviado"/>
+          <a href="/propaganda" style={S.link("#C8A2FF")}>→ ABRIR PROPAGANDA DE GUERRA</a>
+        </div>
+
+        {/* ── INTELIGENCIA MILITAR ──────────────────────────────────────── */}
+        <div style={S.card("#FF6B6B")}>
+          <div style={S.title("#FF6B6B")}>INTELIGENCIA MILITAR</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"8px",lineHeight:"1.6"}}>
+            Registro de guerras y análisis de rivales. Vota por la dificultad de los clanes enemigos.
+          </div>
+          <Row label="Votar dificultad de rivales" pts="+3" color="#FF9F43" desc="3 votos ponderados — Conquistador/Refuerzos/Reserva"/>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",margin:"4px 0 6px",fontFamily:"monospace"}}>
+            Un solo rival: votas si quieres volver a enfrentarte a él
+          </div>
+          <a href="/inteligencia" style={S.link("#FF6B6B")}>→ ABRIR INTELIGENCIA MILITAR</a>
+        </div>
+
+        {/* ── ASAMBLEA DE CENTURIAS ─────────────────────────────────────── */}
+        <div style={S.card("#FFD700")}>
+          <div style={S.title("#FFD700")}>ASAMBLEA — GUERRERO IMPLACABLE</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"8px",lineHeight:"1.6"}}>
+            Vota por el jugador más determinante de la semana. Solo Conquistador, Refuerzos y Reserva votan y son candidatos.
+          </div>
+
+          <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:"5px"}}>PESO DEL VOTO = RANGO + DISPONIBILIDAD</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px",marginBottom:"8px"}}>
+            {[
+              {r:"Líder (PUNK'Z)",p:5},{r:"Co-Líder",p:4},{r:"Oficial",p:3},{r:"Veterano",p:2},{r:"Guerrero · Soldado · Recluta",p:1}
+            ].map(x=>(
+              <div key={x.r} style={{display:"flex",justifyContent:"space-between",padding:"3px 7px",background:"rgba(255,215,0,0.04)",borderRadius:"4px",border:"1px solid rgba(255,215,0,0.08)"}}>
+                <span style={{fontSize:"9px",color:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif"}}>{x.r}</span>
+                <span style={{fontSize:"9px",color:"#FFD700",fontFamily:"monospace",fontWeight:"bold"}}>{x.p}</span>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* PARTICIPACION */}
-        <div style={{background:"rgba(168,255,120,0.08)",border:"2px solid #A8FF78",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#A8FF78",fontWeight:"bold",marginBottom:"8px"}}>⚔️ PASO 2 — Participa en la guerra</div>
-          {[
-            {label:"Apareciste y participaste (una vez por guerra)",pts:"+3",color:"#A8FF78"},
-            {label:"Seguiste las órdenes del admin (una vez por guerra)",pts:"+2",color:"#FFD700"},
-            {label:"Ganaste una batalla",pts:"+2 c/u",color:"#40E0FF"},
-            {label:"Declaraste una batalla y la perdiste",pts:"+1 c/u",color:"#40E0FF"},
-            {label:"Defendiste un castillo",pts:"+1 c/u",color:"#40E0FF"},
-            {label:"6+ batallas ganadas — bonus automático",pts:"+10",color:"#FFD700"},
-            {label:"Atacaste bandidos DESPUÉS de ganar la guerra",pts:"+1 c/u",color:"#A8FF78"},
-            {label:"Cumpliste TODO perfectamente (una vez por guerra)",pts:"+5",color:"#FFD700"},
-            {label:"Participaste sin haberte registrado antes",pts:"+1",color:"#A8FF78"},
-            {label:"Actualizaste solo BP o solo Poder",pts:"+2",color:"#A8FF78"},
-            {label:"Actualizaste BP y Poder juntos",pts:"+5",color:"#FFD700"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px",marginBottom:"2px"}}>
-              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
-              <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* PENALIZACIONES */}
-        <div style={{background:"rgba(255,107,107,0.08)",border:"2px solid #FF6B6B",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>❌ PENALIZACIONES</div>
-          {[
-            {label:"Dijiste Conquistador y no apareciste",pts:"-15",color:"#FF6B6B"},
-            {label:"Dijiste Refuerzos y no apareciste",pts:"-10",color:"#FF6B6B"},
-            {label:"Dijiste Reserva y no apareciste",pts:"-5",color:"#FF6B6B"},
-            {label:"No te registraste y tampoco participaste",pts:"-20",color:"#FF6B6B"},
-            {label:"Ignoraste una orden directa del admin",pts:"-2 c/vez",color:"#FF9F43"},
-            {label:"Abandonaste una defensa sin avisar",pts:"-2 c/vez",color:"#FF9F43"},
-            {label:"Te quedaste fuera del castillo sin entrar a defenderlo",pts:"-2 c/vez",color:"#FF9F43"},
-            {label:"Estuviste inactivo +12h sin justificación",pts:"-3 c/vez",color:"#FF9F43"},
-            {label:"Atacaste bandidos ANTES de ganar la guerra",pts:"-1 c/vez",color:"#FF9F43"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:"rgba(255,107,107,0.05)",borderRadius:"6px",marginBottom:"2px"}}>
-              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>{r.label}</span>
-              <span style={{fontSize:"14px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* WHATSAPP */}
-        <div style={{background:"rgba(37,211,102,0.06)",border:"2px solid rgba(37,211,102,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#25D366",fontWeight:"bold",marginBottom:"8px"}}>📱 GRUPO DE WHATSAPP [AOR]</div>
-          {[
-            {label:"Ya estabas en el grupo al lanzar la app",pts:"+50",color:"#25D366",desc:"Puntos de fundador"},
-            {label:"Te unes al grupo ahora",pts:"+25",color:"#A8FF78",desc:"El admin lo actualiza en el Roster"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:r.color+"08",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"3px"}}>
-              <div><span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>{r.desc}</div></div>
-              <span style={{fontSize:"16px",color:r.color,fontWeight:"bold"}}>{r.pts}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* RANGOS */}
-        <div style={{background:"rgba(255,215,0,0.06)",border:"2px solid rgba(255,215,0,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>🏆 RANGOS — Puntos acumulados totales</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Se acumulan guerra tras guerra. Los rangos con * tienen bonus honorífico por el cargo.</div>
-          {[
-            {label:"Líder 👑",pts:"Designado",color:"#FFD700",hon:"25,000"},
-            {label:"Co-Líder 👑",pts:"25,000+",color:"#FFD700",hon:"25,000"},
-            {label:"Oficial ⚜️",pts:"5,000+",color:"#40E0FF",hon:"5,000"},
-            {label:"Veterano ★★★",pts:"1,000+",color:"#A8FF78",hon:"—"},
-            {label:"Guerrero ★★",pts:"500+",color:"#FFD700",hon:"—"},
-            {label:"Soldado ★",pts:"100+",color:"#FF9F43",hon:"—"},
-            {label:"Recluta",pts:"0+",color:"#888",hon:"—"},
-            {label:"⚠ Vigilado",pts:"Negativo",color:"#FF6B6B",hon:"—"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:r.color+"08",borderRadius:"6px",marginBottom:"2px"}}>
-              <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-              <div style={{textAlign:"right"}}>
-                <span style={{fontSize:"12px",color:r.color}}>{r.pts} pts</span>
-                {r.hon!=="—" && <div style={{fontSize:"9px",color:"rgba(255,215,0,0.6)"}}>⭐ +{r.hon} honoríficos</div>}
+          <div style={{display:"flex",gap:"4px",marginBottom:"8px"}}>
+            {[{a:"Conquistador",b:"+3",c:"#A8FF78"},{a:"Refuerzos",b:"+2",c:"#FFD700"},{a:"Reserva",b:"+1",c:"#FF9F43"}].map(x=>(
+              <div key={x.a} style={{flex:1,padding:"4px",background:x.c+"08",border:"1px solid "+x.c+"20",borderRadius:"4px",textAlign:"center"}}>
+                <div style={{fontSize:"8px",color:x.c,fontFamily:"monospace"}}>{x.a}</div>
+                <div style={{fontSize:"12px",color:x.c,fontWeight:"bold",fontFamily:"monospace"}}>{x.b}</div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:"5px"}}>RECOMPENSAS</div>
+          <Row label="Votar" pts="+3" color="#A8FF78"/>
+          <Row label="Más votado — Guerrero Implacable" pts="+10" color="#FFD700" desc="Único ganador"/>
+          <Row label="Mayor puntaje de la jornada" pts="+10" color="#40E0FF" desc="Único ganador"/>
+          <Row label="Ambos: Pichichi" pts="+10 extra = 30" color="#A8FF78" active desc="Mismo jugador gana los dos"/>
+          <Row label="Empate en puntaje" pts="+3 c/u" color="rgba(255,255,255,0.4)" desc="Cada empatado recibe 3 pts"/>
+          <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.35)",letterSpacing:"0.1em",margin:"8px 0 4px"}}>RACHAS CONSECUTIVAS</div>
+          <Row label="2 semanas consecutivas" pts="+20" color="#FFD700"/>
+          <Row label="3+ semanas (sube +10/semana)" pts="+30+" color="#FFD700"/>
+          <a href="/asamblea" style={S.link("#FFD700")}>→ ABRIR ASAMBLEA</a>
         </div>
 
-
-        {/* PROPAGANDA */}
-        <div style={{background:"rgba(200,162,255,0.06)",border:"2px solid rgba(200,162,255,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#C8A2FF",fontWeight:"bold",marginBottom:"8px"}}>📡 PROPAGANDA DE GUERRA — Difusión del Clan</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
-            Los miembros del clan pueden difundir mensajes preaprobados en el chat general del juego para atraer nuevos guerreros.
-            Accede en <strong style={{color:"#C8A2FF"}}>aor-war-command.vercel.app/propaganda</strong>
-          </div>
+        {/* ── RANGOS ────────────────────────────────────────────────────── */}
+        <div style={S.card("#FF9F43")}>
+          <div style={S.title("#FF9F43")}>RANGOS — PUNTOS ACUMULADOS</div>
           {[
-            {label:"Publicar un mensaje aprobado en el chat",pts:"+Reputación",color:"#C8A2FF",desc:"Hasta el límite diario establecido por el comando"},
-            {label:"Límite diario de publicaciones",pts:"Variable",color:"#C8A2FF",desc:"El comando ajusta el límite desde el panel de control"},
-            {label:"Publicación falsa detectada en auditoría",pts:"-50",color:"#FF6B6B",desc:"Confirmar envío sin haber pegado el mensaje en el chat"},
+            {label:"Líder 👑",desc:"Designado",color:"#FFD700"},
+            {label:"Co-Líder 👑",desc:"25,000+ pts",color:"#FFD700"},
+            {label:"Oficial ⚜",desc:"5,000+ pts",color:"#40E0FF"},
+            {label:"Veterano ★★★",desc:"1,000+ pts",color:"#A8FF78"},
+            {label:"Guerrero ★★",desc:"500+ pts",color:"#FF9F43"},
+            {label:"Soldado ★",desc:"100+ pts",color:"rgba(255,255,255,0.5)"},
+            {label:"Recluta",desc:"0+ pts",color:"rgba(255,255,255,0.3)"},
+            {label:"⚠ Vigilado",desc:"Puntos negativos",color:"#FF6B6B"},
           ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
-              <div style={{flex:1}}>
-                <span style={{fontSize:"12px",color:r.color,fontWeight:"bold"}}>{r.label}</span>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div>
-              </div>
-              <span style={{fontSize:"15px",color:r.pts.startsWith("-")?"#FF6B6B":r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"5px 8px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px"}}>
+              <span style={{fontSize:"11px",color:r.color,fontFamily:"Georgia,serif"}}>{r.label}</span>
+              <span style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",fontFamily:"monospace"}}>{r.desc}</span>
             </div>
           ))}
-          <div style={{marginTop:"10px",padding:"8px 10px",background:"rgba(200,162,255,0.05)",borderRadius:"6px",borderLeft:"3px solid rgba(200,162,255,0.3)"}}>
-            <div style={{fontSize:"10px",color:"rgba(200,162,255,0.7)",marginBottom:"4px",fontWeight:"bold"}}>¿Cómo funciona?</div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",lineHeight:"1.6"}}>
-              1. Entra a <strong style={{color:"#C8A2FF"}}>/propaganda</strong> e identifícate con tu nombre<br/>
-              2. Copia uno de los 4 mensajes preaprobados<br/>
-              3. Pégalo en el chat general del juego<br/>
-              4. Confirma que lo publicaste — queda registrado con timestamp en tu perfil<br/>
-              5. El comando hace auditorías para verificar las publicaciones reales
-            </div>
-          </div>
         </div>
 
-
-        {/* ASAMBLEA DE CENTURIAS */}
-        <div style={{background:"rgba(255,215,0,0.06)",border:"2px solid rgba(255,215,0,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>ASAMBLEA — Guerrero Implacable</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
-            Cada semana los miembros votan por el jugador más determinante. El ganador recibe el título de <strong style={{color:"#FFD700"}}>Guerrero Implacable</strong> y aparece al frente del ranking.
-          </div>
-          {[
-            {label:"Votar (Conquistador/Refuerzos/Reserva registrados)",pts:"+3",color:"#A8FF78",desc:"Se acreditan al votar independientemente del resultado"},
-            {label:"Más votado de la semana — Guerrero Implacable",pts:"+10",color:"#FFD700",desc:"El jugador con mayor puntaje de votación ponderada al cierre"},
-            {label:"Mayor puntaje de puntos en la jornada",pts:"+10",color:"#40E0FF",desc:"El jugador con más puntos ganados en esa guerra específica"},
-            {label:"Ser AMBOS: más votado Y mayor puntaje",pts:"+10",color:"#A8FF78",desc:"Bonus adicional si el mismo jugador gana los dos reconocimientos — total +30"},
-            {label:"2 semanas consecutivas como Guerrero Implacable",pts:"+20",color:"#FFD700",desc:"El bonus de votación sube 10 por cada semana adicional de racha"},
-            {label:"3+ semanas consecutivas",pts:"+30+",color:"#FFD700",desc:"El bonus sigue creciendo +10 por semana"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
-              <div style={{flex:1}}><span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div></div>
-              <span style={{fontSize:"15px",color:r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
-            </div>
-          ))}
-          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,215,0,0.04)",borderRadius:"6px",fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
-            Peso del voto según rango: Líder = 5 pts · Co-Líder/Oficial = 4 pts · Veterano = 2 pts · Resto = 1 pt. Accede en <strong style={{color:"#FFD700"}}>aor-war-command.vercel.app/asamblea</strong>
-          </div>
-        </div>
-
-        {/* INTELIGENCIA MILITAR */}
-        <div style={{background:"rgba(255,107,107,0.06)",border:"2px solid rgba(255,107,107,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>INTELIGENCIA MILITAR — Análisis de Rivales</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
-            Registro histórico de guerras, rivales y análisis táctico. Los miembros votan por la dificultad de los clanes rivales.
-          </div>
-          {[
-            {label:"Votar dificultad de clanes rivales (Conquistador/Refuerzos/Reserva)",pts:"+3",color:"#FF9F43",desc:"3 votos ponderados: dificultad 3, 2 y 1 a diferentes clanes"},
-            {label:"Sin votar habiendo participado",pts:"0",color:"rgba(255,255,255,0.3)",desc:"No se penaliza, pero se pierde la oportunidad"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
-              <div style={{flex:1}}><span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div></div>
-              <span style={{fontSize:"15px",color:r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
-            </div>
-          ))}
-          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,107,107,0.04)",borderRadius:"6px",fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
-            Accede en <strong style={{color:"#FF6B6B"}}>aor-war-command.vercel.app/inteligencia</strong>
-          </div>
-        </div>
-
-        {/* ASCENSOS */}
-        <div style={{background:"rgba(64,224,255,0.06)",border:"2px solid rgba(64,224,255,0.3)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
-          <div style={{fontSize:"13px",color:"#40E0FF",fontWeight:"bold",marginBottom:"8px"}}>⚜️ ASCENSOS Y DESCENSOS DE RANGO</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>📌 Ejemplo de ascenso:</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",marginBottom:"8px"}}>
-            Oficial con 960 pts acumulados → ascendido a Co-Líder<br/>
-            Puntos honoríficos: 5,000 → 25,000 (+20,000)<br/>
-            <strong style={{color:"#A8FF78"}}>Total nuevo: 25,960 pts</strong>
-          </div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"6px"}}>⚠️ Ejemplo de descenso:</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"6px",padding:"8px"}}>
-            Co-Líder con 960 pts acumulados → bajado a Oficial<br/>
-            Puntos honoríficos: 25,000 → 5,000 (-20,000)<br/>
-            <strong style={{color:"#FF6B6B"}}>Total nuevo: 5,960 pts (baja a Oficial)</strong><br/><br/>
-            Si se baja a Recluta → honoríficos = 0<br/>
-            <strong style={{color:"#FF6B6B"}}>Total nuevo: -19,040 pts (Vigilado ⚠)</strong>
-          </div>
-        </div>
-
-        <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"12px",textAlign:"center"}}>
-          <div style={{fontSize:"12px",color:"#FF6B6B",marginBottom:"4px"}}>⚠️ Mínimo mensual: <strong>20 puntos</strong></div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>-100 pts acumulados → candidato a expulsión</div>
-        </div>
-      <NalguitasFooter/>
       </div>
+      <NalguitasFooter/>
     </div>
   );
 }

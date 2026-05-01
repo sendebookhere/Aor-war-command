@@ -43,10 +43,39 @@ export default function Asamblea() {
   const [votes, setVotes]       = useState([]);
   const [history, setHistory]   = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [votingEnabled, setVotingEnabled] = useState(true); // default open
+  const [votingEnabled, setVotingEnabled] = useState(true);
+  const [warModeLocal, setWarModeLocal]   = useState("classic");
+
   useEffect(()=>{
-    supabase.from("app_settings").select("value").eq("key","voting_enabled").single()
-      .then(({data})=>{ if(data) setVotingEnabled(data.value!=="false"); });
+    Promise.all([
+      supabase.from("app_settings").select("value").eq("key","voting_enabled").single(),
+      supabase.from("app_settings").select("value").eq("key","war_mode").single(),
+    ]).then(([ve, wm])=>{
+      const mode = wm.data?.value || "classic";
+      setWarModeLocal(mode);
+      // Auto-activate if war has ended and not manually disabled
+      const now = new Date();
+      const spain = new Date(now.getTime() + 2*60*60*1000); // CEST UTC+2
+      const day  = spain.getDay();  // 0=Sun, 6=Sat
+      const hour = spain.getHours();
+      let warEnded = false;
+      if (mode === "new") {
+        // New: war ends Saturday 18:00 Spain
+        warEnded = (day === 6 && hour >= 18) || day === 0; // Sat 18+ or Sunday
+      } else {
+        // Classic: war ends Sunday 8:00 Spain
+        warEnded = (day === 0 && hour >= 8); // Sunday 8am+
+      }
+      if (warEnded) {
+        setVotingEnabled(true);
+        // Auto-enable in DB if it was disabled
+        if (ve.data?.value === "false") {
+          supabase.from("app_settings").upsert({key:"voting_enabled",value:"true"},{onConflict:"key"}).then(()=>{});
+        }
+      } else {
+        setVotingEnabled(ve.data?.value !== "false");
+      }
+    });
   },[]);
   const [playerName, setPlayerName] = useState(sessionStorage.getItem("aor_player_name")||"");
   const [playerId, setPlayerId] = useState(sessionStorage.getItem("aor_player_id")||null);
@@ -205,16 +234,27 @@ const isDouble = isUniqueTop && winner===top.name;
                       <div style={{marginBottom:"8px"}}>
                         <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>EMPATE — CADA UNO RECIBE +3 pts:</div>
                         {tied.map(p=>(
-                          <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
-                            <span style={{fontFamily:"serif",fontSize:"15px",color:"#A8FF78",fontWeight:"bold"}}>{p.name}</span>
-                            <span style={{fontFamily:"monospace",fontSize:"13px",color:"#A8FF78"}}>+3</span>
+                          <div key={p.id} style={{padding:"4px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"#A8FF78",fontWeight:"bold"}}>{p.name}</span>
+                              <span style={{fontFamily:"monospace",fontSize:"11px",color:"#A8FF78"}}>+3 votos</span>
+                            </div>
+                            <div style={{display:"flex",justifyContent:"space-between",fontSize:"9px",color:"rgba(168,255,120,0.5)"}}>
+                              <span>{topPts>0?"+":""}{topPts} pts jornada</span>
+                              <span>{(p.pts_acumulados||0).toLocaleString()} pts acum.</span>
+                            </div>
                           </div>
                         ))}
                       </div>
                     );
                   })()}
                   {isUniqueTop && <div style={{fontFamily:"serif",fontSize:"15px",color:"#A8FF78",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{top.name}</div>}
-                  {isUniqueTop && <div style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"4px"}}>{topPts>0?"+":""}{topPts} pts</div>}
+                  {isUniqueTop && (
+                  <div>
+                    <div style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"2px"}}>{topPts>0?"+":""}{topPts} pts jornada</div>
+                    <div style={{fontSize:"9px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>{(top.pts_acumulados||0).toLocaleString()} pts acumulados</div>
+                  </div>
+                )}
                   {isUniqueTop && breakdown.map(x=>(
                       <div key={x.l} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <span style={{color:"rgba(255,255,255,0.35)"}}>{x.l}</span>
@@ -232,6 +272,14 @@ const isDouble = isUniqueTop && winner===top.name;
         <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
           <div style={{fontSize:"10px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>VOTAR — {week}</div>
           <div style={{marginBottom:"14px"}}>
+            {/* Voting status indicator */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",padding:"6px 10px",background:votingEnabled?"rgba(168,255,120,0.05)":"rgba(255,107,107,0.05)",borderRadius:"6px",border:"1px solid "+(votingEnabled?"rgba(168,255,120,0.2)":"rgba(255,107,107,0.2)")}}>
+              <div>
+                <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em",color:votingEnabled?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{votingEnabled?"VOTACIONES ABIERTAS":"VOTACIONES CERRADAS"}</div>
+                <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",marginTop:"1px",fontFamily:"monospace"}}>{warModeLocal==="new"?"Auto-abren sáb 18:00h España":"Auto-abren dom 8:00h España"}</div>
+              </div>
+              <div style={{width:"8px",height:"8px",borderRadius:"50%",background:votingEnabled?"#A8FF78":"#FF6B6B"}}/>
+            </div>
             <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"8px"}}>MECÁNICA DE VOTACIÓN</div>
 
             {/* Rank weights */}
