@@ -431,7 +431,6 @@ export default function PublicReport() {
         <NavBar current="/reporte"/>
         {/* Header */}
         <div style={{textAlign:"center",marginBottom:"20px"}}>
-          <div style={{fontSize:"9px",color:"rgba(64,224,255,0.35)",letterSpacing:"0.4em",fontFamily:"monospace"}}>ANTIGUA ORDEN</div>
           <PageHeader page="/reporte"/>
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"-16px",marginBottom:"12px",textAlign:"center"}}>Toca un nombre para ver perfil ↓</div>
           <div style={{display:"flex",gap:"8px",justifyContent:"center",marginTop:"10px",flexWrap:"wrap"}}>
