@@ -140,68 +140,87 @@ export default function Inteligencia() {
           </div>
         )}
 
-        {/* Difficulty voting */}
-        <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
-          <div style={{fontSize:"10px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>VOTACION DE DIFICULTAD — {week}</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)",marginBottom:"12px"}}>
-            Asigna 3 votos a los clanes rivales según su dificultad. Al votar recibes <strong style={{color:"#FFD700"}}>+3 puntos</strong>. Solo pueden votar los registrados en Conquistador, Refuerzos o Reserva.
-          </div>
+        {/* Identification + Voting */}
+        <div style={{background:"rgba(255,215,0,0.03)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
+          <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.25em",color:"rgba(255,215,0,0.4)",marginBottom:"12px"}}>VOTACION DE DIFICULTAD — {week}</div>
 
+          {/* Identity row */}
           {!playerId ? (
-            <div style={{position:"relative"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px",letterSpacing:"0.1em",fontFamily:"monospace"}}>IDENTIFÍCATE</div>
+            <div style={{position:"relative",marginBottom:"12px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.15em",color:"rgba(255,255,255,0.25)",marginBottom:"4px"}}>IDENTIFICATE</div>
               <input value={nameInput} onChange={e=>handleNameInput(e.target.value)} placeholder="Tu nombre en el juego..."
-                style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+                style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#d4c9a8",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",fontFamily:"Georgia,serif"}}/>
               {suggestions.length>0&&(
-                <div style={{background:"#1a1a22",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",marginTop:"4px",position:"absolute",width:"100%",zIndex:10}}>
-                  {suggestions.map(p=>(
-                    <div key={p.id} onClick={()=>selectPlayer(p)} style={{padding:"8px 12px",cursor:"pointer",fontSize:"12px",color:"#d4c9a8",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                      {p.name}
-                    </div>
-                  ))}
+                <div style={{background:"#0f0f14",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",marginTop:"2px",position:"absolute",width:"100%",zIndex:10}}>
+                  {suggestions.map(p=>(<div key={p.id} onClick={()=>selectPlayer(p)} style={{padding:"8px 12px",cursor:"pointer",fontSize:"12px",color:"#d4c9a8",borderBottom:"1px solid rgba(255,255,255,0.04)",fontFamily:"Georgia,serif"}}>{p.name}</div>))}
                 </div>
               )}
             </div>
-          ) : myVotes ? (
-            <div style={{textAlign:"center",padding:"12px",background:"rgba(168,255,120,0.06)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px"}}>
-              <div style={{fontSize:"12px",color:"#A8FF78",fontWeight:"bold"}}>✓ Ya votaste esta semana</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>{playerName}</div>
+          ) : (
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",padding:"6px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
+              <span style={{fontFamily:"Georgia,serif",fontSize:"12px",color:"#FFD700"}}>{playerName}</span>
+              <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"4px",padding:"2px 7px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
+            </div>
+          )}
+
+          {playerId && (myVotes ? (
+            <div style={{textAlign:"center",padding:"10px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"10px",color:"#A8FF78",letterSpacing:"0.1em"}}>VOTO REGISTRADO ESTA SEMANA</div>
             </div>
           ) : !canVote ? (
-            <div style={{textAlign:"center",padding:"12px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px"}}>
-              <div style={{fontSize:"11px",color:"#FF6B6B"}}>Solo pueden votar jugadores registrados como Conquistador, Refuerzos o Reserva esta semana.</div>
-              <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{marginTop:"8px",padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer"}}>Cambiar jugador</button>
+            <div style={{padding:"10px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"6px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,107,107,0.7)",letterSpacing:"0.1em"}}>SOLO PUEDEN VOTAR: CONQUISTADOR · REFUERZOS · RESERVA</div>
             </div>
           ) : rivalClans.length === 0 ? (
-            <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center",padding:"12px"}}>Sin clanes rivales registrados para votar aún.</div>
-          ) : (
+            <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.25)",textAlign:"center",padding:"12px",letterSpacing:"0.1em"}}>SIN CLANES REGISTRADOS PARA VOTAR</div>
+          ) : rivalClans.length === 1 ? (
+            /* Single clan: vote if you want to face them again */
             <div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Hola, <strong style={{color:"#FFD700"}}>{playerName}</strong>. Asigna tus votos:</div>
-              {[3,2,1].map(w=>(
-                <div key={w} style={{marginBottom:"8px"}}>
-                  <div style={{fontSize:"10px",color:w===3?"#FF6B6B":w===2?"#FF9F43":"rgba(255,255,255,0.4)",marginBottom:"4px",fontFamily:"monospace"}}>
-                    VOTO {w} — El clan mas dificil {w===3?"":"(segundo "+(w===2?"nivel":"plano")+")"}
-                  </div>
-                  <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
+              <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.35)",letterSpacing:"0.12em",marginBottom:"10px"}}>UN SOLO RIVAL — ¿QUERRÍAS VOLVER A ENFRENTARLOS?</div>
+              <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
+                {["Si, son un reto","No, prefiero evitarlos"].map(opt=>(
+                  <button key={opt} onClick={()=>setVotes({3:opt,2:null,1:null})}
+                    style={{flex:1,padding:"8px",borderRadius:"6px",cursor:"pointer",fontFamily:"Georgia,serif",fontSize:"11px",
+                      background:votes[3]===opt?"rgba(255,107,107,0.12)":"rgba(255,255,255,0.02)",
+                      border:"1px solid "+(votes[3]===opt?"rgba(255,107,107,0.35)":"rgba(255,255,255,0.07)"),
+                      color:votes[3]===opt?"#FF6B6B":"rgba(255,255,255,0.4)"}}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              {msg&&<div style={{fontFamily:"monospace",fontSize:"9px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",marginBottom:"8px",letterSpacing:"0.1em"}}>{msg}</div>}
+              <button onClick={submitVotes} disabled={saving||!votes[3]} style={{width:"100%",padding:"9px",background:votes[3]?"rgba(255,215,0,0.1)":"rgba(255,255,255,0.03)",border:"1px solid "+(votes[3]?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:votes[3]?"#FFD700":"rgba(255,255,255,0.25)",fontFamily:"monospace",fontSize:"10px",letterSpacing:"0.12em",cursor:votes[3]?"pointer":"default"}}>
+                {saving?"...":"ENVIAR VOTO (+3 PUNTOS)"}
+              </button>
+            </div>
+          ) : (
+            /* Multiple clans: 3 weighted votes */
+            <div>
+              <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.35)",letterSpacing:"0.12em",marginBottom:"10px"}}>ASIGNA TUS 3 VOTOS — CADA VOTO A UN CLAN DIFERENTE</div>
+              {[{w:3,label:"VOTO 3 — EL MAS DIFÍCIL",color:"#FF6B6B"},{w:2,label:"VOTO 2 — SEGUNDO MAS DIFÍCIL",color:"#FF9F43"},{w:1,label:"VOTO 1 — TERCERO",color:"rgba(255,255,255,0.35)"}].map(({w,label,color})=>(
+                <div key={w} style={{marginBottom:"10px"}}>
+                  <div style={{fontFamily:"monospace",fontSize:"8px",color,letterSpacing:"0.1em",marginBottom:"5px"}}>{label}</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(100px,1fr))",gap:"4px"}}>
                     {rivalClans.map((clan,i)=>(
-                      <button key={i} onClick={()=>setVotes(v=>({...v,[w]:clan.name}))}
-                        style={{padding:"5px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",
-                          background:votes[w]===clan.name?"rgba(255,107,107,0.2)":"rgba(255,255,255,0.03)",
-                          border:"1px solid "+(votes[w]===clan.name?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.08)"),
-                          color:votes[w]===clan.name?"#FF6B6B":"rgba(255,255,255,0.5)"}}>
+                      <button key={i} onClick={()=>setVotes(v=>({...v,[w]:votes[w]===clan.name?null:clan.name}))}
+                        style={{padding:"6px 8px",borderRadius:"5px",cursor:"pointer",textAlign:"left",
+                          background:votes[w]===clan.name?"rgba(255,107,107,0.1)":"rgba(255,255,255,0.02)",
+                          border:"1px solid "+(votes[w]===clan.name?"rgba(255,107,107,0.3)":"rgba(255,255,255,0.06)"),
+                          color:votes[w]===clan.name?color:"rgba(255,255,255,0.4)",
+                          fontFamily:"Georgia,serif",fontSize:"11px",
+                          opacity:Object.entries(votes).some(([k,v])=>parseInt(k)!==w&&v===clan.name)?0.35:1}}>
                         {clan.name}
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
-              {msg&&<div style={{fontSize:"11px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",margin:"8px 0"}}>{msg}</div>}
-              <button onClick={submitVotes} disabled={saving} style={{width:"100%",padding:"9px",marginTop:"8px",background:"rgba(255,215,0,0.12)",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"6px",color:"#FFD700",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>
-                {saving?"Enviando...":"Enviar votos (+3 puntos)"}
+              {msg&&<div style={{fontFamily:"monospace",fontSize:"9px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",marginBottom:"8px",letterSpacing:"0.1em"}}>{msg}</div>}
+              <button onClick={submitVotes} disabled={saving} style={{width:"100%",padding:"9px",marginTop:"4px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"6px",color:"#FFD700",fontFamily:"monospace",fontSize:"10px",letterSpacing:"0.12em",cursor:"pointer"}}>
+                {saving?"...":"ENVIAR VOTOS (+3 PUNTOS)"}
               </button>
-              <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{width:"100%",padding:"6px",marginTop:"6px",background:"transparent",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"6px",color:"rgba(255,255,255,0.25)",fontSize:"10px",cursor:"pointer"}}>Cambiar jugador</button>
             </div>
-          )}
+          ))}
         </div>
       </div>
       <NalguitasFooter/>
