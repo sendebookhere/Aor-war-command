@@ -3083,6 +3083,17 @@ function AdminAuth({onAuth}) {
     {href:"/propaganda",   color:"#C8A2FF", icon:"📡", label:"Propaganda de Guerra",   desc:"Mensajes preaprobados para difundir en el clan"},
     {href:"/inteligencia", color:"#FF6B6B", icon:"⚔",  label:"Inteligencia Militar",   desc:"Resultados de guerra y votación de dificultad rival"},
     {href:"/asamblea",     color:"#FFD700", icon:"★",  label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
+    {href:"/noticias",     color:"#FF9F43", icon:"📰", label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
+  ];
+  // NavBar-style grid pages
+  const gridPages = [
+    {href:"/registro",     label:"Registro",      color:"#A8FF78", accent:"rgba(168,255,120,0.08)", border:"rgba(168,255,120,0.3)"},
+    {href:"/reporte",      label:"Ranking",        color:"#40E0FF", accent:"rgba(64,224,255,0.08)",  border:"rgba(64,224,255,0.3)"},
+    {href:"/puntos",       label:"Puntos",         color:"#FF9F43", accent:"rgba(255,159,67,0.08)",  border:"rgba(255,159,67,0.3)"},
+    {href:"/propaganda",   label:"Propaganda",     color:"#C8A2FF", accent:"rgba(200,162,255,0.08)", border:"rgba(200,162,255,0.3)"},
+    {href:"/inteligencia", label:"Inteligencia",   color:"#FF6B6B", accent:"rgba(255,107,107,0.08)", border:"rgba(255,107,107,0.3)"},
+    {href:"/asamblea",     label:"Asamblea",       color:"#F4D03F", accent:"rgba(244,208,63,0.08)",  border:"rgba(244,208,63,0.3)"},
+    {href:"/noticias",     label:"Noticias Clan",  color:"#FF9F43", accent:"rgba(255,159,67,0.08)",  border:"rgba(255,159,67,0.3)"},
   ];
 
   return (
@@ -3091,6 +3102,18 @@ function AdminAuth({onAuth}) {
 
       {/* Header */}
       <PageHeader page="/"/>
+
+      {/* NavBar-style grid — quick nav */}
+      <div style={{width:"100%",maxWidth:"360px",marginBottom:"16px",animation:"fadeIn 0.6s ease"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px"}}>
+          {gridPages.map(p=>(
+            <a key={p.href} href={p.href} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"9px 4px",textDecoration:"none",background:p.accent,border:"1px solid "+p.border,borderRadius:"8px",textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:p.color,fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:"bold",lineHeight:"1.3"}}>{p.label}</div>
+            </a>
+          ))}
+        </div>
+        <div style={{height:"1px",background:"rgba(255,255,255,0.04)",margin:"14px 0"}}/>
+      </div>
 
       {/* Public links — FIRST, prominent */}
       <div style={{width:"100%",maxWidth:"360px",marginBottom:"28px",animation:"fadeIn 0.7s ease"}}>
