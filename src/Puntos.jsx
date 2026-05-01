@@ -78,16 +78,18 @@ export default function Puntos() {
 
           <div style={{background:"rgba(255,255,255,0.02)",borderRadius:"6px",padding:"8px 10px",marginBottom:"10px",borderLeft:"2px solid rgba(255,255,255,0.08)"}}>
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"4px"}}>CIERRE DE REGISTRO</div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"2px"}}>
-              <strong style={{color:"#FFD700"}}>Modo clásico:</strong>{" "}viernes{" "}
-              <strong style={{color:"#A8FF78"}}>14:00h España</strong>{" · "}8:00am Ecuador · 7:00am México
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>
+              <strong style={{color:"#FFD700"}}>Modo clásico:</strong>{" "}cierra viernes{" "}
+              <strong style={{color:"#A8FF78",fontSize:"12px"}}>14:00h España</strong>
+              <span style={{color:"rgba(255,255,255,0.3)"}}>{" · "}8:00am Ecuador · 7:00am México</span>
             </div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)"}}>
-              <strong style={{color:"#FFD700"}}>Modo nuevo (test):</strong>{" "}viernes{" "}
-              <strong style={{color:"#FF9F43"}}>23:00h España</strong>{" · "}17:00h Ecuador · 16:00h México
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"4px"}}>
+              <strong style={{color:"#FFD700"}}>Modo nuevo (test):</strong>{" "}cierra viernes{" "}
+              <strong style={{color:"#FF9F43",fontSize:"12px"}}>22:00h España</strong>
+              <span style={{color:"rgba(255,255,255,0.3)"}}>{" · "}16:00h Ecuador · 15:00h México</span>
             </div>
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginTop:"4px"}}>
-              Clásico: guerra vie 8h → dom 8h España · Nuevo: guerra vie 18h → sáb 18h España
+              Clásico: guerra vie 9h → dom 9h España (vie 8h Ecuador) · Nuevo: vie 18h → sáb 18h España (vie 16h Ecuador)
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 import NavBar from "./NavBar";
+import UserAuthGate from "./UserAuth";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
@@ -1655,6 +1656,32 @@ function SeguridadTab({players}) {
 }
 
 
+
+// ── User Access Toggle ─────────────────────────────────────────────────────
+function UserAccessToggle() {
+  const [enabled, setEnabled] = useState(null);
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
+      .then(({data})=>setEnabled(data?.value==="true"));
+  },[]);
+  async function toggle() {
+    const next = !enabled;
+    setEnabled(next);
+    await supabase.from("app_settings").upsert({key:"user_auth_enabled",value:String(next)},{onConflict:"key"});
+  }
+  return (
+    <div style={{marginTop:"8px",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
+      <div>
+        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)"}}>Acceso con teléfono/código único</div>
+        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>Los usuarios deben identificarse para usar la app</div>
+      </div>
+      <button onClick={toggle} style={{padding:"5px 12px",background:enabled?"rgba(168,255,120,0.12)":"rgba(255,107,107,0.08)",border:"1px solid "+(enabled?"rgba(168,255,120,0.3)":"rgba(255,107,107,0.2)"),borderRadius:"6px",color:enabled?"#A8FF78":"#FF6B6B",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",fontWeight:"bold"}}>
+        {enabled===null?"...":enabled?"ACTIVO":"INACTIVO"}
+      </button>
+    </div>
+  );
+}
+
 // ── War Mode Switch ─────────────────────────────────────────────────────────
 function WarModeSwitch() {
   const [mode, setMode] = useState(localStorage.getItem("aor_war_mode")||"classic");
@@ -1749,6 +1776,8 @@ function WarModeSwitch() {
           {votingEnabled===null?"...":votingEnabled?"ACTIVA":"INACTIVA"}
         </button>
       </div>
+      {/* User access control */}
+      <UserAccessToggle/>
       {mode==="new" && (
         <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,159,67,0.06)",borderRadius:"4px",fontSize:"9px",color:"rgba(255,159,67,0.6)",fontFamily:"monospace"}}>
           AVISO: Modo en prueba — el juego puede revertir a configuración clásica

@@ -1,8 +1,71 @@
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
+
+function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
+  const [code, setCode]       = useState(initialCode||"");
+  const [draft, setDraft]     = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [error, setError]     = useState("");
+  const [prefMode, setPrefMode] = useState(localStorage.getItem("aor_auth_pref")||"phone");
+
+  async function saveCode() {
+    if (draft.length !== 6 || !/^\d{6}$/.test(draft)) {
+      setError("Debe ser exactamente 6 dígitos"); return;
+    }
+    const {error: e} = await supabase.from("players").update({unique_code: draft}).eq("id", playerId);
+    if (e) { setError("Error: "+e.message); return; }
+    setCode(draft); setEditing(false); setSaved(true);
+    setTimeout(()=>setSaved(false), 2000);
+  }
+
+  function togglePref(m) {
+    setPrefMode(m);
+    localStorage.setItem("aor_auth_pref", m);
+  }
+
+  return (
+    <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+      <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,215,0,0.5)",letterSpacing:"0.1em",marginBottom:"8px"}}>CÓDIGO ÚNICO DE ACCESO</div>
+      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"10px",lineHeight:"1.5"}}>
+        Usa tu código de 6 dígitos para acceder a la app en lugar de tu número. Ganas <strong style={{color:"#FFD700"}}>+1 punto</strong> por día al usarlo.
+      </div>
+      {code ? (
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,215,0,0.06)",borderRadius:"5px",padding:"8px 12px",marginBottom:"8px"}}>
+          <span style={{fontFamily:"monospace",fontSize:"20px",color:"#FFD700",letterSpacing:"0.3em"}}>{code}</span>
+          <button onClick={()=>{setDraft(code);setEditing(true);}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
+        </div>
+      ) : (
+        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",marginBottom:"8px",fontFamily:"monospace"}}>Sin código — usa tu número de WhatsApp para acceder</div>
+      )}
+      {editing && (
+        <div style={{marginBottom:"8px"}}>
+          <input value={draft} onChange={e=>setDraft(e.target.value.replace(/\D/g,"").slice(0,6))}
+            placeholder="6 dígitos" type="tel" maxLength={6}
+            style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"5px",color:"#FFD700",padding:"8px",fontSize:"20px",letterSpacing:"0.3em",textAlign:"center",outline:"none",boxSizing:"border-box",fontFamily:"monospace",marginBottom:"6px"}}/>
+          {error && <div style={{fontSize:"9px",color:"#FF6B6B",marginBottom:"4px"}}>{error}</div>}
+          <div style={{display:"flex",gap:"6px"}}>
+            <button onClick={saveCode} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"5px",color:"#A8FF78",fontSize:"11px",cursor:"pointer",fontFamily:"monospace"}}>GUARDAR</button>
+            <button onClick={()=>{setEditing(false);setError("");}} style={{padding:"7px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>
+          </div>
+        </div>
+      )}
+      {saved && <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace"}}>✓ Código guardado</div>}
+      {/* Preference toggle */}
+      <div style={{marginTop:"8px"}}>
+        <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)",marginBottom:"5px"}}>PREFERENCIA DE ACCESO</div>
+        <div style={{display:"flex",gap:"4px"}}>
+          <button onClick={()=>togglePref("phone")} style={{flex:1,padding:"5px",background:prefMode==="phone"?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(prefMode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"4px",color:prefMode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>TELÉFONO</button>
+          <button onClick={()=>togglePref("code")} disabled={!code} style={{flex:1,padding:"5px",background:prefMode==="code"&&code?"rgba(255,215,0,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(prefMode==="code"&&code?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"4px",color:prefMode==="code"&&code?"#FFD700":"rgba(255,255,255,0.25)",fontSize:"9px",cursor:code?"pointer":"default",fontFamily:"monospace"}}>CÓDIGO ÚNICO</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
-import { useState, useEffect } from "react";
-import { supabase } from "./supabase";
 
 const AVAILABILITY = {
   siempre:      { label:"Conquistador",  sub:"Siempre listo", color:"#A8FF78", icon:"🟢" },
@@ -355,6 +418,11 @@ function PlayerProfile({ player, onBack }) {
           </div>
         )}
 
+        {/* Unique code management */}
+        {sessionStorage.getItem("aor_player_id") && String(player.id)===sessionStorage.getItem("aor_player_id") && (
+          <UniqueCodeManager playerId={player.id} playerName={player.name} uniqueCode={player.unique_code}/>
+        )}
+
         {/* Registration count */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
           <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"8px"}}>ACTIVIDAD ACUMULADA</div>
@@ -415,7 +483,7 @@ export default function PublicReport() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    supabase.from("players").select("*").eq("active", true).then(({ data }) => {
+    supabase.from("players").select("*, unique_code").eq("active", true).then(({ data }) => {
       if (data) {
         const rankOrder = p => {
           if (p.name === "PUNK'Z" || p.clan_role === "Líder") return 0;
