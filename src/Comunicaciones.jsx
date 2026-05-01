@@ -196,7 +196,7 @@ export default function Comunicaciones() {
           const todayLogs = playerId ? logsToday(playerId) : [];
           const alreadyUsed = todayLogs.some(l=>l.msg_id===msg.id);
           const limitReached = todayLogs.length >= 2;
-          const canUse = playerId && !limitReached;
+          const canUse = playerId && !limitReached && !isBlocked && !hasCooldown;
 
           return (
             <div key={msg.id} style={{

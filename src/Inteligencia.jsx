@@ -35,7 +35,7 @@ export default function Inteligencia() {
   useEffect(()=>{
     Promise.all([
       supabase.from("war_intel").select("*").order("created_at",{ascending:false}).limit(5),
-      supabase.from("players").select("id,name,active,availability,registered_week,clan_role").eq("active",true).order("name"),
+      supabase.from("players").select("id,name,active,availability,registered_week,registered_form,clan_role").eq("active",true).order("name"),
     ]).then(([i, p])=>{
       if (i.data?.length) setIntel(i.data[0]);
       setPlayers(p.data||[]);
@@ -64,7 +64,7 @@ export default function Inteligencia() {
 
   // Can vote: must be registered this week in any option except not registered/no participation
   const me = players.find(p=>String(p.id)===String(playerId));
-  const canVote = me && me.registered_week === week && ["siempre","intermitente","solo_una"].includes(me.availability);
+  const canVote = me && me.registered_form && ["siempre","intermitente","solo_una"].includes(me.availability);
 
   const rivalClans = intel?.rival_clans ? (typeof intel.rival_clans === 'string' ? JSON.parse(intel.rival_clans) : intel.rival_clans) : [];
 
