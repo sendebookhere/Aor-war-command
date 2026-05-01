@@ -1699,6 +1699,7 @@ function WarIntelPanel({players, reload}) {
   const [loading,  setLoading]  = useState(true);
   const [open,     setOpen]     = useState(false);
   const [pos,      setPos]      = useState("");
+  const [ranking,  setRanking]  = useState("");
   const [pts,      setPts]      = useState("");
   const [rivals,   setRivals]   = useState([{name:"",points:"",note:"",players:[]}]);
   const [saving,   setSaving]   = useState(false);
@@ -1724,7 +1725,7 @@ function WarIntelPanel({players, reload}) {
 
   async function save() {
     setSaving(true);
-    const payload = {week, clan_position:parseInt(pos)||0, clan_points:parseInt(pts)||0,
+    const payload = {week, clan_position:parseInt(pos)||0, clan_ranking:parseInt(ranking)||0, clan_points:parseInt(pts)||0,
       rival_clans: JSON.stringify(rivals.filter(r=>r.name.trim())),
       notable_players: "[]"};
     const {error} = await supabase.from("war_intel").insert(payload);
@@ -1751,9 +1752,14 @@ function WarIntelPanel({players, reload}) {
         <div>
           <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
             <div style={{flex:1}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>POSICIÓN</div>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>POSICIÓN EN GUERRA</div>
               <input value={pos} onChange={e=>setPos(e.target.value)} type="number" placeholder="3"
                 style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>RANKING DEL CLAN</div>
+              <input value={ranking} onChange={e=>setRanking(e.target.value)} type="number" placeholder="150"
+                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF9F43",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
             </div>
             <div style={{flex:2}}>
               <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>PUNTOS DEL CLAN</div>
