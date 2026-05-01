@@ -21,6 +21,11 @@ export default function Inteligencia() {
   const [players, setPlayers]   = useState([]);
   const [myVotes, setMyVotes]   = useState(null);
   const [loading, setLoading]   = useState(true);
+  const [votingEnabled, setVotingEnabled] = useState(true); // default open
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","voting_enabled").single()
+      .then(({data})=>{ if(data) setVotingEnabled(data.value!=="false"); });
+  },[]);
   const [playerName, setPlayerName] = useState(sessionStorage.getItem("aor_player_name")||"");
   const [playerId, setPlayerId] = useState(sessionStorage.getItem("aor_player_id")||null);
   const [nameInput, setNameInput] = useState(sessionStorage.getItem("aor_player_name")||"");

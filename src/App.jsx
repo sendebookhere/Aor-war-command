@@ -237,11 +237,9 @@ function earlyBonusTimeLeft() {
   if (h >= 24) { const d = Math.floor(h/24); return `${d}d ${h%24}h`; }
   return `${h}h ${m}m`;
 }
-function isRegistrationOpen() {
+function isRegistrationOpen(warMode="classic") {
   // Registration closes 1 hour before war start
-  // Classic mode: war starts Friday 7am Ecuador → closes Thursday at some point? No.
-  // Actually: closes Friday 7am Ecuador (classic) or Friday 17:00 Ecuador (new mode)
-  const warMode = localStorage.getItem("aor_war_mode") || "classic";
+  // Classic: closes Friday 7am Ecuador | New: closes Friday 17:00 Ecuador
   const now = new Date();
   const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
   const day  = ec.getDay();
@@ -258,7 +256,7 @@ function isRegistrationOpen() {
   return true;
 }
 
-function RegistrationForm({onRegistered}) {
+function RegistrationForm({onRegistered, warMode="classic"}) {
   const [name, setName]             = useState("");
   const [avail, setAvail]           = useState("");
   const [tz, setTz]                 = useState("mexico");
@@ -276,7 +274,7 @@ function RegistrationForm({onRegistered}) {
   const [newBp, setNewBp]           = useState("");
   const [newLevel, setNewLevel]     = useState("");
   const [lastStats, setLastStats]   = useState(null);
-  const isOpen = isRegistrationOpen();
+  const isOpen = isRegistrationOpen(warMode);
   const currentWeek = getWarWeek();
 
   useEffect(()=>{
@@ -1399,6 +1397,18 @@ function VisitsTab() {
       <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"10px"}}>
         Cargas / Únicos · Sesión = un dispositivo/navegador · Recurrente = volvió 2+ veces · Multipágina = visitó 2+ secciones
       </div>
+      {/* Blocked registration attempts */}
+      {visits.filter(v=>v.page==="/registro_blocked").length > 0 && (
+        <div style={{marginTop:"16px"}}>
+          <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"12px",marginBottom:"8px"}}>Intentos de registro bloqueados</div>
+          {visits.filter(v=>v.page==="/registro_blocked").slice(0,10).map((v,i)=>(
+            <div key={i} style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",padding:"4px 8px",background:"rgba(255,107,107,0.04)",borderRadius:"4px",marginBottom:"3px",borderLeft:"2px solid rgba(255,107,107,0.3)"}}>
+              <span style={{color:"rgba(255,255,255,0.3)",marginRight:"8px"}}>{new Date(v.visited_at).toLocaleString("es-MX")}</span>
+              {v.reason||"Registro cerrado"}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Per-user named activity */}
       <UserActivityTable logs={visits}/>
@@ -1680,16 +1690,30 @@ function WarModeSwitch() {
     }
   };
 
-  function switchMode(m) {
+  async function switchMode(m) {
     setSaving(true);
+    // Save to Supabase so ALL devices see the change
+    await supabase.from("app_settings").upsert({key:"war_mode",value:m},{onConflict:"key"});
     localStorage.setItem("aor_war_mode", m);
+    localStorage.setItem("aor_war_mode_cache", m);
     setMode(m);
-    setTimeout(()=>setSaving(false), 500);
+    setSaving(false);
   }
 
   const current = modes[mode];
   const other = mode==="classic" ? "new" : "classic";
   const otherMode = modes[other];
+
+  const [votingEnabled, setVotingEnabled] = useState(null);
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","voting_enabled").single()
+      .then(({data})=>setVotingEnabled(data?.value!=="false"));
+  },[]);
+  async function toggleVoting() {
+    const next = !votingEnabled;
+    setVotingEnabled(next);
+    await supabase.from("app_settings").upsert({key:"voting_enabled",value:String(next)},{onConflict:"key"});
+  }
 
   return (
     <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"10px",padding:"14px",marginBottom:"14px"}}>
@@ -1714,6 +1738,16 @@ function WarModeSwitch() {
         {current.details.map((d,i)=>(
           <div key={i} style={{fontSize:"9px",color:"rgba(255,255,255,0.45)",padding:"2px 0",fontFamily:"monospace"}}>{d}</div>
         ))}
+      </div>
+      {/* Voting control */}
+      <div style={{marginTop:"8px",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
+        <div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)"}}>Votación de Asamblea e Inteligencia</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>Habilita para que los jugadores puedan votar</div>
+        </div>
+        <button onClick={toggleVoting} style={{padding:"5px 12px",background:votingEnabled?"rgba(168,255,120,0.12)":"rgba(255,107,107,0.08)",border:"1px solid "+(votingEnabled?"rgba(168,255,120,0.3)":"rgba(255,107,107,0.2)"),borderRadius:"6px",color:votingEnabled?"#A8FF78":"#FF6B6B",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",fontWeight:"bold"}}>
+          {votingEnabled===null?"...":votingEnabled?"ACTIVA":"INACTIVA"}
+        </button>
       </div>
       {mode==="new" && (
         <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,159,67,0.06)",borderRadius:"4px",fontSize:"9px",color:"rgba(255,159,67,0.6)",fontFamily:"monospace"}}>
@@ -2884,6 +2918,7 @@ export default function App() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const [warMode, setWarMode] = useState(localStorage.getItem("aor_war_mode_cache")||"classic");
   const path = window.location.pathname;
   // Clear auth when user navigates away from admin — forces PIN on return
   if (path !== "/") sessionStorage.removeItem("aor_auth");
@@ -2891,7 +2926,15 @@ export default function App() {
 
   useEffect(()=>{
     loadPlayers();
-    // Track page visit with session_id (unique per browser session)
+    // Load war mode from DB — shared across ALL devices
+    supabase.from("app_settings").select("value").eq("key","war_mode").single()
+      .then(({data})=>{
+        const m = data?.value || "classic";
+        setWarMode(m);
+        localStorage.setItem("aor_war_mode_cache", m);
+        localStorage.setItem("aor_war_mode", m);
+      });
+    // Track page visit
     let sid = localStorage.getItem("aor_sid");
     if (!sid) {
       sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -2924,7 +2967,7 @@ export default function App() {
     </div>
   );
 
-  if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers}/>;
+  if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers} warMode={warMode}/>;
   if (path === "/reporte")  return <PublicReport />;
   if (path === "/puntos")         return <Puntos onBack={()=>window.history.back()}/>;
   if (path === "/comunicaciones")  return <Comunicaciones/>;
