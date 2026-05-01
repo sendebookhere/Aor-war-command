@@ -75,6 +75,7 @@ function PlayerProfile({ player, onBack }) {
   const [history, setHistory]   = useState([]);
   const [statsList, setStatsList] = useState([]);
   const [msgLogs,  setMsgLogs]  = useState([]);
+  const [assemblyWins, setAssemblyWins] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [newBp, setNewBp]       = useState("");
   const [newLevel, setNewLevel] = useState("");
@@ -85,10 +86,12 @@ function PlayerProfile({ player, onBack }) {
       supabase.from("war_history").select("*").eq("player_id", player.id).order("created_at", {ascending:false}),
       supabase.from("player_stats").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(10),
       supabase.from("message_logs").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(50),
-    ]).then(([h, s, m]) => {
+      supabase.from("assembly_votes").select("week,voter_weight").eq("voted_player_id", player.id).order("created_at", {ascending:false}).limit(20),
+    ]).then(([h, s, m, av]) => {
       setHistory(h.data || []);
       setStatsList(s.data || []);
       setMsgLogs(m.data || []);
+      setAssemblyWins(av.data || []);
       setLoading(false);
     });
   }, [player.id]);
@@ -317,10 +320,26 @@ function PlayerProfile({ player, onBack }) {
           </div>
         )}
 
-        {/* Publication history */}
+        {/* Publication history + propaganda cooldown */}
         {msgLogs.length > 0 && (
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-            <div style={{color:"#C8A2FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📡 Historial de propaganda publicada</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
+              <div style={{color:"#C8A2FF",fontSize:"13px",fontFamily:"serif"}}>Propaganda publicada</div>
+              <div style={{fontFamily:"monospace",fontSize:"10px",color:"#C8A2FF"}}>{msgLogs.length} publicaciones</div>
+            </div>
+            {/* Cooldown timer */}
+            {(()=>{
+              const blockEnd = localStorage.getItem("aor_prop_block");
+              if (!blockEnd || parseInt(blockEnd) <= Date.now()) return null;
+              const remaining = parseInt(blockEnd) - Date.now();
+              const h = Math.floor(remaining/3600000);
+              const m = Math.floor((remaining%3600000)/60000);
+              return (
+                <div style={{padding:"6px 8px",background:"rgba(255,107,107,0.06)",borderRadius:"4px",marginBottom:"8px",fontFamily:"monospace",fontSize:"9px",color:"#FF6B6B"}}>
+                  BLOQUEO ACTIVO — próximo envío en {h>0?h+"h ":""}{m}m
+                </div>
+              );
+            })()}
             {msgLogs.map((m,i)=>(
               <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"6px 8px",marginBottom:"3px",background:"rgba(200,162,255,0.04)",borderRadius:"4px",borderLeft:"2px solid rgba(200,162,255,0.3)"}}>
                 <div style={{flex:1}}>
@@ -333,6 +352,40 @@ function PlayerProfile({ player, onBack }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Registration count */}
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"8px"}}>ACTIVIDAD ACUMULADA</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px"}}>
+            {[
+              {label:"Registros de guerra",val: player.registered_week ? 1 : 0, note: player.registered_week||"—", color:"#40E0FF"},
+              {label:"Propaganda publicada",val: msgLogs.length, color:"#C8A2FF"},
+              {label:"Pts acumulados",val: (player.pts_acumulados||0).toLocaleString(), color:"#FFD700"},
+            ].map(x=>(
+              <div key={x.label} style={{textAlign:"center",padding:"8px 4px",background:x.color+"08",borderRadius:"6px",border:"1px solid "+x.color+"15"}}>
+                <div style={{fontSize:"14px",color:x.color,fontWeight:"bold",fontFamily:"monospace"}}>{x.val}</div>
+                <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",marginTop:"2px",fontFamily:"monospace",lineHeight:"1.3"}}>{x.label}</div>
+                {x.note&&<div style={{fontSize:"8px",color:x.color,opacity:0.5,fontFamily:"monospace"}}>{x.note}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Guerrero Implacable history */}
+        {assemblyWins.length > 0 && (
+          <div style={{background:"linear-gradient(135deg,rgba(255,215,0,0.06),rgba(255,215,0,0.02))",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,215,0,0.5)",marginBottom:"8px"}}>GUERRERO IMPLACABLE — HISTORIAL</div>
+            {assemblyWins.map((v,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(255,215,0,0.04)",borderRadius:"4px"}}>
+                <span style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.35)"}}>{v.week}</span>
+                <span style={{fontFamily:"monospace",fontSize:"9px",color:"#FFD700",fontWeight:"bold"}}>{v.voter_weight} pts votación</span>
+              </div>
+            ))}
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.3)",marginTop:"4px"}}>
+              {assemblyWins.length} vez{assemblyWins.length>1?"es":""} elegido Guerrero Implacable
+            </div>
           </div>
         )}
 
