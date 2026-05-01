@@ -31,8 +31,7 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // Force re-render of children after login
-    window.location.reload();
+    // No reload needed - React state update triggers re-render
   }}/>;
 }
 
