@@ -182,7 +182,7 @@ const isDouble = isUniqueTop && winner===top.name;
                     <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>
                     {isUniqueTop?"MAYOR PUNTAJE +10 pts":"EMPATE EN PUNTAJE"}
                   </div>
-                  {!isUniqueTop && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",fontFamily:"monospace",marginBottom:"6px"}}>PUNTOS DIVIDIDOS: cada empate recibe +1 pt</div>}
+                  {!isUniqueTop && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",fontFamily:"monospace",marginBottom:"6px"}}>PUNTOS DIVIDIDOS: 3 pts repartidos entre los que empaten</div>}
                     <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>
                     <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>
                     {breakdown.map(x=>(
