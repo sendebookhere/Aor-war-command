@@ -821,23 +821,15 @@ function MensajesTab({players}) {
   const avMap = {siempre:"Conquistador",intermitente:"Refuerzos",solo_una:"Reserva",no_disponible:"No disponible"};
 
   // Dynamic extra messages
-  const [extraWa,   setExtraWa]   = useState([]);
-  const [waCards,   setWaCards]   = useState([]);
-  // Initialize waCards on first render
-  const waCardsInitRef = useRef(false);
-  if (!waCardsInitRef.current && (allActive.length > 0 || true)) {
-    waCardsInitRef.current = true;
-    if (waCards.length === 0) {
-      setWaCards([
-        {id:"w1",fixed:false,title:`Registro grupo WA (${waRegistrado.length}/${waPlayers.length})`,desc:"Solo miembros del grupo de WhatsApp",content:buildWaRegistro()},
-        {id:"w2",fixed:false,title:"Registro completo",desc:"Todos los miembros activos",content:buildRegistro()},
-        {id:"w3",fixed:false,title:"Reporte semanal",desc:"Ranking guerra actual",content:buildSemanal()},
-        {id:"w4",fixed:false,title:"Ranking acumulado",desc:"Sin bonus de rango",content:buildAcumulado()},
-        {id:"w5",fixed:false,title:"Aviso actividad minima",desc:"Para jugadores bajo 20 pts mensuales",content:"*[AOR] Aviso de actividad*\n\nEstas bajo el minimo mensual (20 pts). Registrate para la proxima guerra:\n https://aor-war-command.vercel.app/registro"},
-        {id:"w6",fixed:false,title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!*\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos\n\nBuena suerte en batalla!"},
-      ]);
-    }
-  }
+  const [extraWa, setExtraWa] = useState([]);
+  const [waCards, setWaCards] = useState([
+    {id:"w1",title:"Registro grupo WA",desc:"Solo miembros del grupo de WhatsApp",content:"*[AOR] Registro de Guerra — Grupo WA*"},
+    {id:"w2",title:"Registro completo",desc:"Todos los miembros activos",content:"*[AOR] Registro de Guerra*"},
+    {id:"w3",title:"Reporte semanal",desc:"Ranking guerra actual",content:"*[AOR] Reporte Semanal*"},
+    {id:"w4",title:"Ranking acumulado",desc:"Sin bonus de rango",content:"*[AOR] Ranking Acumulado*"},
+    {id:"w5",title:"Aviso actividad minima",content:"*[AOR] Aviso de actividad*\n\nEstas bajo el minimo mensual (20 pts). Registrate: https://aor-war-command.vercel.app/registro"},
+    {id:"w6",title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!*\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos"},
+  ]);
   const [extraGame, setExtraGame] = useState([]);
   const [addModal,  setAddModal]  = useState(false);
   const [newTitle,  setNewTitle]  = useState("");
@@ -1932,7 +1924,7 @@ function WarIntelPanel({players, reload}) {
         <div>
           <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
             <div style={{flex:1}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>POSICIÓN EN GUERRA</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace",letterSpacing:"0.05em"}}>POSICIÓN</div>
               <input value={pos} onChange={e=>setPos(e.target.value)} type="number" placeholder="3"
                 style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
             </div>
