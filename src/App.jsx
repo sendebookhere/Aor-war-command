@@ -1,3 +1,4 @@
+import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
 import Inteligencia from "./Inteligencia";
@@ -427,12 +428,8 @@ function RegistrationForm({onRegistered}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",backgroundImage:"radial-gradient(ellipse at 10% 0%, rgba(64,224,255,0.05) 0%, transparent 50%)",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}>
-          <a href="/puntos" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>❓ Puntos</a>
-          <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>
-          <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>Ver ranking →</a>
-        </div>
-        <div style={{textAlign:"center",marginBottom:"24px"}}>
+        <NavBar current="/registro"/>
+        <div style={{textAlign:"center",marginBottom:"16px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em",marginBottom:"4px"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Registro de Guerra</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Confirma tu participación y recibe tus puntos</div>
@@ -1514,34 +1511,9 @@ function SeguridadTab({players}) {
         </div>
       ))}
 
-      {/* Add message modal */}
-      {addModal && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
-          <div style={{background:"#0d0d0f",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"12px",padding:"20px",width:"100%",maxWidth:"400px"}}>
-            <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"15px",marginBottom:"14px"}}>Agregar mensaje</div>
-            <div style={{display:"flex",gap:"6px",marginBottom:"12px"}}>
-              <button onClick={()=>setNewType("wa")} style={{flex:1,padding:"7px",background:newType==="wa"?"rgba(37,211,102,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(newType==="wa"?"rgba(37,211,102,0.4)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:newType==="wa"?"#25D366":"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>WhatsApp</button>
-              <button onClick={()=>setNewType("game")} style={{flex:1,padding:"7px",background:newType==="game"?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(newType==="game"?"rgba(64,224,255,0.4)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:newType==="game"?"#40E0FF":"rgba(255,255,255,0.4)",fontSize:"11px",cursor:"pointer"}}>Chat del juego</button>
-            </div>
-            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px",letterSpacing:"0.1em"}}>TÍTULO</div>
-            <input value={newTitle} onChange={e=>setNewTitle(e.target.value)} autoFocus placeholder="Ej: Aviso de guerra especial"
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",marginBottom:"8px"}}/>
-            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"4px",letterSpacing:"0.1em"}}>CONTENIDO{newType==="game"?" (máx 250 chars)":""}</div>
-            <textarea value={newContent} onChange={e=>setNewContent(e.target.value)} rows={4} placeholder={newType==="game"?"<color=#FFD700>[AOR]</color> Tu mensaje...":"*[AOR]* Tu mensaje..."}
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid "+(newType==="game"&&newContent.length>250?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.1)"),borderRadius:"6px",color:"#d4c9a8",padding:"8px 10px",fontSize:"11px",outline:"none",boxSizing:"border-box",marginBottom:"4px",resize:"vertical",fontFamily:newType==="game"?"monospace":"inherit"}}/>
-            {newType==="game" && <div style={{fontSize:"9px",color:newContent.length>250?"#FF6B6B":"rgba(255,255,255,0.3)",textAlign:"right",marginBottom:"8px"}}>{newContent.length}/250</div>}
-            <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
-              <button onClick={addMessage} disabled={!newTitle.trim()||(newType==="game"&&newContent.length>250)} style={{flex:1,padding:"9px",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"6px",color:"#A8FF78",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>Agregar</button>
-              <button onClick={()=>setAddModal(false)} style={{padding:"9px 14px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
-
 
 // ── Daily Limit Setting ─────────────────────────────────────────────────────
 function DailyLimitSetting() {
@@ -2437,10 +2409,12 @@ function AdminAuth({onAuth}) {
   }
 
   const publicLinks = [
-    {href:"/registro",   color:"#A8FF78", icon:"📋", label:"Registro de Guerra",  desc:"Confirma tu participación y suma puntos"},
-    {href:"/reporte",    color:"#40E0FF", icon:"📊", label:"Ranking [AOR]",        desc:"Posiciones, perfiles y puntos del clan"},
-    {href:"/puntos",     color:"#FFD700", icon:"❓", label:"Sistema de Puntos",    desc:"Cómo ganar y perder puntos en cada guerra"},
-    {href:"/propaganda", color:"#C8A2FF", icon:"📡", label:"Propaganda de Guerra", desc:"Mensajes aprobados para difundir en el clan"},
+    {href:"/registro",     color:"#A8FF78", icon:"📋", label:"Registro de Guerra",    desc:"Confirma tu participación y suma puntos"},
+    {href:"/reporte",      color:"#40E0FF", icon:"📊", label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
+    {href:"/puntos",       color:"#FF9F43", icon:"❓", label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
+    {href:"/propaganda",   color:"#C8A2FF", icon:"📡", label:"Propaganda de Guerra",   desc:"Mensajes preaprobados para difundir en el clan"},
+    {href:"/inteligencia", color:"#FF6B6B", icon:"⚔",  label:"Inteligencia Militar",   desc:"Resultados de guerra y votación de dificultad rival"},
+    {href:"/asamblea",     color:"#FFD700", icon:"★",  label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
   ];
 
   return (

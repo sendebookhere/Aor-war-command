@@ -1,17 +1,11 @@
+import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 
 export default function Puntos({onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",marginBottom:"20px"}}>
-          <a href="/" style={{fontSize:"12px",color:"#FFD700",textDecoration:"none",padding:"5px 20px",border:"1px solid rgba(255,215,0,0.35)",borderRadius:"20px",background:"rgba(255,215,0,0.06)",letterSpacing:"0.1em"}}>HOME AOR</a>
-          <div style={{display:"flex",gap:"8px",flexWrap:"wrap",justifyContent:"center"}}>
-            <a href="/registro" style={{fontSize:"11px",color:"#A8FF78",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"20px"}}>📋 Registro</a>
-            <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>📊 Ranking</a>
-            <a href="/propaganda" style={{fontSize:"11px",color:"#C8A2FF",textDecoration:"none",padding:"4px 12px",border:"1px solid rgba(200,162,255,0.3)",borderRadius:"20px"}}>📡 Propaganda</a>
-          </div>
-        </div>
+<NavBar current="/puntos"/>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
           <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Sistema de Puntos</div>
@@ -162,6 +156,49 @@ export default function Puntos({onBack}) {
               4. Confirma que lo publicaste — queda registrado con timestamp en tu perfil<br/>
               5. El comando hace auditorías para verificar las publicaciones reales
             </div>
+          </div>
+        </div>
+
+
+        {/* ASAMBLEA DE CENTURIAS */}
+        <div style={{background:"rgba(255,215,0,0.06)",border:"2px solid rgba(255,215,0,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"8px"}}>ASAMBLEA — Guerrero Implacable</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
+            Cada semana los miembros votan por el jugador más determinante. El ganador recibe el título de <strong style={{color:"#FFD700"}}>Guerrero Implacable</strong> y aparece al frente del ranking.
+          </div>
+          {[
+            {label:"Votar (cualquier registrado: Conquistador/Refuerzos/Reserva)",pts:"+3",color:"#A8FF78",desc:"Se acreditan al votar, independientemente del resultado"},
+            {label:"Ser elegido Guerrero Implacable",pts:"+10",color:"#FFD700",desc:"El jugador con más puntos de votación al cierre de semana"},
+            {label:"2 semanas consecutivas elegido",pts:"+20",color:"#FFD700",desc:"Racha de 2"},
+            {label:"3+ semanas consecutivas",pts:"+30+",color:"#FFD700",desc:"El bonus sube 10 por cada semana adicional"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
+              <div style={{flex:1}}><span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div></div>
+              <span style={{fontSize:"15px",color:r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
+            </div>
+          ))}
+          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,215,0,0.04)",borderRadius:"6px",fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
+            Peso del voto según rango: Líder = 5 pts · Co-Líder/Oficial = 4 pts · Veterano = 2 pts · Resto = 1 pt. Accede en <strong style={{color:"#FFD700"}}>aor-war-command.vercel.app/asamblea</strong>
+          </div>
+        </div>
+
+        {/* INTELIGENCIA MILITAR */}
+        <div style={{background:"rgba(255,107,107,0.06)",border:"2px solid rgba(255,107,107,0.25)",borderRadius:"10px",padding:"14px",marginBottom:"12px"}}>
+          <div style={{fontSize:"13px",color:"#FF6B6B",fontWeight:"bold",marginBottom:"8px"}}>INTELIGENCIA MILITAR — Análisis de Rivales</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.6)",marginBottom:"10px",lineHeight:"1.6"}}>
+            Registro histórico de guerras, rivales y análisis táctico. Los miembros votan por la dificultad de los clanes rivales.
+          </div>
+          {[
+            {label:"Votar dificultad de clanes rivales (Conquistador/Refuerzos/Reserva)",pts:"+3",color:"#FF9F43",desc:"3 votos ponderados: dificultad 3, 2 y 1 a diferentes clanes"},
+            {label:"Sin votar habiendo participado",pts:"0",color:"rgba(255,255,255,0.3)",desc:"No se penaliza, pero se pierde la oportunidad"},
+          ].map(r=>(
+            <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
+              <div style={{flex:1}}><span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div></div>
+              <span style={{fontSize:"15px",color:r.color,fontWeight:"bold",marginLeft:"12px",flexShrink:0}}>{r.pts}</span>
+            </div>
+          ))}
+          <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,107,107,0.04)",borderRadius:"6px",fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
+            Accede en <strong style={{color:"#FF6B6B"}}>aor-war-command.vercel.app/inteligencia</strong>
           </div>
         </div>
 
