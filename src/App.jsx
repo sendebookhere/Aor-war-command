@@ -2585,8 +2585,10 @@ export default function App() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
-  const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
   const path = window.location.pathname;
+  // Clear auth when user navigates away from admin — forces PIN on return
+  if (path !== "/") sessionStorage.removeItem("aor_auth");
+  const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
 
   useEffect(()=>{
     loadPlayers();
