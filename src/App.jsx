@@ -2595,10 +2595,6 @@ function AdminPanel({players, update, loading, saving, reload}) {
               </div>
             )}
 
-            {/* War Intel */}
-            <WarIntelPanel players={players} reload={reload}/>
-            <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
-
             {/* Expulsados */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",marginTop:"20px"}}>
               <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"14px"}}>🚫 Expulsados ({expelled.length})</div>
