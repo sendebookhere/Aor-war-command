@@ -68,7 +68,7 @@ export default function Asamblea() {
 
   const me = players.find(p=>String(p.id)===String(playerId));
   const myVoteThisWeek = votes.find(v=>String(v.voter_id)===String(playerId));
-  const canVote = me && me.registered_week===week && ["siempre","intermitente","solo_una"].includes(me.availability);
+  const canVote = me && me.registered_form && ["siempre","intermitente","solo_una"].includes(me.availability);
 
   // Tally votes this week
   const tally = {};
