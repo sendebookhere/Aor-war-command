@@ -190,14 +190,14 @@ function LoginScreen({onLogin}) {
           <div className="login-in-d2">
             <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
               <button onClick={()=>{setMode("phone");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em",transition:"all 0.15s"}}>
-                TELÉFONO
+                CLAVE
               </button>
               <button onClick={()=>{setMode("code");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em",transition:"all 0.15s"}}>
                 CÓDIGO ÚNICO
               </button>
             </div>
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(255,255,255,0.2)",marginBottom:"4px"}}>
-              {mode==="phone"?"NÚMERO WHATSAPP — no se guarda en caché":"CÓDIGO DE 6 DÍGITOS"}
+              {mode==="phone"?"CLAVE DE ACCESO — no se almacena":"CÓDIGO ÚNICO DE 6 DÍGITOS"}
             </div>
             <input
               ref={phoneRef}
@@ -205,7 +205,7 @@ function LoginScreen({onLogin}) {
               onChange={e=>setPhoneInput(mode==="code"?e.target.value.replace(/\D/g,"").slice(0,6):e.target.value)}
               onKeyDown={e=>e.key==="Enter"&&verify()}
               type={mode==="phone"?"tel":"tel"}
-              placeholder={mode==="phone"?"+34... / +52... / +593...":"------"}
+              placeholder={mode==="phone"?"--- --- --- ---":"------"}
               autoComplete="off" autoCorrect="off" spellCheck="false"
               style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",color:"#fff",padding:"12px 14px",fontSize:mode==="code"?"20px":"14px",outline:"none",boxSizing:"border-box",letterSpacing:mode==="code"?"0.4em":"normal",fontFamily:"monospace",marginBottom:"8px"}}/>
             {mode==="code" && <div style={{fontSize:"8px",color:"rgba(255,215,0,0.3)",fontFamily:"monospace",marginBottom:"8px",letterSpacing:"0.1em"}}>+1 PUNTO AL DÍA POR USAR TU CÓDIGO</div>}
@@ -216,8 +216,8 @@ function LoginScreen({onLogin}) {
             </button>
 
             <div style={{marginTop:"10px",textAlign:"center",fontSize:"8px",color:"rgba(255,255,255,0.15)",fontFamily:"monospace",lineHeight:"1.6"}}>
-              Si olvidaste tu código, usa siempre tu número.
-              Si no estás registrado, contacta a un administrador.
+              Si olvidaste tu código único, usa tu clave de acceso.
+              Si no estás en el sistema, contacta a un administrador.
             </div>
           </div>
         )}
@@ -235,7 +235,7 @@ function ErrorScreen({error, onRetry, playerName}) {
           <div style={{fontFamily:"monospace",fontSize:"10px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.5)",marginBottom:"8px"}}>ACCESO DENEGADO</div>
           <div style={{fontSize:"16px",color:"rgba(255,255,255,0.6)",marginBottom:"8px"}}>{playerName}</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginBottom:"20px",lineHeight:"1.6"}}>
-            Tu número no está registrado en el sistema.<br/>Contacta a un administrador del clan para solicitar acceso.
+            No estás registrado en el sistema.<br/>Contacta a un administrador del clan para solicitar acceso.
           </div>
           <button onClick={onRetry} style={{padding:"10px 24px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"7px",color:"rgba(255,255,255,0.4)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.15em"}}>
             INTENTAR DE NUEVO

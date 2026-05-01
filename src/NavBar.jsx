@@ -16,52 +16,73 @@ function logout() {
 
 export default function NavBar({current}) {
   const cur = current || "";
+  const isHome = cur === "/";
   return (
     <div style={{marginBottom:"24px"}}>
-      {/* HOME — large, dimmed when on home */}
+      {/* HOME — colored ONLY when on home page */}
       <a href="/" style={{
         display:"block", textAlign:"center", padding:"12px 10px 10px",
-        background: cur==="/" ? "rgba(255,255,255,0.01)" : "rgba(255,215,0,0.05)",
-        border:"1px solid "+(cur==="/" ? "rgba(255,255,255,0.06)" : "rgba(255,215,0,0.18)"),
+        background: isHome ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.02)",
+        border:"1px solid "+(isHome ? "rgba(255,215,0,0.35)" : "rgba(255,255,255,0.06)"),
         borderRadius:"10px", textDecoration:"none", marginBottom:"8px",
-        opacity: cur==="/" ? 0.4 : 1,
-        pointerEvents: cur==="/" ? "none" : "auto",
+        pointerEvents: isHome ? "none" : "auto",
       }}>
         <div style={{fontSize:"8px",letterSpacing:"0.5em",color:"rgba(255,255,255,0.2)",fontFamily:"monospace",marginBottom:"3px"}}>ANTIGUA ORDEN</div>
         <div style={{fontSize:"11px",color:"rgba(255,255,255,0.15)",marginBottom:"3px"}}>⚔</div>
-        <div style={{fontSize:"8px",letterSpacing:"0.4em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"3px"}}>[AOR]</div>
-        <div style={{fontSize:"13px",color:cur==="/"?"rgba(255,255,255,0.3)":"#FFD700",fontFamily:"monospace",fontWeight:"bold",letterSpacing:"0.25em"}}>HOME</div>
+        <div style={{fontSize:"8px",letterSpacing:"0.4em",color:isHome?"rgba(255,215,0,0.5)":"rgba(255,255,255,0.15)",fontFamily:"monospace",marginBottom:"3px"}}>[AOR]</div>
+        <div style={{fontSize:"13px",color:isHome?"#FFD700":"rgba(255,255,255,0.2)",fontFamily:"monospace",fontWeight:"bold",letterSpacing:"0.25em"}}>HOME</div>
       </a>
 
-      {/* 7 pages + CERRAR SESIÓN = 8 slots in 3-col grid */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px"}}>
-        {PAGES.slice(1).map(p=>{
+      {/* 6 pages in 3-col grid */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px",marginBottom:"5px"}}>
+        {PAGES.slice(1,7).map(p=>{
           const active = cur===p.href;
           return (
             <a key={p.href} href={p.href} style={{
-              display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-              padding:"9px 4px", textDecoration:"none",
+              display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+              padding:"9px 4px",textDecoration:"none",
               background: active ? p.accent : "rgba(255,255,255,0.02)",
               border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
-              borderRadius:"8px", textAlign:"center",
-              opacity: active ? 1 : 0.75,
+              borderRadius:"8px",textAlign:"center",
               pointerEvents: active ? "none" : "auto",
             }}>
-              <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.35)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
+              <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
                 {p.label}
               </div>
             </a>
           );
         })}
-        {/* CERRAR SESIÓN — always visible as 8th button */}
+      </div>
+
+      {/* Bottom row: Noticias + Cerrar Sesión — equal width side by side */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px"}}>
+        {[PAGES[7]].map(p=>{
+          const active = cur===p.href;
+          return (
+            <a key={p.href} href={p.href} style={{
+              display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+              padding:"9px 4px",textDecoration:"none",
+              background: active ? p.accent : "rgba(255,255,255,0.02)",
+              border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
+              borderRadius:"8px",textAlign:"center",
+              pointerEvents: active ? "none" : "auto",
+            }}>
+              <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal"}}>
+                {p.label}
+              </div>
+            </a>
+          );
+        })}
+        {/* CERRAR SESIÓN — same height, fills remaining column */}
         <button onClick={logout} style={{
-          display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-          padding:"9px 4px", cursor:"pointer",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+          padding:"9px 4px",cursor:"pointer",
           background:"rgba(255,107,107,0.05)",
-          border:"1px solid rgba(255,107,107,0.15)",
-          borderRadius:"8px", textAlign:"center",
+          border:"1px solid rgba(255,107,107,0.18)",
+          borderRadius:"8px",textAlign:"center",
+          width:"100%",
         }}>
-          <div style={{fontSize:"10px",color:"rgba(255,107,107,0.6)",fontFamily:"monospace",letterSpacing:"0.04em",lineHeight:"1.3"}}>
+          <div style={{fontSize:"10px",color:"rgba(255,107,107,0.55)",fontFamily:"monospace",letterSpacing:"0.04em"}}>
             Cerrar Sesión
           </div>
         </button>
