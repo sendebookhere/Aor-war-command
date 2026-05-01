@@ -164,10 +164,12 @@ export default function Puntos({onBack}) {
             Cada semana los miembros votan por el jugador más determinante. El ganador recibe el título de <strong style={{color:"#FFD700"}}>Guerrero Implacable</strong> y aparece al frente del ranking.
           </div>
           {[
-            {label:"Votar (cualquier registrado: Conquistador/Refuerzos/Reserva)",pts:"+3",color:"#A8FF78",desc:"Se acreditan al votar, independientemente del resultado"},
-            {label:"Ser elegido Guerrero Implacable",pts:"+10",color:"#FFD700",desc:"El jugador con más puntos de votación al cierre de semana"},
-            {label:"2 semanas consecutivas elegido",pts:"+20",color:"#FFD700",desc:"Racha de 2"},
-            {label:"3+ semanas consecutivas",pts:"+30+",color:"#FFD700",desc:"El bonus sube 10 por cada semana adicional"},
+            {label:"Votar (Conquistador/Refuerzos/Reserva registrados)",pts:"+3",color:"#A8FF78",desc:"Se acreditan al votar independientemente del resultado"},
+            {label:"Más votado de la semana — Guerrero Implacable",pts:"+10",color:"#FFD700",desc:"El jugador con mayor puntaje de votación ponderada al cierre"},
+            {label:"Mayor puntaje de puntos en la jornada",pts:"+10",color:"#40E0FF",desc:"El jugador con más puntos ganados en esa guerra específica"},
+            {label:"Ser AMBOS: más votado Y mayor puntaje",pts:"+10",color:"#A8FF78",desc:"Bonus adicional si el mismo jugador gana los dos reconocimientos — total +30"},
+            {label:"2 semanas consecutivas como Guerrero Implacable",pts:"+20",color:"#FFD700",desc:"El bonus de votación sube 10 por cada semana adicional de racha"},
+            {label:"3+ semanas consecutivas",pts:"+30+",color:"#FFD700",desc:"El bonus sigue creciendo +10 por semana"},
           ].map(r=>(
             <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 10px",background:r.color+"09",borderRadius:"6px",border:"1px solid "+r.color+"22",marginBottom:"4px"}}>
               <div style={{flex:1}}><span style={{fontSize:"11px",color:r.color,fontWeight:"bold"}}>{r.label}</span><div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}}>{r.desc}</div></div>

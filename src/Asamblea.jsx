@@ -124,7 +124,7 @@ export default function Asamblea() {
 
               {/* Most voted */}
               <div style={{background:"linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,215,0,0.02))",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"10px",padding:"14px"}}>
-                <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>MAS VOTADO</div>
+                <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>MAS VOTADO +10 pts</div>
                 {winner ? (
                   <>
                     <div style={{fontFamily:"serif",fontSize:"18px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{winner}</div>
@@ -175,8 +175,8 @@ export default function Asamblea() {
                 const isDouble = winner===top.name;
                 return (
                   <div style={{background:isDouble?"linear-gradient(135deg,rgba(168,255,120,0.1),rgba(255,215,0,0.05))":"linear-gradient(135deg,rgba(168,255,120,0.06),rgba(168,255,120,0.01))",border:"1px solid "+(isDouble?"rgba(168,255,120,0.4)":"rgba(168,255,120,0.2)"),borderRadius:"10px",padding:"14px",position:"relative"}}>
-                    {isDouble && <div style={{position:"absolute",top:"8px",right:"8px",fontSize:"8px",color:"#A8FF78",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"4px",padding:"2px 6px",fontFamily:"monospace"}}>+10 BONUS</div>}
-                    <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>MAYOR PUNTAJE</div>
+                    {isDouble && <div style={{position:"absolute",top:"8px",right:"8px",fontSize:"8px",color:"#A8FF78",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"4px",padding:"2px 6px",fontFamily:"monospace"}}>+10 EXTRA = 30 TOTAL</div>}
+                    <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>MAYOR PUNTAJE +10 pts</div>
                     <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>
                     <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>
                     {breakdown.map(x=>(
