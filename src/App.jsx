@@ -1051,7 +1051,7 @@ function UserActivityTable({logs}) {
                 <td style={{textAlign:"center",color:p.propaganda?"#C8A2FF":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.propaganda?"bold":"normal"}}>{p.propaganda||"—"}</td>
                 <td style={{textAlign:"center",color:p.diff_votes?"#FF6B6B":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.diff_votes?"bold":"normal"}}>{p.diff_votes||"—"}</td>
                 <td style={{textAlign:"center",color:p.assembly_votes?"#FFD700":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.assembly_votes?"bold":"normal"}}>{p.assembly_votes||"—"}</td>
-                <td style={{textAlign:"center",padding:"5px 8px"}}>{p.registered_week?<span style={{color:"#A8FF78",fontWeight:"bold"}}>✓</span>:<span style={{color:"rgba(255,255,255,0.15)"}}>—</span>}</td>
+                <td style={{textAlign:"center",color:p.registered_week?"#A8FF78":"rgba(255,255,255,0.15)",padding:"5px 8px",fontFamily:"monospace"}}>{p.registered_week||"—"}</td>
               </tr>
             ))}
           </tbody>

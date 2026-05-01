@@ -172,11 +172,17 @@ export default function Asamblea() {
                   {l:"Bandido post",v:top.pt_bandido_post||0},
                   {l:"Penalizaciones",v:-((top.pt_penalizacion||0)+(top.pt_no_aparecio||0)+(top.pt_ignoro_orden||0)*2+(top.pt_abandono||0)*2+(top.pt_inactivo_4h||0)*3+(top.pt_bandido_pre||0))},
                 ].filter(x=>x.v!==0);
-                const isDouble = winner===top.name;
+                // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
+const topPts2 = ranked[1]?tp(ranked[1]):0;
+const isUniqueTop = topPts > topPts2;
+const isDouble = isUniqueTop && winner===top.name;
                 return (
                   <div style={{background:isDouble?"linear-gradient(135deg,rgba(168,255,120,0.1),rgba(255,215,0,0.05))":"linear-gradient(135deg,rgba(168,255,120,0.06),rgba(168,255,120,0.01))",border:"1px solid "+(isDouble?"rgba(168,255,120,0.4)":"rgba(168,255,120,0.2)"),borderRadius:"10px",padding:"14px",position:"relative"}}>
                     {isDouble && <div style={{position:"absolute",top:"8px",right:"8px",fontSize:"8px",color:"#A8FF78",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"4px",padding:"2px 6px",fontFamily:"monospace"}}>+10 EXTRA = 30 TOTAL</div>}
-                    <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>MAYOR PUNTAJE +10 pts</div>
+                    <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>
+                    {isUniqueTop?"MAYOR PUNTAJE +10 pts":"EMPATE EN PUNTAJE"}
+                  </div>
+                  {!isUniqueTop && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",fontFamily:"monospace",marginBottom:"6px"}}>PUNTOS DIVIDIDOS: cada empate recibe +1 pt</div>}
                     <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>
                     <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>
                     {breakdown.map(x=>(
@@ -224,7 +230,7 @@ export default function Asamblea() {
             <div>
               <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Hola, <strong style={{color:"#FFD700"}}>{playerName}</strong>. Tu voto vale <strong style={{color:"#FFD700"}}>{voterWeight(me)} puntos</strong>.</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px",marginBottom:"10px",maxHeight:"200px",overflow:"auto"}}>
-                {players.filter(p=>String(p.id)!==String(playerId) && p.registered_week===week).map(p=>(
+                {players.filter(p=>String(p.id)!==String(playerId) && p.registered_week===week && ["siempre","intermitente","solo_una"].includes(p.availability)).map(p=>(
                   <button key={p.id} onClick={()=>setSelectedVote(String(p.id))}
                     style={{padding:"8px 10px",borderRadius:"6px",fontSize:"12px",cursor:"pointer",textAlign:"left",
                       background:selectedVote===String(p.id)?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.02)",
