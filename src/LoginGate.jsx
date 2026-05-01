@@ -77,43 +77,54 @@ function LoginScreen({onLogin}) {
     if (!selected) return;
     if (!phoneInput.trim()) { setError("wrong"); return; }
     setVerifying(true);
+    // Normalize phone: strip spaces, dashes, and allow entry without leading +
+    function normalizePhone(p) {
+      if (!p) return "";
+      p = p.replace(/[\s\-]/g,"");
+      if (!p.startsWith("+")) p = "+"+p;
+      return p;
+    }
     const val = phoneInput.trim();
     let ok = false;
     if (mode === "phone") {
-      ok = selected.phone && selected.phone.replace(/\s/g,"") === val.replace(/\s/g,"");
+      ok = selected.phone && normalizePhone(selected.phone) === normalizePhone(val);
     } else {
-      ok = selected.unique_code && selected.unique_code === val;
+      ok = selected.unique_code && selected.unique_code === val.replace(/\D/g,"").slice(0,6);
     }
     if (!ok) {
-      // Log failed attempt
-      await supabase.from("user_access_logs").insert({
-        player_id: selected.id, player_name: selected.name,
-        method: "failed_"+mode, page: window.location.pathname,
-        accessed_at: new Date().toISOString(),
-        session_id: localStorage.getItem("aor_sid")||"unknown",
-      }).catch(()=>{});
+      // Log failed attempt — wrapped in try/catch so it never hangs
+      try {
+        await supabase.from("user_access_logs").insert({
+          player_id: selected.id, player_name: selected.name,
+          method: "failed_"+mode, page: window.location.pathname,
+          accessed_at: new Date().toISOString(),
+        });
+      } catch(e) {}
       setVerifying(false);
       setPhoneInput("");
       if (!selected.phone && !selected.unique_code) setError("not_registered");
       else setError("wrong");
       return;
     }
-    // Log success
-    await supabase.from("user_access_logs").insert({
-      player_id: selected.id, player_name: selected.name,
-      method: mode, page: window.location.pathname,
-      accessed_at: new Date().toISOString(),
-      session_id: localStorage.getItem("aor_sid")||"unknown",
-    }).catch(()=>{});
-    // +1pt for code
+    // Log success — all in try/catch so nothing blocks login
+    try {
+      await supabase.from("user_access_logs").insert({
+        player_id: selected.id, player_name: selected.name,
+        method: mode, page: window.location.pathname,
+        accessed_at: new Date().toISOString(),
+      });
+    } catch(e) {}
+    // +1pt for code usage (once per day)
     if (mode === "code") {
-      const today = new Date().toISOString().slice(0,10);
-      const {data:logs} = await supabase.from("user_access_logs")
-        .select("id").eq("player_id",selected.id).eq("method","code")
-        .gte("accessed_at",today+"T00:00:00Z");
-      if (logs && logs.length <= 1) {
-        await supabase.from("players").update({pts_acumulados:(selected.pts_acumulados||0)+1}).eq("id",selected.id);
-      }
+      try {
+        const today = new Date().toISOString().slice(0,10);
+        const {data:logs} = await supabase.from("user_access_logs")
+          .select("id").eq("player_id",selected.id).eq("method","code")
+          .gte("accessed_at",today+"T00:00:00Z");
+        if (logs && logs.length <= 1) {
+          await supabase.from("players").update({pts_acumulados:(selected.pts_acumulados||0)+1}).eq("id",selected.id);
+        }
+      } catch(e) {}
     }
     setVerifying(false);
     onLogin(selected);
