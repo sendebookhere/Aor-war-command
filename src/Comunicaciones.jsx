@@ -110,11 +110,14 @@ export default function Comunicaciones() {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",paddingBottom:"40px"}}>
 
+      <div style={{maxWidth:"560px",margin:"0 auto",padding:"20px 20px 0"}}>
+        <NavBar current="/propaganda"/>
+      </div>
       {/* Header */}
-      <div style={{borderBottom:"1px solid rgba(64,224,255,0.1)",padding:"20px 20px 16px"}}>
+      <div style={{borderBottom:"1px solid rgba(200,162,255,0.1)",padding:"0 20px 16px"}}>
         <div style={{maxWidth:"560px",margin:"0 auto"}}>
-          <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(64,224,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
-          <div style={{fontSize:"22px",color:"#FFD700",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
+          <div style={{fontSize:"9px",letterSpacing:"0.5em",color:"rgba(200,162,255,0.35)",marginBottom:"4px",fontFamily:"monospace"}}>ANTIGUA ORDEN — PROPAGANDA</div>
+          <div style={{fontSize:"22px",color:"#C8A2FF",fontFamily:"serif",marginBottom:"4px"}}>[AOR] Propaganda — Difusión del Clan</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.35)"}}>Mensajes preaprobados por el comando. Cópialos y pégalos en el chat general del juego.</div>
 
         </div>
