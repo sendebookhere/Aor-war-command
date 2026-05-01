@@ -115,19 +115,79 @@ export default function Asamblea() {
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/asamblea"/>
         <PageHeader page="/asamblea"/>
-        {/* Current winner */}
-        {winner && (
-          <div style={{background:"linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.03))",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"12px",padding:"20px",marginBottom:"20px",textAlign:"center"}}>
-            <div style={{fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>GUERRERO IMPLACABLE — {week}</div>
-            <div style={{fontFamily:"serif",fontSize:"26px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px"}}>{winner}</div>
-            <div style={{fontSize:"12px",color:"rgba(255,255,255,0.4)"}}>{sorted[0]?.[1]} puntos de votación · {votes.length} votos emitidos</div>
-            <div style={{marginTop:"12px"}}>
-              {sorted.slice(0,5).map(([name,pts],i)=>(
-                <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px"}}>
-                  <span style={{fontSize:"12px",color:i===0?"#FFD700":"rgba(255,255,255,0.5)"}}>{i+1}. {name}</span>
-                  <span style={{fontSize:"12px",color:i===0?"#FFD700":"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>{pts} pts</span>
-                </div>
-              ))}
+        {/* Current standings — parallel display */}
+        {(winner || players.length > 0) && (
+          <div style={{marginBottom:"20px"}}>
+            <div style={{fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"12px",textAlign:"center"}}>SEMANA {week}</div>
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"12px"}}>
+
+              {/* Most voted */}
+              <div style={{background:"linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,215,0,0.02))",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"10px",padding:"14px"}}>
+                <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>MAS VOTADO</div>
+                {winner ? (
+                  <>
+                    <div style={{fontFamily:"serif",fontSize:"18px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{winner}</div>
+                    <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",marginBottom:"8px"}}>
+                      {sorted[0]?.[1]} pts de votación
+                    </div>
+                    {sorted[1] && (
+                      <div style={{fontSize:"10px",color:"rgba(255,107,107,0.6)",background:"rgba(255,107,107,0.06)",borderRadius:"4px",padding:"4px 6px",marginBottom:"8px"}}>
+                        +{(sorted[0][1]-sorted[1][1])} pts sobre {sorted[1][0]}
+                      </div>
+                    )}
+                    <div style={{fontSize:"9px",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"4px"}}>{votes.length} votos emitidos</div>
+                    {sorted.slice(1,4).map(([name,pts],i)=>(
+                      <div key={name} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <span style={{color:"rgba(255,255,255,0.4)"}}>{i+2}. {name}</span>
+                        <span style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{pts}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div style={{fontSize:"11px",color:"rgba(255,255,255,0.25)"}}>Sin votos aún</div>
+                )}
+              </div>
+
+              {/* Highest points */}
+              {(() => {
+                const ranked = [...players].filter(p=>p.active).sort((a,b)=>{
+                  const pa = (a.pt_registro||0)+(a.pt_disponibilidad_declarada||0)+(a.pt_disponibilidad||0)+(a.pt_obediencia||0)+(a.pt_batallas_ganadas||0)*2+(a.pt_batallas_perdidas||0)+(a.pt_defensas||0)+(a.pt_bonus||0)+(a.pt_bandido_post||0)+((a.pt_batallas_ganadas||0)>=6?10:0)-(a.pt_penalizacion||0)-(a.pt_no_aparecio||0)-(a.pt_ignoro_orden||0)*2-(a.pt_abandono||0)*2-(a.pt_inactivo_4h||0)*3-(a.pt_bandido_pre||0);
+                  const pb = (b.pt_registro||0)+(b.pt_disponibilidad_declarada||0)+(b.pt_disponibilidad||0)+(b.pt_obediencia||0)+(b.pt_batallas_ganadas||0)*2+(b.pt_batallas_perdidas||0)+(b.pt_defensas||0)+(b.pt_bonus||0)+(b.pt_bandido_post||0)+((b.pt_batallas_ganadas||0)>=6?10:0)-(b.pt_penalizacion||0)-(b.pt_no_aparecio||0)-(b.pt_ignoro_orden||0)*2-(b.pt_abandono||0)*2-(b.pt_inactivo_4h||0)*3-(b.pt_bandido_pre||0);
+                  return pb-pa;
+                });
+                const top = ranked[0];
+                if (!top) return null;
+                const tp = p=>(p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)+(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)+(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+((p.pt_batallas_ganadas||0)>=6?10:0)-(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)-(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0);
+                const topPts = tp(top);
+                const breakdown = [
+                  {l:"Registro",v:top.pt_registro||0},
+                  {l:"Apareció",v:top.pt_disponibilidad||0},
+                  {l:"Órdenes",v:(top.pt_obediencia||0)*2},
+                  {l:"Batallas ganadas",v:(top.pt_batallas_ganadas||0)*2},
+                  {l:"Bonus 6+ bat.",v:(top.pt_batallas_ganadas||0)>=6?10:0},
+                  {l:"Batallas perdidas",v:top.pt_batallas_perdidas||0},
+                  {l:"Defensas",v:top.pt_defensas||0},
+                  {l:"Bonus completo",v:(top.pt_bonus||0)*5},
+                  {l:"Bandido post",v:top.pt_bandido_post||0},
+                  {l:"Penalizaciones",v:-((top.pt_penalizacion||0)+(top.pt_no_aparecio||0)+(top.pt_ignoro_orden||0)*2+(top.pt_abandono||0)*2+(top.pt_inactivo_4h||0)*3+(top.pt_bandido_pre||0))},
+                ].filter(x=>x.v!==0);
+                const isDouble = winner===top.name;
+                return (
+                  <div style={{background:isDouble?"linear-gradient(135deg,rgba(168,255,120,0.1),rgba(255,215,0,0.05))":"linear-gradient(135deg,rgba(168,255,120,0.06),rgba(168,255,120,0.01))",border:"1px solid "+(isDouble?"rgba(168,255,120,0.4)":"rgba(168,255,120,0.2)"),borderRadius:"10px",padding:"14px",position:"relative"}}>
+                    {isDouble && <div style={{position:"absolute",top:"8px",right:"8px",fontSize:"8px",color:"#A8FF78",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"4px",padding:"2px 6px",fontFamily:"monospace"}}>+10 BONUS</div>}
+                    <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>MAYOR PUNTAJE</div>
+                    <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>
+                    <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>
+                    {breakdown.map(x=>(
+                      <div key={x.l} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <span style={{color:"rgba(255,255,255,0.35)"}}>{x.l}</span>
+                        <span style={{color:x.v>=0?"rgba(168,255,120,0.6)":"rgba(255,107,107,0.6)",fontFamily:"monospace"}}>{x.v>0?"+":""}{x.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
