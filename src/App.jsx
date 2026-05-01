@@ -830,14 +830,7 @@ function MensajesTab({players}) {
 
   // Dynamic extra messages
   const [extraWa, setExtraWa] = useState([]);
-  const [waCards, setWaCards] = useState([
-    {id:"w1",title:"Registro grupo WA",desc:"Solo miembros del grupo de WhatsApp",content:"*[AOR] Registro de Guerra — Grupo WA*"},
-    {id:"w2",title:"Registro completo",desc:"Todos los miembros activos",content:"*[AOR] Registro de Guerra*"},
-    {id:"w3",title:"Reporte semanal",desc:"Ranking guerra actual",content:"*[AOR] Reporte Semanal*"},
-    {id:"w4",title:"Ranking acumulado",desc:"Sin bonus de rango",content:"*[AOR] Ranking Acumulado*"},
-    {id:"w5",title:"Aviso actividad minima",content:"*[AOR] Aviso de actividad*\n\nEstas bajo el minimo mensual (20 pts). Registrate: https://aor-war-command.vercel.app/registro"},
-    {id:"w6",title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!*\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos"},
-  ]);
+  const [waCards, setWaCards] = useState(null); // initialized in useEffect below
   const [extraGame,  setExtraGame]  = useState([]);
   const [gameCards,  setGameCards]  = useState([
     {id:"g1",title:"Defensa urgente",content:"<color=#FF6B6B>-- [AOR] ALERTA --</color>\nCastillo bajo ataque. Todos a defender.\n<color=#FFD700>Antigua Orden</color> no cede territorio."},
@@ -873,6 +866,20 @@ function MensajesTab({players}) {
 
   const waRegistrado   = waPlayers.filter(p=>p.registered_form);
   const waNoRegistrado = waPlayers.filter(p=>!p.registered_form);
+  // Initialize waCards with real content after players are available
+  const [waCardsReady, setWaCardsReady] = useState(false);
+  if (!waCardsReady && allActive.length > 0) {
+    setWaCardsReady(true);
+    setWaCards([
+      {id:"w1",title:`Registro grupo WA (${waRegistrado.length}/${waPlayers.length})`,desc:"Solo miembros del grupo de WhatsApp",content:buildWaRegistro()},
+      {id:"w2",title:"Registro completo",desc:"Todos los miembros activos",content:buildRegistro()},
+      {id:"w3",title:"Reporte semanal",desc:"Ranking guerra actual",content:buildSemanal()},
+      {id:"w4",title:"Ranking acumulado",desc:"Sin bonus de rango",content:buildAcumulado()},
+      {id:"w5",title:"Aviso actividad minima",desc:"Para jugadores bajo 20 pts",content:"*[AOR] Aviso de actividad* ⚠\n\nEstas bajo el minimo mensual (20 pts). Registrate para la proxima guerra:\nhttps://aor-war-command.vercel.app/registro"},
+      {id:"w6",title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!* ⚔\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos\n\nBuena suerte en batalla!"},
+    ]);
+  }
+
   const NAME_COLORS = ["#FFD700","#40E0FF","#A8FF78","#FF9F43","#FF6B6B","#C8A2FF","#FF79C6","#8BE9FD","#FFB86C","#50FA7B","#F1FA8C","#BD93F9","#FF5555","#7EFFF5"];
 
   function buildWaRegistro() {
@@ -915,7 +922,7 @@ function MensajesTab({players}) {
   return (
     <div style={{padding:"0 16px"}}>
       <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
-      {waCards.map((m,i)=><WaCard key={m.id||i} title={m.title} desc={m.desc} initialValue={m.content} onDelete={m.fixed?null:()=>setWaCards(prev=>prev.filter((_,j)=>j!==i))}/>)}
+      {(waCards||[]).map((m,i)=><WaCard key={m.id||i} title={m.title} desc={m.desc} initialValue={m.content} onDelete={()=>setWaCards(prev=>(prev||[]).filter((_,j)=>j!==i))}/>)}
       {extraWa.map(m=><WaCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraWa(prev=>prev.filter(x=>x.id!==m.id))}/>)}
       <button onClick={()=>{setNewType("wa");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(37,211,102,0.06)",border:"1px dashed rgba(37,211,102,0.25)",borderRadius:"8px",color:"rgba(37,211,102,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje WhatsApp</button>
 
@@ -1620,6 +1627,86 @@ function SeguridadTab({players}) {
         </div>
       ))}
 
+    </div>
+  );
+}
+
+
+// ── War Mode Switch ─────────────────────────────────────────────────────────
+function WarModeSwitch() {
+  const [mode, setMode] = useState(localStorage.getItem("aor_war_mode")||"classic");
+  const [saving, setSaving] = useState(false);
+
+  const modes = {
+    classic: {
+      label: "Modo Clásico",
+      desc: "Guerra de 2 días · Inicio 14:05 · Protección castillo 24h · Avanzada 20 min · Ritmo 90",
+      color: "#40E0FF",
+      details: [
+        "Duración: 2 días",
+        "Inicio fase guerra: 14:05",
+        "Protección inicial castillo: 24 horas",
+        "Protección avanzada tras captura: 20 minutos",
+        "Ritmo de movimiento: 90",
+        "Registro: lunes a viernes 7am Ecuador",
+        "Periodos: Primeras 24h (castillos) · Segundas 24h (ciudades)",
+      ]
+    },
+    new: {
+      label: "Modo Nuevo (Test)",
+      desc: "Guerra de 1 día · Inicio 18:00 · Protección castillo 18h · Avanzada 15 min · Ritmo 120",
+      color: "#FF9F43",
+      details: [
+        "Duración: 1 día (puede revertirse)",
+        "Inicio fase guerra: 18:00 (3h 55min más tarde)",
+        "Protección inicial castillo: 18 horas (antes 24h)",
+        "Protección avanzada tras captura: 15 minutos (antes 20min)",
+        "Ritmo de movimiento: 120 (33% más lento, stat inverso)",
+        "Registro: ajustar según horario",
+      ]
+    }
+  };
+
+  function switchMode(m) {
+    setSaving(true);
+    localStorage.setItem("aor_war_mode", m);
+    setMode(m);
+    setTimeout(()=>setSaving(false), 500);
+  }
+
+  const current = modes[mode];
+  const other = mode==="classic" ? "new" : "classic";
+  const otherMode = modes[other];
+
+  return (
+    <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"10px",padding:"14px",marginBottom:"14px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
+        <div>
+          <div style={{fontSize:"11px",color:current.color,fontWeight:"bold"}}>{current.label}</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.35)",marginTop:"2px",fontFamily:"monospace"}}>MODO DE GUERRA ACTIVO</div>
+        </div>
+        <button onClick={()=>switchMode(other)} disabled={saving} style={{padding:"6px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"rgba(255,255,255,0.5)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.05em"}}>
+          {saving?"...":"CAMBIAR A "+otherMode.label.toUpperCase()}
+        </button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px",marginBottom:"8px"}}>
+        {["classic","new"].map(m=>(
+          <div key={m} onClick={()=>switchMode(m)} style={{padding:"8px",borderRadius:"6px",cursor:"pointer",border:"1px solid "+(mode===m?modes[m].color+"55":"rgba(255,255,255,0.06)"),background:mode===m?modes[m].color+"0A":"rgba(255,255,255,0.01)"}}>
+            <div style={{fontSize:"10px",color:mode===m?modes[m].color:"rgba(255,255,255,0.4)",fontWeight:mode===m?"bold":"normal",marginBottom:"3px"}}>{modes[m].label}</div>
+            <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",lineHeight:"1.4"}}>{modes[m].desc}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:current.color+"08",borderRadius:"6px",padding:"8px 10px",borderLeft:"2px solid "+current.color+"44"}}>
+        {current.details.map((d,i)=>(
+          <div key={i} style={{fontSize:"9px",color:"rgba(255,255,255,0.45)",padding:"2px 0",fontFamily:"monospace"}}>{d}</div>
+        ))}
+      </div>
+      {mode==="new" && (
+        <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,159,67,0.06)",borderRadius:"4px",fontSize:"9px",color:"rgba(255,159,67,0.6)",fontFamily:"monospace"}}>
+          AVISO: Modo en prueba — el juego puede revertir a configuración clásica
+        </div>
+      )}
     </div>
   );
 }
@@ -2547,6 +2634,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
             {/* Daily limit setting */}
             <DailyLimitSetting/>
+            <WarModeSwitch/>
             <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
 
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>➕ Agregar jugador</div>
