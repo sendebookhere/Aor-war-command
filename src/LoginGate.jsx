@@ -4,40 +4,35 @@ import { storeSession, clearSession } from "./SessionManager";
 
 export default function LoginGate({onLogin, children}) {
   const [authEnabled, setAuthEnabled] = useState(null);
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(()=>{
+    // Check session immediately (sync) to avoid flash
+    try {
+      const s = sessionStorage.getItem("aor_session");
+      return s ? JSON.parse(s) : null;
+    } catch { return null; }
+  });
   const [checking, setChecking] = useState(true);
 
   useEffect(()=>{
-    // Check if auth is enabled
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
-        const enabled = data?.value === "true";
-        setAuthEnabled(enabled);
-        if (!enabled) {
-          setChecking(false);
-          return;
-        }
-        // Check existing session
-        const s = sessionStorage.getItem("aor_session");
-        if (s) {
-          try {
-            const parsed = JSON.parse(s);
-            setSession(parsed);
-            onLogin && onLogin(parsed);
-          } catch {}
-        }
+        setAuthEnabled(data?.value === "true");
         setChecking(false);
-      });
+      })
+      .catch(()=>{ setAuthEnabled(false); setChecking(false); });
   },[]);
 
   if (checking) return <SplashScreen/>;
-  if (!authEnabled) return children;
-  if (session) return children;
+  if (!authEnabled) return children;   // Auth disabled → pass through
+  if (session) return children;         // Already logged in → pass through
 
+  // Not logged in → show login screen
   return <LoginScreen onLogin={(player)=>{
     storeSession(player);
-    setSession({id:player.id,name:player.name,clan_role:player.clan_role});
+    setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
+    // Force re-render of children after login
+    window.location.reload();
   }}/>;
 }
 
