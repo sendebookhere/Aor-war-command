@@ -3103,41 +3103,9 @@ function AdminAuth({onAuth}) {
       {/* Header */}
       <PageHeader page="/"/>
 
-      {/* NavBar-style grid — quick nav */}
-      <div style={{width:"100%",maxWidth:"360px",marginBottom:"16px",animation:"fadeIn 0.6s ease"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px"}}>
-          {gridPages.map(p=>(
-            <a key={p.href} href={p.href} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"9px 4px",textDecoration:"none",background:p.accent,border:"1px solid "+p.border,borderRadius:"8px",textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:p.color,fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:"bold",lineHeight:"1.3"}}>{p.label}</div>
-            </a>
-          ))}
-        </div>
-        <div style={{height:"1px",background:"rgba(255,255,255,0.04)",margin:"14px 0"}}/>
-      </div>
-
-      {/* Public links — FIRST, prominent */}
-      <div style={{width:"100%",maxWidth:"360px",marginBottom:"28px",animation:"fadeIn 0.7s ease"}}>
-        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.3em",textAlign:"center",marginBottom:"12px"}}>ACCESO ABIERTO — SIN PIN</div>
-        {publicLinks.map(l=>(
-          <a key={l.href} href={l.href} style={{
-            display:"flex",alignItems:"center",gap:"12px",
-            padding:"13px 16px",marginBottom:"8px",
-            background:l.color+"08",
-            border:"1px solid "+l.color+"30",
-            borderRadius:"10px",
-            textDecoration:"none",
-            transition:"all 0.15s",
-          }}
-          onMouseEnter={e=>{ e.currentTarget.style.background=l.color+"14"; e.currentTarget.style.borderColor=l.color+"55"; }}
-          onMouseLeave={e=>{ e.currentTarget.style.background=l.color+"08"; e.currentTarget.style.borderColor=l.color+"30"; }}>
-            <span style={{fontSize:"20px",flexShrink:0}}>{l.icon}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:"13px",color:l.color,fontWeight:"bold",marginBottom:"2px"}}>{l.label}</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>{l.desc}</div>
-            </div>
-            <span style={{fontSize:"12px",color:l.color+"60"}}>›</span>
-          </a>
-        ))}
+      {/* Same NavBar as all other pages — positioned at top */}
+      <div style={{width:"100%",maxWidth:"480px",marginBottom:"24px",animation:"fadeIn 0.6s ease"}}>
+        <NavBar current="/"/>
       </div>
 
       {/* Divider */}
