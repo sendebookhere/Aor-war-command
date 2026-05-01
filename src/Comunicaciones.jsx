@@ -195,7 +195,9 @@ export default function Comunicaciones() {
         {msgs.map((msg, idx) => {
           const todayLogs = playerId ? logsToday(playerId) : [];
           const alreadyUsed = todayLogs.some(l=>l.msg_id===msg.id);
-          const limitReached = todayLogs.length >= 2;
+          const limitReached = todayLogs.length >= dailyLimit;
+          const isBlocked = blockUntil && blockUntil > Date.now();
+          const hasCooldown = playerId && cooldownRemaining(playerId) > 0;
           const canUse = playerId && !limitReached && !isBlocked && !hasCooldown;
 
           return (
