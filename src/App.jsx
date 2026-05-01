@@ -238,15 +238,23 @@ function earlyBonusTimeLeft() {
   return `${h}h ${m}m`;
 }
 function isRegistrationOpen() {
-  // Open Mon(1)–Thu(4) all day + Fri(5) before 7am Ecuador (UTC-5)
-  // Closed: Fri 7am+ (war starts), Sat(6), Sun(0)
+  // Registration closes 1 hour before war start
+  // Classic mode: war starts Friday 7am Ecuador → closes Thursday at some point? No.
+  // Actually: closes Friday 7am Ecuador (classic) or Friday 17:00 Ecuador (new mode)
+  const warMode = localStorage.getItem("aor_war_mode") || "classic";
   const now = new Date();
-  const ec  = new Date(now.getTime() - 5*60*60*1000);
+  const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
   const day  = ec.getDay();
   const hour = ec.getHours();
-  if (day === 0) return false;                  // Sunday
-  if (day === 6) return false;                  // Saturday
-  if (day === 5 && hour >= 7) return false;     // Friday 7am+ (war in progress)
+  if (day === 0) return false; // Sunday
+  if (day === 6) return false; // Saturday
+  if (warMode === "new") {
+    // New mode: war starts Friday 18:00 Ecuador, register until 17:00
+    if (day === 5 && hour >= 17) return false;
+  } else {
+    // Classic: war starts Friday ~7:00am Ecuador (historical), register until 7am
+    if (day === 5 && hour >= 7) return false;
+  }
   return true;
 }
 
@@ -401,7 +409,12 @@ function RegistrationForm({onRegistered}) {
       <div style={{textAlign:"center",maxWidth:"360px"}}>
         <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
         <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
-        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>El registro abre los lunes y cierra el viernes a las 7:00am hora Ecuador cuando comienza la guerra.</div>
+        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>
+          El registro abre los lunes y cierra una hora antes de que comience la guerra del viernes.{" "}
+          {(localStorage.getItem("aor_war_mode")||"classic")==="new"
+            ? "Modo actual: cierra a las 17:00h Ecuador (guerra a las 18:00h)."
+            : "Modo actual: cierra a las 7:00am Ecuador."}
+        </div>
       </div>
       <NalguitasFooter/>
     </div>
