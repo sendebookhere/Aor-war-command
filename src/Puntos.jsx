@@ -8,7 +8,7 @@ export default function Puntos({onBack}) {
 <NavBar current="/puntos"/>
         <div style={{textAlign:"center",marginBottom:"24px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em"}}>ANTIGUA ORDEN</div>
-          <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Sistema de Puntos</div>
+          <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF9F43"}}>[AOR] Sistema de Puntos</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Cómo ganar y perder puntos en cada guerra</div>
         </div>
 

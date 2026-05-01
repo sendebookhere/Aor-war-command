@@ -965,6 +965,94 @@ function MensajesTab({players}) {
 
 
 // ── Visits Tab ──────────────────────────────────────────────────────────────
+
+// ── User Activity Table ─────────────────────────────────────────────────────
+function UserActivityTable({logs}) {
+  const [expanded, setExpanded] = useState(null);
+
+  // Group by player_name (from message_logs embedded in visits via player session)
+  // We use session_id to link visits + player names from message_logs
+  // For now: show all named activities from message_logs
+  const [msgLogs, setMsgLogs] = useState([]);
+  const [regLogs, setRegLogs] = useState([]);
+  const [voteLogs, setVoteLogs] = useState([]);
+  const [assemblyLogs, setAssemblyLogs] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(()=>{
+    Promise.all([
+      supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500),
+      supabase.from("players").select("id,name,registered_week,pt_stats,pts_acumulados,bp,level").eq("active",true),
+      supabase.from("difficulty_votes").select("*").order("created_at",{ascending:false}).limit(200),
+      supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(200),
+    ]).then(([m,p,d,av])=>{
+      setMsgLogs(m.data||[]);
+      setRegLogs(p.data||[]);
+      setVoteLogs(d.data||[]);
+      setAssemblyLogs(av.data||[]);
+      setLoaded(true);
+    });
+  },[]);
+
+  if (!loaded) return <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>Cargando actividad por usuario...</div>;
+
+  // Build per-player activity summary
+  const playerMap = {};
+  regLogs.forEach(p=>{
+    if (!playerMap[p.name]) playerMap[p.name]={name:p.name,registros:0,bp_updates:0,propaganda:0,diff_votes:0,assembly_votes:0,pts_acumulados:p.pts_acumulados||0};
+    playerMap[p.name].registered_week = p.registered_week;
+    playerMap[p.name].bp = p.bp;
+    playerMap[p.name].level = p.level;
+  });
+  msgLogs.forEach(m=>{
+    if (!playerMap[m.player_name]) playerMap[m.player_name]={name:m.player_name,registros:0,bp_updates:0,propaganda:0,diff_votes:0,assembly_votes:0};
+    playerMap[m.player_name].propaganda = (playerMap[m.player_name].propaganda||0)+1;
+  });
+  voteLogs.forEach(v=>{
+    if (!playerMap[v.player_name]) playerMap[v.player_name]={name:v.player_name,registros:0,bp_updates:0,propaganda:0,diff_votes:0,assembly_votes:0};
+    playerMap[v.player_name].diff_votes = (playerMap[v.player_name].diff_votes||0)+1;
+  });
+  assemblyLogs.forEach(v=>{
+    if (!playerMap[v.voter_name]) playerMap[v.voter_name]={name:v.voter_name,registros:0,bp_updates:0,propaganda:0,diff_votes:0,assembly_votes:0};
+    playerMap[v.voter_name].assembly_votes = (playerMap[v.voter_name].assembly_votes||0)+1;
+  });
+
+  const players = Object.values(playerMap).filter(p=>p.propaganda>0||p.diff_votes>0||p.assembly_votes>0||p.registered_week);
+  const sorted = players.sort((a,b)=>((b.propaganda||0)+(b.diff_votes||0)+(b.assembly_votes||0))-((a.propaganda||0)+(a.diff_votes||0)+(a.assembly_votes||0)));
+
+  if (sorted.length===0) return null;
+
+  return (
+    <div style={{marginTop:"20px"}}>
+      <div style={{fontFamily:"serif",color:"rgba(255,255,255,0.6)",fontSize:"12px",marginBottom:"8px"}}>Actividad registrada por usuario (solo usuarios identificados)</div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:"10px"}}>
+          <thead>
+            <tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+              <th style={{textAlign:"left",color:"rgba(255,255,255,0.4)",padding:"4px 8px",fontWeight:"normal"}}>Jugador</th>
+              <th style={{textAlign:"center",color:"#C8A2FF",padding:"4px 8px",fontWeight:"normal"}}>Propaganda</th>
+              <th style={{textAlign:"center",color:"#FF6B6B",padding:"4px 8px",fontWeight:"normal"}}>Inteligencia</th>
+              <th style={{textAlign:"center",color:"#FFD700",padding:"4px 8px",fontWeight:"normal"}}>Asamblea</th>
+              <th style={{textAlign:"center",color:"#A8FF78",padding:"4px 8px",fontWeight:"normal"}}>Registrado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map(p=>(
+              <tr key={p.name} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                <td style={{color:"rgba(255,255,255,0.6)",padding:"5px 8px",fontWeight:"bold"}}>{p.name}</td>
+                <td style={{textAlign:"center",color:p.propaganda?"#C8A2FF":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.propaganda?"bold":"normal"}}>{p.propaganda||"—"}</td>
+                <td style={{textAlign:"center",color:p.diff_votes?"#FF6B6B":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.diff_votes?"bold":"normal"}}>{p.diff_votes||"—"}</td>
+                <td style={{textAlign:"center",color:p.assembly_votes?"#FFD700":"rgba(255,255,255,0.15)",padding:"5px 8px",fontWeight:p.assembly_votes?"bold":"normal"}}>{p.assembly_votes||"—"}</td>
+                <td style={{textAlign:"center",padding:"5px 8px"}}>{p.registered_week?<span style={{color:"#A8FF78",fontWeight:"bold"}}>✓</span>:<span style={{color:"rgba(255,255,255,0.15)"}}>—</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function VisitsTab() {
   const [visits, setVisits]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1273,6 +1361,9 @@ function VisitsTab() {
       <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",marginTop:"10px"}}>
         Cargas / Únicos · Sesión = un dispositivo/navegador · Recurrente = volvió 2+ veces · Multipágina = visitó 2+ secciones
       </div>
+
+      {/* Per-user named activity */}
+      <UserActivityTable logs={visits}/>
     </div>
   );
 }
