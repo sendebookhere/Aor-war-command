@@ -1,3 +1,4 @@
+import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 import { useState, useEffect } from "react";
@@ -431,8 +432,8 @@ export default function PublicReport() {
         {/* Header */}
         <div style={{textAlign:"center",marginBottom:"20px"}}>
           <div style={{fontSize:"9px",color:"rgba(64,224,255,0.35)",letterSpacing:"0.4em",fontFamily:"monospace"}}>ANTIGUA ORDEN</div>
-          <div style={{fontFamily:"serif",fontSize:"22px",color:"#40E0FF"}}>[AOR] Ranking</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Toca un nombre para ver perfil ↓</div>
+          <PageHeader page="/reporte"/>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"-16px",marginBottom:"12px",textAlign:"center"}}>Toca un nombre para ver perfil ↓</div>
           <div style={{display:"flex",gap:"8px",justifyContent:"center",marginTop:"10px",flexWrap:"wrap"}}>
             <span style={{fontSize:"10px",color:"#25D366",background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"12px",padding:"3px 10px"}}>📱 WA: {waReg}/{waTotal} reg.</span>
             <span style={{fontSize:"10px",color:"#FFD700",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"12px",padding:"3px 10px"}}>📋 {totalReg}/{players.length} registrados</span>

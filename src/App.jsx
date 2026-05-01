@@ -1,4 +1,5 @@
 import NavBar from "./NavBar";
+import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
 import Inteligencia from "./Inteligencia";
@@ -431,7 +432,7 @@ function RegistrationForm({onRegistered}) {
         <NavBar current="/registro"/>
         <div style={{textAlign:"center",marginBottom:"16px"}}>
           <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em",marginBottom:"4px"}}>ANTIGUA ORDEN</div>
-          <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>[AOR] Registro de Guerra</div>
+          <PageHeader page="/registro"/>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Confirma tu participación y recibe tus puntos</div>
         </div>
 

@@ -1,3 +1,4 @@
+import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NavBar from "./NavBar";
@@ -114,14 +115,7 @@ export default function Asamblea() {
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/asamblea"/>
 
-        {/* Header */}
-        <div style={{textAlign:"center",marginBottom:"24px"}}>
-          <div style={{fontSize:"9px",letterSpacing:"0.4em",color:"rgba(255,255,255,0.25)",fontFamily:"monospace",marginBottom:"4px"}}>ANTIGUA ORDEN</div>
-          <div style={{fontSize:"16px",color:"rgba(255,255,255,0.15)",marginBottom:"2px"}}>⚔</div>
-          <div style={{fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"6px"}}>[AOR]</div>
-          <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>Asamblea</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>Elige al Guerrero Implacable de la semana</div>
-        </div>
+        <PageHeader page="/asamblea"/>
 
         {/* Current winner */}
         {winner && (
