@@ -152,7 +152,7 @@ export default function Asamblea() {
               {/* Highest points */}
               {(() => {
                 const eligible = ["siempre","intermitente","solo_una"];
-                const ranked = [...players].filter(p=>p.active && p.registered_week===week && eligible.includes(p.availability)).sort((a,b)=>{
+                const ranked = [...players].filter(p=>p.active && eligible.includes(p.availability)).sort((a,b)=>{
                   const pa = (a.pt_registro||0)+(a.pt_disponibilidad_declarada||0)+(a.pt_disponibilidad||0)+(a.pt_obediencia||0)+(a.pt_batallas_ganadas||0)*2+(a.pt_batallas_perdidas||0)+(a.pt_defensas||0)+(a.pt_bonus||0)+(a.pt_bandido_post||0)+((a.pt_batallas_ganadas||0)>=6?10:0)-(a.pt_penalizacion||0)-(a.pt_no_aparecio||0)-(a.pt_ignoro_orden||0)*2-(a.pt_abandono||0)*2-(a.pt_inactivo_4h||0)*3-(a.pt_bandido_pre||0);
                   const pb = (b.pt_registro||0)+(b.pt_disponibilidad_declarada||0)+(b.pt_disponibilidad||0)+(b.pt_obediencia||0)+(b.pt_batallas_ganadas||0)*2+(b.pt_batallas_perdidas||0)+(b.pt_defensas||0)+(b.pt_bonus||0)+(b.pt_bandido_post||0)+((b.pt_batallas_ganadas||0)>=6?10:0)-(b.pt_penalizacion||0)-(b.pt_no_aparecio||0)-(b.pt_ignoro_orden||0)*2-(b.pt_abandono||0)*2-(b.pt_inactivo_4h||0)*3-(b.pt_bandido_pre||0);
                   return pb-pa;
@@ -242,7 +242,7 @@ const isDouble = isUniqueTop && winner===top.name;
             <div>
               <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Hola, <strong style={{color:"#FFD700"}}>{playerName}</strong>. Tu voto vale <strong style={{color:"#FFD700"}}>{voterWeight(me)} puntos</strong>.</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px",marginBottom:"10px",maxHeight:"200px",overflow:"auto"}}>
-                {players.filter(p=>String(p.id)!==String(playerId) && p.registered_week===week && ["siempre","intermitente","solo_una"].includes(p.availability)).map(p=>(
+                {players.filter(p=>String(p.id)!==String(playerId) && ["siempre","intermitente","solo_una"].includes(p.availability)).map(p=>(
                   <button key={p.id} onClick={()=>setSelectedVote(String(p.id))}
                     style={{padding:"8px 10px",borderRadius:"6px",fontSize:"12px",cursor:"pointer",textAlign:"left",
                       background:selectedVote===String(p.id)?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.02)",
