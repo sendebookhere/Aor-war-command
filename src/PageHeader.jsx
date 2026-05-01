@@ -24,7 +24,7 @@ export const PAGE_SUBTITLES = {
   "/registro":     "Confirma tu participación y suma puntos",
   "/reporte":      "Posiciones, perfiles y puntos del clan",
   "/puntos":       "Cómo ganar y perder puntos en cada guerra",
-  "/propaganda":   "Mensajes preaprobados para difundir en el clan",
+  "/propaganda":   "Mensajes preaprobados para difundir en el chat general",
   "/inteligencia": "Registro de guerras, rivales y análisis táctico",
   "/asamblea":     "Elige al Guerrero Implacable de la semana",
 };
