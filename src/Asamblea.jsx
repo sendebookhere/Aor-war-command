@@ -16,15 +16,26 @@ function getWarWeek() {
   return `${year}-W${week}`;
 }
 
+// Rank weight — exact per role
 const RANK_WEIGHTS = {
-  "Líder":3, "Co-Líder":3, "Oficial":2, "Veterano":2,
+  "Líder":5,     // PUNK'Z
+  "Co-Líder":4,  // NALGUITAS, limonloco, Iberico[E]
+  "Oficial":3,   // ODIN, iditxa
+  "Veterano":2,
   "Guerrero":1, "Soldado":1, "Recluta":1, "⚠ Vigilado":1,
 };
-const LEADER_WEIGHTS = {"PUNK'Z":5, "NALGUITAS":4, "limonloco":4, "Iberico[E]":4};
+// Availability bonus — additive on top of rank
+// Conquistador +3, Refuerzos +2, Reserva +1 (but Reserva adds nothing beyond rank base)
+const AVAIL_BONUS = { "siempre":3, "intermitente":2, "solo_una":1 };
 
 function voterWeight(player) {
-  if (LEADER_WEIGHTS[player.name]) return LEADER_WEIGHTS[player.name];
-  return RANK_WEIGHTS[player.clan_role] || 1;
+  const rank  = RANK_WEIGHTS[player.clan_role] || 1;
+  const bonus = AVAIL_BONUS[player.availability] || 0;
+  return rank + bonus;
+  // Examples: Punk'z Conquistador = 5+3 = 8
+  //           Nalguitas Refuerzos = 4+2 = 6
+  //           Oficial Reserva = 3+1 = 4
+  //           Guerrero Conquistador = 1+3 = 4
 }
 
 export default function Asamblea() {
@@ -32,6 +43,11 @@ export default function Asamblea() {
   const [votes, setVotes]       = useState([]);
   const [history, setHistory]   = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [votingEnabled, setVotingEnabled] = useState(true); // default open
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","voting_enabled").single()
+      .then(({data})=>{ if(data) setVotingEnabled(data.value!=="false"); });
+  },[]);
   const [playerName, setPlayerName] = useState(sessionStorage.getItem("aor_player_name")||"");
   const [playerId, setPlayerId] = useState(sessionStorage.getItem("aor_player_id")||null);
   const [nameInput, setNameInput] = useState(sessionStorage.getItem("aor_player_name")||"");
@@ -127,7 +143,7 @@ export default function Asamblea() {
                 <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>MAS VOTADO +10 pts</div>
                 {winner ? (
                   <>
-                    <div style={{fontFamily:"serif",fontSize:"18px",color:"#FFD700",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{winner}</div>
+                    <div style={{fontFamily:"serif",fontSize:"15px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{winner}</div>
                     <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",marginBottom:"8px"}}>
                       {sorted[0]?.[1]} pts de votación
                     </div>
@@ -197,8 +213,8 @@ const isDouble = isUniqueTop && winner===top.name;
                       </div>
                     );
                   })()}
-                  {isUniqueTop && <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>}
-                  {isUniqueTop && <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>}
+                  {isUniqueTop && <div style={{fontFamily:"serif",fontSize:"15px",color:"#A8FF78",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{top.name}</div>}
+                  {isUniqueTop && <div style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"4px"}}>{topPts>0?"+":""}{topPts} pts</div>}
                   {isUniqueTop && breakdown.map(x=>(
                       <div key={x.l} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <span style={{color:"rgba(255,255,255,0.35)"}}>{x.l}</span>
@@ -215,8 +231,53 @@ const isDouble = isUniqueTop && winner===top.name;
         {/* Voting */}
         <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
           <div style={{fontSize:"10px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>VOTAR — {week}</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)",marginBottom:"12px"}}>
-            Vota por el jugador más determinante de la semana. <strong style={{color:"#FFD700"}}>+3 puntos</strong> al votar. El ganador recibe <strong style={{color:"#FFD700"}}>+10 puntos</strong>. Pesos según rango: Líder=5pts, Co-Líder/Oficial=4pts, Veterano/Guerrero/Soldado=2-1pt.
+          <div style={{marginBottom:"14px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"8px"}}>MECÁNICA DE VOTACIÓN</div>
+
+            {/* Rank weights */}
+            <div style={{marginBottom:"8px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:"5px"}}>PESO POR RANGO</div>
+              {[
+                {label:"Líder — PUNK'Z",rank:5,color:"#FFD700"},
+                {label:"Co-Líder — NALGUITAS · limonloco · Iberico[E]",rank:4,color:"#FFD700"},
+                {label:"Oficial — ODIN · iditxa",rank:3,color:"#40E0FF"},
+                {label:"Veterano",rank:2,color:"#A8FF78"},
+                {label:"Guerrero · Soldado · Recluta",rank:1,color:"rgba(255,255,255,0.4)"},
+              ].map(r=>(
+                <div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px",border:"1px solid rgba(255,255,255,0.05)"}}>
+                  <span style={{fontSize:"9px",color:r.color,fontFamily:"Georgia,serif"}}>{r.label}</span>
+                  <span style={{fontSize:"10px",color:r.color,fontFamily:"monospace",fontWeight:"bold"}}>{r.rank}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Availability bonus */}
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:"5px"}}>+ BONUS POR DISPONIBILIDAD (SUMADO AL RANGO)</div>
+            <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
+              {[{a:"Conquistador",b:3,c:"#A8FF78"},{a:"Refuerzos",b:2,c:"#FFD700"},{a:"Reserva",b:1,c:"#FF9F43"}].map(x=>(
+                <div key={x.a} style={{flex:1,padding:"5px 4px",background:x.c+"08",border:"1px solid "+x.c+"22",borderRadius:"5px",textAlign:"center"}}>
+                  <div style={{fontSize:"9px",color:x.c,fontFamily:"Georgia,serif",marginBottom:"2px"}}>{x.a}</div>
+                  <div style={{fontSize:"13px",color:x.c,fontFamily:"monospace",fontWeight:"bold"}}>+{x.b}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rewards */}
+            <div style={{background:"rgba(255,215,0,0.04)",borderRadius:"6px",padding:"8px 10px",borderLeft:"2px solid rgba(255,215,0,0.3)"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"4px"}}>RECOMPENSAS</div>
+              {[
+                {t:"Por votar",v:"+3 pts",c:"#A8FF78"},
+                {t:"Más votado (único ganador)",v:"+10 pts",c:"#FFD700"},
+                {t:"Mayor puntaje de la jornada (único)",v:"+10 pts",c:"#40E0FF"},
+                {t:"Ambos en el mismo jugador (Pichichi)",v:"+10 pts extra = 30 total",c:"#A8FF78"},
+                {t:"Empate en puntaje",v:"+3 pts c/u",c:"rgba(255,255,255,0.4)"},
+              ].map(x=>(
+                <div key={x.t} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                  <span style={{fontSize:"9px",color:"rgba(255,255,255,0.45)",fontFamily:"Georgia,serif"}}>{x.t}</span>
+                  <span style={{fontSize:"10px",color:x.c,fontFamily:"monospace",fontWeight:"bold"}}>{x.v}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {!playerId ? (
@@ -242,7 +303,10 @@ const isDouble = isUniqueTop && winner===top.name;
             </div>
           ) : (
             <div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Hola, <strong style={{color:"#FFD700"}}>{playerName}</strong>. Tu voto vale <strong style={{color:"#FFD700"}}>{voterWeight(me)} puntos</strong>.</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px",padding:"6px 8px",background:"rgba(255,215,0,0.04)",borderRadius:"5px"}}>
+                {playerName} — tu voto vale <strong style={{color:"#FFD700"}}>{voterWeight(me)}</strong> punto{voterWeight(me)>1?"s":""}{" "}
+                <span style={{fontSize:"9px",color:"rgba(255,255,255,0.25)"}}>(rango {RANK_WEIGHTS[me?.clan_role]||1} + disponibilidad {AVAIL_BONUS[me?.availability]||0})</span>
+              </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px",marginBottom:"10px",maxHeight:"200px",overflow:"auto"}}>
                 {players.filter(p=>String(p.id)!==String(playerId) && ["siempre","intermitente","solo_una"].includes(p.availability)).map(p=>(
                   <button key={p.id} onClick={()=>setSelectedVote(String(p.id))}
