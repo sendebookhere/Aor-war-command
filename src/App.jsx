@@ -4,7 +4,7 @@ import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
 import Inteligencia from "./Inteligencia";
 import Asamblea from "./Asamblea";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
 import Puntos from "./Puntos";
@@ -822,6 +822,22 @@ function MensajesTab({players}) {
 
   // Dynamic extra messages
   const [extraWa,   setExtraWa]   = useState([]);
+  const [waCards,   setWaCards]   = useState([]);
+  // Initialize waCards on first render
+  const waCardsInitRef = useRef(false);
+  if (!waCardsInitRef.current && (allActive.length > 0 || true)) {
+    waCardsInitRef.current = true;
+    if (waCards.length === 0) {
+      setWaCards([
+        {id:"w1",fixed:false,title:`Registro grupo WA (${waRegistrado.length}/${waPlayers.length})`,desc:"Solo miembros del grupo de WhatsApp",content:buildWaRegistro()},
+        {id:"w2",fixed:false,title:"Registro completo",desc:"Todos los miembros activos",content:buildRegistro()},
+        {id:"w3",fixed:false,title:"Reporte semanal",desc:"Ranking guerra actual",content:buildSemanal()},
+        {id:"w4",fixed:false,title:"Ranking acumulado",desc:"Sin bonus de rango",content:buildAcumulado()},
+        {id:"w5",fixed:false,title:"Aviso actividad minima",desc:"Para jugadores bajo 20 pts mensuales",content:"*[AOR] Aviso de actividad*\n\nEstas bajo el minimo mensual (20 pts). Registrate para la proxima guerra:\n https://aor-war-command.vercel.app/registro"},
+        {id:"w6",fixed:false,title:"Bienvenida nuevo miembro",content:"*Bienvenido a [AOR] Antigua Orden!*\n\nhttps://aor-war-command.vercel.app/registro\nhttps://aor-war-command.vercel.app/reporte\nhttps://aor-war-command.vercel.app/puntos\n\nBuena suerte en batalla!"},
+      ]);
+    }
+  }
   const [extraGame, setExtraGame] = useState([]);
   const [addModal,  setAddModal]  = useState(false);
   const [newTitle,  setNewTitle]  = useState("");
@@ -884,12 +900,7 @@ function MensajesTab({players}) {
   return (
     <div style={{padding:"0 16px"}}>
       <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
-      <WaCard title={`📱 Registro del grupo WA (${waRegistrado.length}/${waPlayers.length})`} desc="Solo miembros del grupo de WhatsApp" initialValue={buildWaRegistro()}/>
-      <WaCard title="📋 Registro completo" desc="Todos los miembros activos" initialValue={buildRegistro()}/>
-      <WaCard title="📊 Reporte semanal" desc="Ranking guerra actual" initialValue={buildSemanal()}/>
-      <WaCard title="🏆 Ranking acumulado" desc="Sin bonus de rango" initialValue={buildAcumulado()}/>
-      <WaCard title="⚠ Aviso actividad mínima" desc="Para jugadores bajo 20 pts mensuales" initialValue={"*[AOR] Aviso de actividad* ⚠\n\nEstás bajo el mínimo mensual (20 pts). Regístrate para la próxima guerra:\n📋 https://aor-war-command.vercel.app/registro\n📊 Tu posición: https://aor-war-command.vercel.app/reporte"}/>
-      <WaCard title="👋 Bienvenida nuevo miembro" initialValue={"*¡Bienvenido a [AOR] Antigua Orden!* ⚔\n\n📋 https://aor-war-command.vercel.app/registro\n📊 https://aor-war-command.vercel.app/reporte\n❓ https://aor-war-command.vercel.app/puntos\n\n¡Buena suerte en batalla!"}/>
+      {waCards.map((m,i)=><WaCard key={m.id||i} title={m.title} desc={m.desc} initialValue={m.content} onDelete={m.fixed?null:()=>setWaCards(prev=>prev.filter((_,j)=>j!==i))}/>)}
       {extraWa.map(m=><WaCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraWa(prev=>prev.filter(x=>x.id!==m.id))}/>)}
       <button onClick={()=>{setNewType("wa");setAddModal(true);}} style={{width:"100%",padding:"8px",background:"rgba(37,211,102,0.06)",border:"1px dashed rgba(37,211,102,0.25)",borderRadius:"8px",color:"rgba(37,211,102,0.5)",fontSize:"11px",cursor:"pointer",marginBottom:"8px"}}>+ Agregar mensaje WhatsApp</button>
 
@@ -1610,9 +1621,16 @@ function DailyLimitSetting() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(()=>{
+    // Try cached value first for instant render
+    const cached = sessionStorage.getItem("daily_msg_limit");
+    if (cached) { setLimit(parseInt(cached)||2); setLoaded(true); }
     supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single()
       .then(({data, error})=>{
-        if (!error && data?.value) setLimit(parseInt(data.value)||2);
+        if (!error && data?.value) {
+          const v = parseInt(data.value)||2;
+          setLimit(v);
+          sessionStorage.setItem("daily_msg_limit", String(v));
+        }
         setLoaded(true);
       });
   },[]);
@@ -1693,6 +1711,58 @@ function WaReportButtonsAdmin({players}) {
 }
 
 
+
+// ── First Mobilization Button ──────────────────────────────────────────────
+function FirstMobilizationButton({players, update, reload}) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const active = players.filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name));
+  async function apply() {
+    if (!selected) return;
+    setSaving(true);
+    const p = active.find(x=>String(x.id)===selected);
+    await update(parseInt(selected), {pts_acumulados: (p?.pts_acumulados||0)+3});
+    await reload();
+    setMsg("✓ +3 pts a "+p?.name+" por primer movilizador");
+    setSaving(false); setOpen(false); setSelected(null);
+    setTimeout(()=>setMsg(""),3000);
+  }
+  return (
+    <>
+      <button onClick={()=>setOpen(true)} style={{padding:"6px 12px",background:"rgba(64,224,255,0.1)",border:"1px solid rgba(64,224,255,0.2)",borderRadius:"6px",color:"#40E0FF",fontSize:"11px",cursor:"pointer"}}>
+        Primer movilizador +3
+      </button>
+      {msg && <div style={{fontSize:"10px",color:"#A8FF78",padding:"4px 0"}}>{msg}</div>}
+      {open && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
+          <div style={{background:"#0d0d0f",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"12px",padding:"20px",width:"100%",maxWidth:"360px"}}>
+            <div style={{fontFamily:"serif",color:"#40E0FF",fontSize:"15px",marginBottom:"12px"}}>Primer movilizador de tropas +3 pts</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>El jugador que primero movilizó tropas recibe +3 pts de bonificación.</div>
+            <div style={{maxHeight:"240px",overflow:"auto",marginBottom:"12px"}}>
+              {active.map(p=>(
+                <div key={p.id} onClick={()=>setSelected(String(p.id))} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 10px",marginBottom:"3px",borderRadius:"6px",cursor:"pointer",background:selected===String(p.id)?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(selected===String(p.id)?"rgba(64,224,255,0.3)":"rgba(255,255,255,0.05)")}}>
+                  <div style={{width:"16px",height:"16px",borderRadius:"3px",border:"1px solid "+(selected===String(p.id)?"#40E0FF":"rgba(255,255,255,0.2)"),background:selected===String(p.id)?"#40E0FF":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    {selected===String(p.id)&&<span style={{color:"#000",fontSize:"10px",fontWeight:"bold"}}>✓</span>}
+                  </div>
+                  <span style={{fontSize:"12px",color:selected===String(p.id)?"#40E0FF":"rgba(255,255,255,0.6)"}}>{p.name}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:"8px"}}>
+              <button onClick={apply} disabled={!selected||saving} style={{flex:1,padding:"9px",background:"rgba(64,224,255,0.15)",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"6px",color:"#40E0FF",fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>
+                {saving?"...":"Asignar +3 pts"}
+              </button>
+              <button onClick={()=>{setOpen(false);setSelected(null);}} style={{padding:"9px 14px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>✕</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── War Intel Panel ──────────────────────────────────────────────────────────
 function WarIntelPanel({players, reload}) {
   const [intel,    setIntel]    = useState(null);
@@ -1701,7 +1771,7 @@ function WarIntelPanel({players, reload}) {
   const [pos,      setPos]      = useState("");
   const [ranking,  setRanking]  = useState("");
   const [pts,      setPts]      = useState("");
-  const [rivals,   setRivals]   = useState([{name:"",points:"",note:"",players:[]}]);
+  const [rivals,   setRivals]   = useState([{name:"",abbrev:"",points:"",note:"",players:[]}]);
   const [saving,   setSaving]   = useState(false);
   const [msg,      setMsg]      = useState("");
   const week = (() => {
@@ -1717,7 +1787,7 @@ function WarIntelPanel({players, reload}) {
       .then(({data})=>{ if(data) setIntel(data); setLoading(false); });
   },[]);
 
-  function addRival() { setRivals(r=>[...r,{name:"",points:"",note:"",players:[]}]); }
+  function addRival() { setRivals(r=>[...r,{name:"",abbrev:"",points:"",note:"",players:[]}]); }
   function removeRival(i) { setRivals(r=>r.filter((_,j)=>j!==i)); }
   function updateRival(i,field,val) { setRivals(r=>r.map((x,j)=>j===i?{...x,[field]:val}:x)); }
   function addRivalPlayer(ri) { setRivals(r=>r.map((x,j)=>j===ri?{...x,players:[...x.players,{name:"",bp:"",level:"",note:""}]}:x)); }
@@ -1761,7 +1831,7 @@ function WarIntelPanel({players, reload}) {
               <input value={ranking} onChange={e=>setRanking(e.target.value)} type="number" placeholder="150"
                 style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF9F43",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box",fontWeight:"bold"}}/>
             </div>
-            <div style={{flex:2}}>
+            <div style={{flex:1}}>
               <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"3px",fontFamily:"monospace"}}>PUNTOS DEL CLAN</div>
               <input value={pts} onChange={e=>setPts(e.target.value)} type="number" placeholder="85000"
                 style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}/>
@@ -1772,7 +1842,9 @@ function WarIntelPanel({players, reload}) {
             <div key={ri} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"6px",padding:"10px",marginBottom:"8px"}}>
               <div style={{display:"flex",gap:"6px",marginBottom:"6px"}}>
                 <input value={rival.name} onChange={e=>updateRival(ri,"name",e.target.value)} placeholder="Nombre del clan rival"
-                  style={{flex:2,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"#FF6B6B",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                  style={{flex:3,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"#FF6B6B",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                <input value={rival.abbrev} onChange={e=>updateRival(ri,"abbrev",e.target.value)} placeholder="[ABC]"
+                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"5px",color:"#FF9F43",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
                 <input value={rival.points} onChange={e=>updateRival(ri,"points",e.target.value)} placeholder="Pts"
                   style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"5px",color:"#fff",padding:"5px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
                 <button onClick={()=>removeRival(ri)} style={{padding:"5px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"5px",color:"rgba(255,107,107,0.5)",cursor:"pointer",fontSize:"11px"}}>✕</button>
@@ -1781,12 +1853,16 @@ function WarIntelPanel({players, reload}) {
                 style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"5px",color:"rgba(255,255,255,0.5)",padding:"5px 8px",fontSize:"10px",outline:"none",boxSizing:"border-box",marginBottom:"6px"}}/>
               {rival.players.map((pl,pi)=>(
                 <div key={pi} style={{display:"flex",gap:"4px",marginBottom:"4px"}}>
-                  <input value={pl.name} onChange={e=>updateRivalPlayer(ri,pi,"name",e.target.value)} placeholder="Jugador notable"
-                    style={{flex:2,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"4px",color:"#FF9F43",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
-                  <input value={pl.bp} onChange={e=>updateRivalPlayer(ri,pi,"bp",e.target.value)} placeholder="BP"
-                    style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
-                  <input value={pl.level} onChange={e=>updateRivalPlayer(ri,pi,"level",e.target.value)} placeholder="Poder"
-                    style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{display:"flex",flexDirection:"column",gap:"3px",flex:1}}>
+                    <input value={pl.name} onChange={e=>updateRivalPlayer(ri,pi,"name",e.target.value)} placeholder="Jugador notable"
+                      style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"4px",color:"#FF9F43",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                    <div style={{display:"flex",gap:"4px"}}>
+                      <input value={pl.bp} onChange={e=>updateRivalPlayer(ri,pi,"bp",e.target.value)} placeholder="BP"
+                        style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                      <input value={pl.level} onChange={e=>updateRivalPlayer(ri,pi,"level",e.target.value)} placeholder="Poder"
+                        style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"4px",color:"rgba(255,255,255,0.4)",padding:"4px 7px",fontSize:"10px",outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                  </div>
                 </div>
               ))}
               <input value={rival.players[rival.players.length-1]?.note||""} onChange={e=>rival.players.length>0?updateRivalPlayer(ri,rival.players.length-1,"note",e.target.value):null} placeholder="Nota del jugador"
@@ -2346,21 +2422,19 @@ function AdminPanel({players, update, loading, saving, reload}) {
         {/* ADMIN TAB */}
         {activeTab==="admin" && (
           <div style={{padding:"0 16px"}}>
+            {/* Gestas heroicas — FIRST */}
+            <div style={{display:"flex",gap:"8px",marginBottom:"12px",flexWrap:"wrap"}}>
+              <HeroicPointsButton players={players} update={update} reload={reload}/>
+              <FirstMobilizationButton players={players} update={update} reload={reload}/>
+            </div>
+
+            {/* War Intel — SECOND */}
+            <WarIntelPanel players={players} reload={reload}/>
+            <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
+
             {/* Daily limit setting */}
             <DailyLimitSetting/>
             <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"16px 0"}}/>
-            {/* Weekly reset */}
-            <div style={{background:"rgba(37,211,102,0.05)",border:"1px solid rgba(37,211,102,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px"}}>
-              <div style={{fontFamily:"serif",color:"#25D366",fontSize:"13px",marginBottom:"8px"}}>📱 WhatsApp</div>
-              <HeroicPointsButton players={players} update={update} reload={reload}/>
-            </div>
-            <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"20px"}}>
-              <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>🔄 Cerrar guerra y resetear</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"10px"}}>Archiva los puntos de esta guerra en el historial y resetea todos los contadores para la siguiente. Ejecutar cada viernes antes de la nueva guerra.</div>
-              <button onClick={weeklyReset} style={{padding:"8px 16px",background:"rgba(255,107,107,0.15)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>
-                Archivar guerra y resetear puntos
-              </button>
-            </div>
 
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>➕ Agregar jugador</div>
             {addingPlayer ? (
@@ -2436,6 +2510,15 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 </div>
               ))
             }
+
+            {/* Archive war — LAST */}
+            <div style={{marginTop:"24px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px"}}>
+              <div style={{fontFamily:"serif",color:"#FF6B6B",fontSize:"13px",marginBottom:"6px"}}>Cerrar guerra y resetear</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"10px"}}>Archiva los puntos en el historial y resetea contadores para la siguiente guerra. Ejecutar cada viernes.</div>
+              <button onClick={weeklyReset} style={{padding:"8px 16px",background:"rgba(255,107,107,0.12)",border:"1px solid rgba(255,107,107,0.25)",borderRadius:"6px",color:"#FF6B6B",fontSize:"12px",cursor:"pointer"}}>
+                Archivar guerra y resetear puntos
+              </button>
+            </div>
           </div>
         )}
 
