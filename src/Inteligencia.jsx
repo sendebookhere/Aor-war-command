@@ -91,9 +91,7 @@ export default function Inteligencia() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/inteligencia"/>
-
         <PageHeader page="/inteligencia"/>
-
         {/* War results */}
         {intel ? (
           <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>

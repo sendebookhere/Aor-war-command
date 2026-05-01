@@ -114,9 +114,7 @@ export default function Asamblea() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/asamblea"/>
-
         <PageHeader page="/asamblea"/>
-
         {/* Current winner */}
         {winner && (
           <div style={{background:"linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.03))",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"12px",padding:"20px",marginBottom:"20px",textAlign:"center"}}>

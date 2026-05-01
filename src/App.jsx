@@ -430,11 +430,7 @@ function RegistrationForm({onRegistered}) {
     <div style={{minHeight:"100vh",background:"#0d0d0f",backgroundImage:"radial-gradient(ellipse at 10% 0%, rgba(64,224,255,0.05) 0%, transparent 50%)",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/registro"/>
-        <div style={{textAlign:"center",marginBottom:"16px"}}>
-          <div style={{fontSize:"9px",color:"#40E0FF",letterSpacing:"0.3em",marginBottom:"4px"}}>ANTIGUA ORDEN</div>
-          <PageHeader page="/registro"/>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Confirma tu participación y recibe tus puntos</div>
-        </div>
+        <PageHeader page="/registro"/>
 
         {/* Name */}
         <div style={{marginBottom:"16px",position:"relative"}}>
@@ -2514,11 +2510,7 @@ function AdminAuth({onAuth}) {
       <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Header */}
-      <div style={{textAlign:"center",marginBottom:"32px",animation:"fadeIn 0.6s ease"}}>
-        <div style={{fontSize:"10px",color:"rgba(64,224,255,0.4)",letterSpacing:"0.5em",marginBottom:"8px"}}>ANTIGUA ORDEN</div>
-        <div style={{fontSize:"32px",marginBottom:"6px"}}>⚔</div>
-        <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",letterSpacing:"0.05em"}}>[AOR] War Command</div>
-      </div>
+      <PageHeader page="/"/>
 
       {/* Public links — FIRST, prominent */}
       <div style={{width:"100%",maxWidth:"360px",marginBottom:"28px",animation:"fadeIn 0.7s ease"}}>
