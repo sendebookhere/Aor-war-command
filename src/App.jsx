@@ -3237,14 +3237,15 @@ export default function App() {
     </div>
   );
 
-  if (path === "/registro") return <RegistrationForm onRegistered={loadPlayers} warMode={warMode}/>;
-  if (path === "/reporte")  return <PublicReport />;
-  if (path === "/puntos")         return <Puntos onBack={()=>window.history.back()}/>;
-  if (path === "/comunicaciones")  return <Comunicaciones/>;
-  if (path === "/propaganda")       return <Comunicaciones/>;
-  if (path === "/inteligencia")     return <Inteligencia/>;
-  if (path === "/asamblea")         return <Asamblea/>;
-  if (path === "/noticias")         return <Noticias/>;
-  if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
+  // All public pages gated by LoginGate (checks user_auth_enabled from DB)
+  if (path === "/registro")       return <LoginGate><RegistrationForm onRegistered={loadPlayers} warMode={warMode}/></LoginGate>;
+  if (path === "/reporte")        return <LoginGate><PublicReport /></LoginGate>;
+  if (path === "/puntos")         return <LoginGate><Puntos onBack={()=>window.history.back()}/></LoginGate>;
+  if (path === "/comunicaciones") return <LoginGate><Comunicaciones/></LoginGate>;
+  if (path === "/propaganda")     return <LoginGate><Comunicaciones/></LoginGate>;
+  if (path === "/inteligencia")   return <LoginGate><Inteligencia/></LoginGate>;
+  if (path === "/asamblea")       return <LoginGate><Asamblea/></LoginGate>;
+  if (path === "/noticias")       return <LoginGate><Noticias/></LoginGate>;
+  if (!authed) return <LoginGate><AdminAuth onAuth={()=>setAuthed(true)}/></LoginGate>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
