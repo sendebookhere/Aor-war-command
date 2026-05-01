@@ -151,7 +151,8 @@ export default function Asamblea() {
 
               {/* Highest points */}
               {(() => {
-                const ranked = [...players].filter(p=>p.active).sort((a,b)=>{
+                const eligible = ["siempre","intermitente","solo_una"];
+                const ranked = [...players].filter(p=>p.active && p.registered_week===week && eligible.includes(p.availability)).sort((a,b)=>{
                   const pa = (a.pt_registro||0)+(a.pt_disponibilidad_declarada||0)+(a.pt_disponibilidad||0)+(a.pt_obediencia||0)+(a.pt_batallas_ganadas||0)*2+(a.pt_batallas_perdidas||0)+(a.pt_defensas||0)+(a.pt_bonus||0)+(a.pt_bandido_post||0)+((a.pt_batallas_ganadas||0)>=6?10:0)-(a.pt_penalizacion||0)-(a.pt_no_aparecio||0)-(a.pt_ignoro_orden||0)*2-(a.pt_abandono||0)*2-(a.pt_inactivo_4h||0)*3-(a.pt_bandido_pre||0);
                   const pb = (b.pt_registro||0)+(b.pt_disponibilidad_declarada||0)+(b.pt_disponibilidad||0)+(b.pt_obediencia||0)+(b.pt_batallas_ganadas||0)*2+(b.pt_batallas_perdidas||0)+(b.pt_defensas||0)+(b.pt_bonus||0)+(b.pt_bandido_post||0)+((b.pt_batallas_ganadas||0)>=6?10:0)-(b.pt_penalizacion||0)-(b.pt_no_aparecio||0)-(b.pt_ignoro_orden||0)*2-(b.pt_abandono||0)*2-(b.pt_inactivo_4h||0)*3-(b.pt_bandido_pre||0);
                   return pb-pa;
@@ -182,10 +183,21 @@ const isDouble = isUniqueTop && winner===top.name;
                     <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"8px"}}>
                     {isUniqueTop?"MAYOR PUNTAJE +10 pts":"EMPATE EN PUNTAJE"}
                   </div>
-                  {!isUniqueTop && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",fontFamily:"monospace",marginBottom:"6px"}}>PUNTOS DIVIDIDOS: 3 pts repartidos entre los que empaten</div>}
-                    <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>
-                    <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>
-                    {breakdown.map(x=>(
+                  {!isUniqueTop && (() => {
+                    const tied = ranked.filter(p=>tp(p)===topPts);
+                    return (
+                      <div style={{marginBottom:"8px"}}>
+                        <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>3 PUNTOS REPARTIDOS ENTRE:</div>
+                        {tied.map(p=>(
+                          <div key={p.id} style={{fontFamily:"serif",fontSize:"16px",color:"#A8FF78",fontWeight:"bold",lineHeight:1.3}}>{p.name}</div>
+                        ))}
+                        <div style={{fontSize:"14px",color:"#A8FF78",fontFamily:"monospace",marginTop:"4px",marginBottom:"4px"}}>+{topPts} pts (empate)</div>
+                      </div>
+                    );
+                  })()}
+                  {isUniqueTop && <div style={{fontFamily:"serif",fontSize:"18px",color:"#A8FF78",fontWeight:"bold",marginBottom:"4px",lineHeight:1.2}}>{top.name}</div>}
+                  {isUniqueTop && <div style={{fontSize:"20px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"8px"}}>{topPts>0?"+":""}{topPts} pts</div>}
+                  {isUniqueTop && breakdown.map(x=>(
                       <div key={x.l} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <span style={{color:"rgba(255,255,255,0.35)"}}>{x.l}</span>
                         <span style={{color:x.v>=0?"rgba(168,255,120,0.6)":"rgba(255,107,107,0.6)",fontFamily:"monospace"}}>{x.v>0?"+":""}{x.v}</span>
