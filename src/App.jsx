@@ -7,6 +7,7 @@ import NalguitasFooter from "./NalguitasFooter";
 import Comunicaciones from "./Comunicaciones";
 import Inteligencia from "./Inteligencia";
 import Asamblea from "./Asamblea";
+import Noticias from "./Noticias";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
@@ -337,6 +338,14 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  // Pre-fill from session on load
+  useEffect(()=>{
+    const sid = sessionStorage.getItem("aor_player_id");
+    if (sid && allPlayers.length>0 && !selectedPlayer) {
+      const found = allPlayers.find(p=>String(p.id)===sid);
+      if (found) setSelectedPlayer(found);
+    }
+  },[allPlayers]);
   const [existingAvail, setExistingAvail] = useState(null);
   const [newBp, setNewBp]           = useState("");
   const [newLevel, setNewLevel]     = useState("");
@@ -1632,6 +1641,37 @@ function HeroicPointsButton({players, update, reload}) {
 }
 
 // ── Seguridad Tab (includes Snapshots + security audit) ────────────────────
+function PinResetPanel({players}) {
+  const [selected, setSelected] = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [msg, setMsg]           = useState("");
+
+  async function resetPin() {
+    if (!selected) return;
+    setSaving(true);
+    await supabase.from("players").update({unique_code: null}).eq("id", parseInt(selected));
+    setMsg("✓ Código reseteado. El jugador puede crear uno nuevo desde su perfil.");
+    setSaving(false); setTimeout(()=>setMsg(""),4000);
+  }
+
+  return (
+    <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"12px",marginBottom:"12px"}}>
+      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>RESETEAR CÓDIGO ÚNICO DE JUGADOR</div>
+      <select value={selected} onChange={e=>setSelected(e.target.value)}
+        style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"5px",color:"#d4c9a8",padding:"7px 10px",fontSize:"12px",outline:"none",marginBottom:"8px"}}>
+        <option value="">Selecciona jugador...</option>
+        {players.filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>(
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </select>
+      {msg&&<div style={{fontSize:"10px",color:"#A8FF78",marginBottom:"6px"}}>{msg}</div>}
+      <button onClick={resetPin} disabled={!selected||saving} style={{width:"100%",padding:"7px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer",fontFamily:"monospace"}}>
+        {saving?"Reseteando...":"Resetear código único"}
+      </button>
+    </div>
+  );
+}
+
 function SeguridadTab({players}) {
   const [snapshots, setSnapshots] = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -1902,6 +1942,52 @@ function WarModeSwitch() {
           AVISO: Modo en prueba — el juego puede revertir a configuración clásica
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ── Post News Panel ─────────────────────────────────────────────────────────
+function PostNewsPanel() {
+  const [type, setType]   = useState("noticia");
+  const [title, setTitle] = useState("");
+  const [body, setBody]   = useState("");
+  const [to, setTo]       = useState("todos"); // "todos" or specific player
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg]     = useState("");
+
+  async function post() {
+    if (!title.trim()||!body.trim()) { setMsg("Completa título y cuerpo"); return; }
+    setSaving(true);
+    const {error} = await supabase.from("clan_news").insert({
+      type, title:title.trim(), body:body.trim(),
+      author: sessionStorage.getItem("aor_player_name")||"Admin",
+      target: to, completions: [],
+    });
+    if (error) setMsg("Error: "+error.message);
+    else { setMsg("✓ Publicado en /noticias"); setTitle(""); setBody(""); }
+    setSaving(false);
+    setTimeout(()=>setMsg(""),3000);
+  }
+
+  return (
+    <div style={{background:"rgba(255,159,67,0.04)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"14px"}}>
+      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,159,67,0.6)",marginBottom:"10px"}}>PUBLICAR EN NOTICIAS CLAN</div>
+      <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
+        {["noticia","requerimiento"].map(t=>(
+          <button key={t} onClick={()=>setType(t)} style={{flex:1,padding:"6px",background:type===t?"rgba(255,159,67,0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(type===t?"rgba(255,159,67,0.3)":"rgba(255,255,255,0.07)"),borderRadius:"5px",color:type===t?"#FF9F43":"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>
+            {t.toUpperCase()}{t==="requerimiento"&&" (+1pt al cumplir)"}
+          </button>
+        ))}
+      </div>
+      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Título"
+        style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,159,67,0.15)",borderRadius:"5px",color:"#FF9F43",padding:"7px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",marginBottom:"6px",fontFamily:"Georgia,serif"}}/>
+      <textarea value={body} onChange={e=>setBody(e.target.value)} rows={3} placeholder="Cuerpo del mensaje..."
+        style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"5px",color:"#d4c9a8",padding:"7px 10px",fontSize:"11px",outline:"none",boxSizing:"border-box",marginBottom:"6px",resize:"vertical",fontFamily:"Georgia,serif"}}/>
+      {msg&&<div style={{fontSize:"10px",color:msg.startsWith("✓")?"#A8FF78":"#FF6B6B",marginBottom:"6px"}}>{msg}</div>}
+      <button onClick={post} disabled={saving} style={{width:"100%",padding:"8px",background:"rgba(255,159,67,0.12)",border:"1px solid rgba(255,159,67,0.25)",borderRadius:"6px",color:"#FF9F43",fontSize:"11px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+        {saving?"PUBLICANDO...":"PUBLICAR →  /NOTICIAS"}
+      </button>
     </div>
   );
 }
@@ -2928,6 +3014,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               {label:"📡 Propaganda",url:"https://aor-war-command.vercel.app/propaganda",color:"#C8A2FF",desc:"Mensajes de difusión preaprobados para el clan",icon:"📡"},
               {label:"Inteligencia",url:"https://aor-war-command.vercel.app/inteligencia",color:"#FF6B6B",desc:"Resultados de guerra, rivales y votación de dificultad",icon:"🎯"},
               {label:"Asamblea",url:"https://aor-war-command.vercel.app/asamblea",color:"#FFD700",desc:"Vota al Guerrero Implacable de la semana",icon:"⚔"},
+              {label:"Noticias Clan",url:"https://aor-war-command.vercel.app/noticias",color:"#FF9F43",desc:"Noticias y requerimientos del clan",icon:"📰"},
             ].map(link=>(
               <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
@@ -2968,13 +3055,25 @@ function AdminAuth({onAuth}) {
   const [shake, setShake] = useState(false);
 
   function tryPin() {
-    if (pin === ADMIN_PIN) {
-      sessionStorage.setItem("aor_auth", "1");
-      onAuth();
-    } else {
+    if (pin !== ADMIN_PIN) {
       setError(true); setShake(true); setPin("");
       setTimeout(()=>setShake(false), 500);
+      return;
     }
+    // Role check: only Líder and Co-Líder
+    const sess = sessionStorage.getItem("aor_session");
+    if (sess) {
+      try {
+        const s = JSON.parse(sess);
+        if (s.clan_role && !["Líder","Co-Líder"].includes(s.clan_role)) {
+          setError(true); setShake(true); setPin("");
+          setTimeout(()=>setShake(false), 500);
+          return;
+        }
+      } catch {}
+    }
+    sessionStorage.setItem("aor_auth", "1");
+    onAuth();
   }
 
   const publicLinks = [
@@ -3122,6 +3221,7 @@ export default function App() {
   if (path === "/propaganda")       return <Comunicaciones/>;
   if (path === "/inteligencia")     return <Inteligencia/>;
   if (path === "/asamblea")         return <Asamblea/>;
+  if (path === "/noticias")         return <Noticias/>;
   if (!authed) return <AdminAuth onAuth={()=>setAuthed(true)}/>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }

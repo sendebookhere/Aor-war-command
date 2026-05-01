@@ -7,6 +7,7 @@ export const PAGE_COLORS = {
   "/propaganda":   "#C8A2FF",  // Propaganda — lavanda
   "/inteligencia": "#FF6B6B",  // Inteligencia — rojo coral
   "/asamblea":     "#F4D03F",  // Asamblea — dorado cálido
+  "/noticias":     "#FF9F43",  // Noticias Clan — naranja
 };
 
 export const PAGE_NAMES = {
@@ -15,6 +16,9 @@ export const PAGE_NAMES = {
   "/reporte":      "Ranking [AOR]",
   "/puntos":       "Sistema de Puntos",
   "/propaganda":   "Propaganda de Guerra",
+  "/inteligencia": "Inteligencia Militar",
+  "/asamblea":     "Asamblea",
+  "/noticias":     "Noticias Clan",
   "/inteligencia": "Inteligencia Militar",
   "/asamblea":     "Asamblea",
 };
