@@ -169,8 +169,17 @@ export default function Inteligencia() {
           )}
 
           {playerId && (myVotes ? (
-            <div style={{textAlign:"center",padding:"10px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px"}}>
-              <div style={{fontFamily:"monospace",fontSize:"10px",color:"#A8FF78",letterSpacing:"0.1em"}}>VOTO REGISTRADO ESTA SEMANA</div>
+            <div style={{padding:"10px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontFamily:"monospace",fontSize:"10px",color:"#A8FF78",letterSpacing:"0.1em"}}>VOTO REGISTRADO</div>
+              <button onClick={async()=>{
+                if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
+                await supabase.from("difficulty_votes").delete().eq("player_id",parseInt(playerId)).eq("week",week);
+                const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+                await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                setMyVotes(null);
+              }} style={{padding:"3px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"4px",color:"rgba(255,107,107,0.6)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
+                Eliminar voto
+              </button>
             </div>
           ) : !canVote ? (
             <div style={{padding:"10px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"6px"}}>

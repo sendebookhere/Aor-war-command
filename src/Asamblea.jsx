@@ -146,11 +146,29 @@ export default function Asamblea() {
       week, voter_weight:weight,
     });
     if (error) { setMsg("Error: "+error.message); setSaving(false); return; }
-    // +3 pts to voter
-    await supabase.from("players").update({pts_acumulados:(me?.pts_acumulados||0)+3}).eq("id",parseInt(playerId));
-    // Refresh votes
-    const {data} = await supabase.from("assembly_votes").select("*").eq("week",week);
-    setVotes(data||[]);
+
+    // +3 pts to voter immediately
+    const {data:voterData} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+    await supabase.from("players").update({pts_acumulados:(voterData?.pts_acumulados||0)+3}).eq("id",parseInt(playerId));
+
+    // Refresh votes and recalculate winner (+10 to current leader)
+    const {data:newVotes} = await supabase.from("assembly_votes").select("*").eq("week",week);
+    setVotes(newVotes||[]);
+
+    // Tally to find current leader
+    const tally={};
+    (newVotes||[]).forEach(v=>{ tally[v.voted_player_name]=(tally[v.voted_player_name]||0)+(v.voter_weight||1); });
+    const sorted=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+    if (sorted.length>0) {
+      const winnerName=sorted[0][0];
+      const winnerPlayer=players.find(p=>p.name===winnerName);
+      if (winnerPlayer && String(winnerPlayer.id)!==String(playerId)) {
+        // Only award +10 during weekly close, not on each vote
+        // Just update guerrero_implacable_week to track current leader
+        await supabase.from("players").update({guerrero_implacable_week:week}).eq("id",winnerPlayer.id);
+      }
+    }
+
     setMsg("✓ Voto enviado. +3 puntos acreditados.");
     setSaving(false);
   }
@@ -338,9 +356,23 @@ const isDouble = isUniqueTop && winner===top.name;
               )}
             </div>
           ) : myVoteThisWeek ? (
-            <div style={{textAlign:"center",padding:"12px",background:"rgba(168,255,120,0.06)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"8px"}}>
-              <div style={{fontSize:"12px",color:"#A8FF78",fontWeight:"bold"}}>✓ Ya votaste esta semana</div>
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"4px"}}>Tu voto fue para: <strong>{myVoteThisWeek.voted_player_name}</strong></div>
+            <div style={{padding:"12px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"8px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:"11px",color:"#A8FF78",fontWeight:"bold"}}>✓ Votaste por: {myVoteThisWeek.voted_player_name}</div>
+                  <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginTop:"2px",fontFamily:"monospace"}}>Peso del voto: {myVoteThisWeek.voter_weight} pts</div>
+                </div>
+                <button onClick={async()=>{
+                  if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
+                  await supabase.from("assembly_votes").delete().eq("id",myVoteThisWeek.id);
+                  const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+                  await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                  const {data:v} = await supabase.from("assembly_votes").select("*").eq("week",week);
+                  setVotes(v||[]);
+                }} style={{padding:"4px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"4px",color:"rgba(255,107,107,0.6)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
+                  Eliminar voto
+                </button>
+              </div>
             </div>
           ) : !canVote ? (
             <div style={{textAlign:"center",padding:"12px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px"}}>

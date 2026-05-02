@@ -121,8 +121,13 @@ export default function Comunicaciones() {
     if (error) { setFeedback(f=>({...f,[msg.id]:"Error: "+error.message})); return; }
     // Award +1 pt acumulado for each confirmed propaganda message
     if (playerId) {
-      const {data:pl} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-      if (pl) await supabase.from("players").update({pts_acumulados:(pl.pts_acumulados||0)+1}).eq("id",parseInt(playerId));
+      try {
+        const {data:pl, error:pe} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+        if (!pe && pl) {
+          const {error:ue} = await supabase.from("players").update({pts_acumulados:(pl.pts_acumulados||0)+1}).eq("id",parseInt(playerId));
+          if (ue) console.error("Points update error:", ue.message);
+        }
+      } catch(e) { console.error("Points error:", e); }
     }
     const blockEnd = Date.now() + 60*60*1000;
     setBlockUntil(blockEnd);
