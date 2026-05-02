@@ -415,18 +415,47 @@ function PlayerProfile({ player, onBack }) {
           </div>
         )}
 
-        {/* Points breakdown - uses warItems/directItems/penalties from above */}
+        {/* Points breakdown - current week all categories */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-          <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>⚔ Guerra actual</div>
-          {warItems.length===0&&penalties.length===0
-            ? <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Sin actividad registrada esta guerra</div>
-            : [...warItems,...penalties].map((item,i)=>(
-              <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"5px 8px",marginBottom:"3px",background:item.val>=0?"rgba(168,255,120,0.05)":"rgba(255,107,107,0.05)",borderRadius:"4px",border:"1px solid "+(item.val>=0?"rgba(168,255,120,0.1)":"rgba(255,107,107,0.1)")}}>
-                <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>{item.label}</span>
-                <span style={{fontSize:"13px",color:item.val>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{item.val>0?"+":""}{item.val}</span>
-              </div>
-            ))
-          }
+          <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📊 Puntos de la semana</div>
+
+          {warItems.length>0&&<div style={{marginBottom:"8px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(64,224,255,0.4)",marginBottom:"4px"}}>⚔ GUERRA DE CLANES</div>
+            {warItems.map((item,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(168,255,120,0.04)",borderRadius:"4px"}}>
+              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>{item.label}</span>
+              <span style={{fontSize:"12px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace"}}>+{item.val}</span>
+            </div>)}
+          </div>}
+
+          <div style={{marginBottom:"8px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(200,162,255,0.4)",marginBottom:"4px"}}>📡 ACTIVIDAD SEMANAL</div>
+            {[
+              {l:"📊 BP / Poder / Nivel actualizado", v:player.pt_stats||0, show:(player.pt_stats||0)>0},
+              {l:`${(player.pt_whatsapp||0)===50?"📱 WhatsApp Fundador":"📱 WhatsApp Grupo"}`, v:player.pt_whatsapp||0, show:(player.pt_whatsapp||0)>0},
+              {l:"📡 Propaganda publicada", v:null, note:"+1pt c/mensaje"},
+              {l:"🗳 Asamblea / Inteligencia votadas", v:null, note:"+3pts c/voto"},
+              {l:"⚔ Batallas PvP registradas", v:null, note:"+1pt c/set"},
+              {l:"🔑 Código único (1pt/día)", v:null, note:"+1pt/día"},
+              {l:"📰 Noticias leídas", v:null, note:"+1pt c/noticia"},
+            ].filter(x=>x.show!==false).map((x,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(200,162,255,0.03)",borderRadius:"4px"}}>
+              <span style={{fontSize:"10px",color:"rgba(255,255,255,0.55)"}}>{x.l}</span>
+              {x.v!=null?<span style={{fontSize:"11px",color:"#C8A2FF",fontWeight:"bold",fontFamily:"monospace"}}>+{x.v}</span>:<span style={{fontSize:"9px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace"}}>{x.note}</span>}
+            </div>)}
+            <div style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginTop:"3px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+              <span style={{fontSize:"10px",color:"rgba(200,162,255,0.6)",fontFamily:"monospace"}}>Total acumulado histórico</span>
+              <span style={{fontSize:"12px",color:"#C8A2FF",fontWeight:"bold",fontFamily:"monospace"}}>+{acc}</span>
+            </div>
+          </div>
+
+          {penalties.length>0&&<div>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.4)",marginBottom:"4px"}}>⚠ PENALIZACIONES</div>
+            {penalties.map((item,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(255,107,107,0.04)",borderRadius:"4px"}}>
+              <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>{item.label}</span>
+              <span style={{fontSize:"12px",color:"#FF6B6B",fontWeight:"bold",fontFamily:"monospace"}}>{item.val}</span>
+            </div>)}
+          </div>}
+
+          {warItems.length===0&&penalties.length===0&&acc===0&&<div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Sin actividad esta semana</div>}
         </div>
 
         {/* Stats evolution with revert */}
@@ -624,10 +653,12 @@ export default function PublicReport() {
         // Auto-open own profile when ?own=1 is in URL
         const sid = sessionStorage.getItem("aor_player_id");
         const ownParam = new URLSearchParams(window.location.search).get("own");
-        if (ownParam === "1" && sid) {
+        const gotoProfile = sessionStorage.getItem("aor_goto_profile");
+        if ((ownParam === "1" || gotoProfile === "1") && sid) {
+          sessionStorage.removeItem("aor_goto_profile");
           const own = data.find(p=>String(p.id)===sid);
-          if (own) { setSelected(own); }
-          window.history.replaceState({}, "", "/reporte");
+          if (own) setSelected(own);
+          if (ownParam) window.history.replaceState({}, "", "/reporte");
         }
       }
       setLoading(false);

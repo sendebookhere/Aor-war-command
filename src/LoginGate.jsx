@@ -37,15 +37,12 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // Navigate to the originally requested page, or to player's profile if going to HOME
+    // Mark that we want to open own profile after login
+    sessionStorage.setItem("aor_goto_profile","1");
+    // Navigate once, clean
     const intended = sessionStorage.getItem("aor_intended_url");
     sessionStorage.removeItem("aor_intended_url");
-    if (intended && intended !== "/") {
-      window.location.href = intended;
-    } else {
-      // Default: go directly to own profile
-      window.location.href = "/reporte?own=1";
-    }
+    window.location.replace(intended && intended !== "/" ? intended : "/reporte");
   }}/>;
 }
 
