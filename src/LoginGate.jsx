@@ -45,12 +45,13 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // Mark that we want to open own profile after login
+    // Navigate using SPA router (no page reload)
     sessionStorage.setItem("aor_goto_profile","1");
-    // Navigate once, clean
     const intended = sessionStorage.getItem("aor_intended_url");
     sessionStorage.removeItem("aor_intended_url");
-    window.location.replace(intended && intended !== "/" ? intended : "/reporte");
+    const dest = (intended && intended !== "/") ? intended : "/reporte";
+    if (window.__aorNavigate) window.__aorNavigate(dest);
+    else window.location.replace(dest);
   }}/>;
 }
 

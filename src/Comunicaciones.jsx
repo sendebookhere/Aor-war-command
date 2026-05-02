@@ -1,3 +1,4 @@
+import { LoadingScreen } from "./LoadingScreen";
 import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import { useState, useEffect } from "react";
@@ -143,11 +144,7 @@ export default function Comunicaciones() {
   logs.forEach(l=>{ rankMap[l.player_name] = (rankMap[l.player_name]||0)+1; });
   const ranking = Object.entries(rankMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  if (loading) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(255,215,0,0.6)",fontFamily:"monospace",letterSpacing:"0.2em",fontSize:"11px"}}>
-      CARGANDO...
-    </div>
-  );
+  if (loading) return <LoadingScreen page="/propaganda"/>;
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",paddingBottom:"40px"}}>
