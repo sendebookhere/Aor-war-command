@@ -1666,7 +1666,9 @@ function PinResetPanel({players}) {
   async function resetPin() {
     if (!selected) return;
     setSaving(true);
-    await supabase.from("players").update({unique_code: null}).eq("id", parseInt(selected));
+    // Save current code as prev before resetting
+    const {data:curr} = await supabase.from("players").select("unique_code").eq("id",parseInt(selected)).single();
+    await supabase.from("players").update({unique_code: null, prev_code: curr?.unique_code||null}).eq("id", parseInt(selected));
     setMsg("✓ Código reseteado. El jugador puede crear uno nuevo desde su perfil.");
     setRevealCode("");
     setSaving(false); setTimeout(()=>setMsg(""),4000);
@@ -1674,10 +1676,13 @@ function PinResetPanel({players}) {
 
   async function recoverCode() {
     if (!selected) return;
-    const {data} = await supabase.from("players").select("unique_code,name").eq("id",parseInt(selected)).single();
-    if (data?.unique_code) setRevealCode(`${data.name}: ${data.unique_code}`);
-    else setRevealCode("Sin código registrado");
-    setTimeout(()=>setRevealCode(""),8000);
+    const {data} = await supabase.from("players").select("unique_code,prev_code,name").eq("id",parseInt(selected)).single();
+    let info = `${data?.name}: `;
+    if (data?.unique_code) info += `Código activo: ${data.unique_code}`;
+    else info += "Sin código activo";
+    if (data?.prev_code) info += ` · Anterior: ${data.prev_code}`;
+    setRevealCode(info);
+    setTimeout(()=>setRevealCode(""),10000);
   }
 
   return (
