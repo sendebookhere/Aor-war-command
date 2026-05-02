@@ -487,22 +487,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
     if (onRegistered) onRegistered();
   }
 
-  // Registration closed screen
-  if (!isOpen) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
-      <div style={{textAlign:"center",maxWidth:"360px"}}>
-        <div style={{fontSize:"48px",marginBottom:"16px"}}>🔒</div>
-        <div style={{fontFamily:"serif",fontSize:"22px",color:"#FF6B6B",marginBottom:"8px"}}>Registro cerrado</div>
-        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)"}}>
-          El registro abre los lunes y cierra una hora antes de que comience la guerra del viernes.{" "}
-          {(localStorage.getItem("aor_war_mode")||"classic")==="new"
-            ? "Modo actual: cierra a las 17:00h Ecuador (guerra a las 18:00h)."
-            : "Modo actual: cierra a las 7:00am Ecuador."}
-        </div>
-      </div>
-      <NalguitasFooter/>
-    </div>
-  );
+  // Registration closed - form shown but disabled (timer handles messaging)
 
   if (done) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
@@ -680,10 +665,27 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           </div>
         )}
 
+        {!isOpen && (
+          <div style={{background:"rgba(255,107,107,0.06)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",textAlign:"center"}}>
+            <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,107,107,0.7)",marginBottom:"2px"}}>REGISTRO CERRADO</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
+              {warMode==="new"
+                ? "Abre el lunes · Cierra viernes 21:00h España (15:00h Ecuador · 14:00h México)"
+                : "Abre el lunes · Cierra viernes 13:00h España (7:00h Ecuador · 6:00h México)"}
+            </div>
+          </div>
+        )}
         {error && <div style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",padding:"10px",fontSize:"11px",color:"#FF6B6B",marginBottom:"12px"}}>{error}</div>}
 
-        <button onClick={handleSubmit} disabled={submitting||alreadyRegistered} style={{width:"100%",padding:"14px",background:alreadyRegistered?"rgba(255,255,255,0.05)":"rgba(64,224,255,0.15)",border:"1px solid "+(alreadyRegistered?"rgba(255,255,255,0.1)":"rgba(64,224,255,0.3)"),borderRadius:"8px",color:alreadyRegistered?"rgba(255,255,255,0.3)":"#40E0FF",fontFamily:"serif",fontSize:"14px",cursor:alreadyRegistered?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
-          {submitting ? "Registrando..." : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACION"}
+        <button onClick={handleSubmit} disabled={submitting||alreadyRegistered||!isOpen}
+          style={{width:"100%",padding:"14px",
+            background:!isOpen?"rgba(255,255,255,0.02)":alreadyRegistered?"rgba(255,255,255,0.05)":"rgba(64,224,255,0.15)",
+            border:"1px solid "+(!isOpen?"rgba(255,255,255,0.06)":alreadyRegistered?"rgba(255,255,255,0.1)":"rgba(64,224,255,0.3)"),
+            borderRadius:"8px",
+            color:!isOpen?"rgba(255,255,255,0.15)":alreadyRegistered?"rgba(255,255,255,0.3)":"#40E0FF",
+            fontFamily:"serif",fontSize:"14px",
+            cursor:!isOpen||alreadyRegistered?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
+          {submitting ? "Registrando..." : !isOpen ? "Registro cerrado" : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACION"}
         </button>
 
         <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>
@@ -3325,6 +3327,7 @@ export default function App() {
   if (path === "/inteligencia")   return <LoginGate><Inteligencia/></LoginGate>;
   if (path === "/asamblea")       return <LoginGate><Asamblea/></LoginGate>;
   if (path === "/noticias")       return <LoginGate><Noticias/></LoginGate>;
+  if (path === "/versus")         return <LoginGate><Versus/></LoginGate>;
   if (!authed) return <LoginGate><AdminAuth onAuth={()=>setAuthed(true)}/></LoginGate>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
