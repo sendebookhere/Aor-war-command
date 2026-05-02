@@ -30,12 +30,16 @@ export default function Versus() {
   const [saving, setSaving]       = useState(false);
 
   async function load() {
-    const [p,b] = await Promise.all([
-      supabase.from("players").select("id,name,pts_acumulados").eq("active",true).order("name"),
-      supabase.from("pvp_battles").select("*").order("created_at",{ascending:false}).limit(200),
-    ]);
-    setPlayers(p.data||[]);
-    setBattles(b.data||[]);
+    try {
+      const [p,b] = await Promise.all([
+        supabase.from("players").select("id,name,pts_acumulados").eq("active",true).order("name"),
+        supabase.from("pvp_battles").select("*").order("created_at",{ascending:false}).limit(200),
+      ]);
+      setPlayers(p.data||[]);
+      setBattles(b.data||[]);
+    } catch(e) {
+      console.error("Versus load error:", e);
+    }
     setLoading(false);
   }
 
