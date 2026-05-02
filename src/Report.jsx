@@ -178,6 +178,8 @@ function PlayerProfile({ player, onBack }) {
     });
   }, [player.id]);
 
+  if (loading) return <LoadingScreen page="/reporte"/>;
+
   async function revertStats() {
     if (statsList.length < 2) { setStatsMsg("No hay versión anterior disponible"); return; }
     const prev = statsList[1]; // second entry is previous
