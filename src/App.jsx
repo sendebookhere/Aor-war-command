@@ -1246,7 +1246,7 @@ function VisitsTab() {
       .then(({data}) => { setVisits(data || []); setLoading(false); });
   }, []);
 
-  if (loading) return <div style={{padding:"20px",color:"rgba(255,255,255,0.4)"}}>Cargando visitas...</div>;
+  if (loading) return <LoadingScreen page="/reporte"/>;
   if (visits.length === 0) return (
     <div style={{padding:"20px",fontSize:"12px",color:"rgba(255,255,255,0.4)",textAlign:"center"}}>
       <div style={{marginBottom:"8px"}}>Sin datos todavía.</div>
@@ -3337,11 +3337,7 @@ export default function App() {
     setSaving(false);
   }
 
-  if (loading) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFD700",fontFamily:"serif",fontSize:"18px"}}>
-    <LoadingScreen page="/"/>
-    </div>
-  );
+  if (loading) return <LoadingScreen page="/"/>;
 
   // All public pages gated by LoginGate (checks user_auth_enabled from DB)
   if (path === "/registro")       return <LoginGate><RegistrationForm onRegistered={loadPlayers} warMode={warMode}/></LoginGate>;
