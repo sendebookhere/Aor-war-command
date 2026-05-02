@@ -90,16 +90,27 @@ export default function Noticias() {
         {news.length===0&&reqs.length===0&&(
           <div style={{textAlign:"center",padding:"32px",color:"rgba(255,255,255,0.2)",fontSize:"11px"}}>Sin noticias publicadas aún.</div>
         )}
-        {news.map(post=>(
+        {news.map(post=>{
+          const read = post.completions?.find(c=>String(c.id)===String(playerId));
+          return(
           <div key={post.id} style={{background:"rgba(255,159,67,0.03)",border:"1px solid rgba(255,159,67,0.12)",borderRadius:"8px",padding:"14px",marginBottom:"8px"}}>
-            <div style={{fontFamily:"serif",fontSize:"14px",color:"#FF9F43",marginBottom:"6px"}}>{post.title}</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"6px"}}>
+              <div style={{fontFamily:"serif",fontSize:"14px",color:"#FF9F43",flex:1}}>{post.title}</div>
+              {!read&&playerId&&(
+                <button onClick={()=>markDone(post)} style={{padding:"3px 8px",background:"rgba(255,159,67,0.1)",border:"1px solid rgba(255,159,67,0.25)",borderRadius:"4px",color:"#FF9F43",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",flexShrink:0,marginLeft:"8px"}}>
+                  ✓ LEÍDA +1pt
+                </button>
+              )}
+              {read&&<div style={{fontSize:"9px",color:"rgba(255,159,67,0.4)",fontFamily:"monospace",flexShrink:0,marginLeft:"8px"}}>✓ LEÍDA</div>}
+            </div>
             <div style={{fontSize:"12px",color:"rgba(255,255,255,0.55)",lineHeight:"1.6",marginBottom:"8px"}}>{post.body}</div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:"9px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>
               <span>Por: {post.author}</span>
               <span>{new Date(post.created_at).toLocaleDateString("es-ES",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       <NalguitasFooter/>
     </div>
