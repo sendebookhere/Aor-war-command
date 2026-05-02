@@ -70,18 +70,17 @@ export default function NavBar({current}) {
 
       {/* Mi Perfil — visible when logged in */}
       {playerId && (
-        <a href="/reporte" style={{
+        <a href="/reporte?own=1" style={{
           display:"flex",alignItems:"center",justifyContent:"space-between",
           padding:"7px 12px",marginBottom:"6px",textDecoration:"none",
-          background: cur==="/reporte" ? "rgba(64,224,255,0.08)" : "rgba(255,255,255,0.02)",
-          border:"1px solid "+(cur==="/reporte" ? "rgba(64,224,255,0.25)" : "rgba(255,255,255,0.07)"),
+          background:"rgba(64,224,255,0.06)",
+          border:"1px solid rgba(64,224,255,0.18)",
           borderRadius:"8px",
-          pointerEvents: cur==="/reporte" ? "none" : "auto",
         }}>
-          <div style={{fontFamily:"monospace",fontSize:"9px",color:cur==="/reporte"?"#40E0FF":"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:"#40E0FF",letterSpacing:"0.1em"}}>
             MI PERFIL
           </div>
-          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:cur==="/reporte"?"#40E0FF":"rgba(255,255,255,0.4)"}}>
+          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"rgba(64,224,255,0.7)"}}>
             {playerName||""}
           </div>
         </a>
