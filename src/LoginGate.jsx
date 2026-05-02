@@ -31,7 +31,8 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // No reload needed - React state update triggers re-render
+    // Always navigate to HOME after login
+    if (window.location.pathname !== "/") window.location.href = "/";
   }}/>;
 }
 
@@ -53,7 +54,18 @@ function LoginScreen({onLogin}) {
   const [error, setError]         = useState(null); // null | "wrong" | "not_registered"
   const [loading, setLoading]     = useState(true);
   const [verifying, setVerifying] = useState(false);
+  const [authMethod, setAuthMethod] = useState("both");
   const phoneRef = useRef(null);
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","auth_method").single()
+      .then(({data})=>{
+        if (data?.value) {
+          setAuthMethod(data.value);
+          if (data.value==="code_only") setMode("code");
+          if (data.value==="phone_only") setMode("phone");
+        }
+      });
+  },[]);
 
   useEffect(()=>{
     supabase.from("players").select("id,name,clan_role,availability,unique_code,phone,active,pts_acumulados,whatsapp")
@@ -188,14 +200,16 @@ function LoginScreen({onLogin}) {
         {/* Auth mode + input */}
         {selected && (
           <div className="login-in-d2">
-            <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
-              <button onClick={()=>{setMode("phone");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em",transition:"all 0.15s"}}>
-                CLAVE
-              </button>
-              <button onClick={()=>{setMode("code");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em",transition:"all 0.15s"}}>
-                CÓDIGO ÚNICO
-              </button>
-            </div>
+            {authMethod !== "code_only" && authMethod !== "phone_only" && (
+              <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
+                <button onClick={()=>{setMode("phone");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+                  CLAVE
+                </button>
+                <button onClick={()=>{setMode("code");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+                  CÓDIGO ÚNICO
+                </button>
+              </div>
+            )}
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(255,255,255,0.2)",marginBottom:"4px"}}>
               {mode==="phone"?"CLAVE DE ACCESO — no se almacena":"CÓDIGO ÚNICO DE 6 DÍGITOS"}
             </div>
@@ -249,13 +263,10 @@ function ErrorScreen({error, onRetry, playerName}) {
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",fontFamily:"Georgia,serif"}}>
       <style>{`@keyframes shake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}`}</style>
-      <div style={{animation:"shake 0.4s ease",fontSize:"80px",marginBottom:"20px",filter:"grayscale(0.3)"}}>🤠</div>
-      <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.3em",color:"rgba(255,159,67,0.4)",marginBottom:"12px"}}>ACCESO DENEGADO</div>
-      <div style={{fontSize:"18px",color:"rgba(255,159,67,0.8)",textAlign:"center",maxWidth:"300px",lineHeight:"1.6",marginBottom:"8px",fontStyle:"italic"}}>
-        "Forastero, este pueblo es muy pequeño para ti y para mi."
-      </div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace",marginBottom:"24px",letterSpacing:"0.1em"}}>
-        Número o código incorrecto.
+      <div style={{animation:"shake 0.4s ease",fontSize:"72px",marginBottom:"12px"}}>⚔️🛡️</div>
+      <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"12px"}}>ACCESO DENEGADO</div>
+      <div style={{fontSize:"15px",color:"rgba(255,107,107,0.7)",textAlign:"center",maxWidth:"320px",lineHeight:"1.7",marginBottom:"20px",fontFamily:"Georgia,serif",fontStyle:"italic"}}>
+        "El código es incorrecto y lo sabes.<br/>Forastero, este pueblo es muy pequeño para ti y para mí.<br/>Regresa por donde viniste y no veas atrás."
       </div>
       <button onClick={onRetry} style={{padding:"11px 28px",background:"rgba(255,159,67,0.08)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"7px",color:"rgba(255,159,67,0.7)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.2em"}}>
         INTENTAR DE NUEVO

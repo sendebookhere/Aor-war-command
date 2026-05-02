@@ -77,9 +77,11 @@ export default function Asamblea() {
       }
     });
   },[]);
-  const [playerName, setPlayerName] = useState(sessionStorage.getItem("aor_player_name")||"");
-  const [playerId, setPlayerId] = useState(sessionStorage.getItem("aor_player_id")||null);
-  const [nameInput, setNameInput] = useState(sessionStorage.getItem("aor_player_name")||"");
+  const sessionLockedId = sessionStorage.getItem("aor_player_id");
+  const sessionLockedName = sessionStorage.getItem("aor_player_name");
+  const [playerName, setPlayerName] = useState(sessionLockedName||"");
+  const [playerId, setPlayerId] = useState(sessionLockedId||null);
+  const [nameInput, setNameInput] = useState(sessionLockedName||"");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedVote, setSelectedVote] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -172,22 +174,18 @@ export default function Asamblea() {
                 <div style={{fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"8px"}}>MAS VOTADO +10 pts</div>
                 {winner ? (
                   <>
-                    <div style={{fontFamily:"serif",fontSize:"15px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{winner}</div>
-                    <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",marginBottom:"8px"}}>
-                      {sorted[0]?.[1]} pts de votación
-                    </div>
-                    {sorted[1] && (
-                      <div style={{fontSize:"10px",color:"rgba(255,107,107,0.6)",background:"rgba(255,107,107,0.06)",borderRadius:"4px",padding:"4px 6px",marginBottom:"8px"}}>
-                        +{(sorted[0][1]-sorted[1][1])} pts sobre {sorted[1][0]}
-                      </div>
-                    )}
-                    <div style={{fontSize:"9px",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"4px"}}>{votes.length} votos emitidos</div>
-                    {sorted.slice(1,4).map(([name,pts],i)=>(
-                      <div key={name} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-                        <span style={{color:"rgba(255,255,255,0.4)"}}>{i+2}. {name}</span>
+                    {/* Winner - big */}
+                    <div style={{fontFamily:"serif",fontSize:"17px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{winner}</div>
+                    <div style={{fontSize:"13px",color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",marginBottom:"6px"}}>{sorted[0]?.[1]} pts</div>
+                    {sorted[1] && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.5)",marginBottom:"8px",fontFamily:"monospace"}}>+{(sorted[0][1]-sorted[1][1])} sobre el 2°</div>}
+                    {/* 2 runners up - smaller */}
+                    {sorted.slice(1,3).map(([name,pts],i)=>(
+                      <div key={name} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"3px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <span style={{color:"rgba(255,255,255,0.35)",fontFamily:"Georgia,serif"}}>{i+2}° {name}</span>
                         <span style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{pts}</span>
                       </div>
                     ))}
+                    <div style={{fontSize:"8px",color:"rgba(255,215,0,0.3)",fontFamily:"monospace",marginTop:"6px"}}>{votes.length} votos emitidos</div>
                   </>
                 ) : (
                   <div style={{fontSize:"11px",color:"rgba(255,255,255,0.25)"}}>Sin votos aún</div>
@@ -347,7 +345,7 @@ const isDouble = isUniqueTop && winner===top.name;
           ) : !canVote ? (
             <div style={{textAlign:"center",padding:"12px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px"}}>
               <div style={{fontSize:"11px",color:"#FF6B6B"}}>Solo pueden votar jugadores registrados en Conquistador, Refuerzos o Reserva.</div>
-              <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{marginTop:"8px",padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer"}}>Cambiar jugador</button>
+              {!sessionLockedId && <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{marginTop:"8px",padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer"}}>Cambiar jugador</button>}
             </div>
           ) : (
             <div>

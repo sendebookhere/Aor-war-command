@@ -72,6 +72,15 @@ export default function Puntos() {
         <NavBar current="/puntos"/>
         <PageHeader page="/puntos"/>
 
+        {/* ── CÓDIGO ÚNICO ──────────────────────────────────────────────── */}
+        <div style={S.card("#FFD700")}>
+          <div style={S.title("#FFD700")}>ACCESO CON CÓDIGO ÚNICO</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"8px",lineHeight:"1.6"}}>
+            Cada jugador puede crear un código de 6 dígitos desde su perfil en <strong style={{color:"#FFD700"}}>/reporte</strong>. El código se puede guardar en el dispositivo. La clave de acceso principal (teléfono) nunca se almacena en caché.
+          </div>
+          <Row label="Primera vez que usas tu código único cada día" pts="+1" color="#FFD700" desc="Solo una vez por día aunque accedas varias veces"/>
+        </div>
+
         {/* ── PASO 1: REGISTRO ─────────────────────────────────────────── */}
         <div style={S.card("#40E0FF")}>
           <div style={S.title("#40E0FF")}>PASO 1 — REGISTRO DE DISPONIBILIDAD</div>
