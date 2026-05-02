@@ -13,9 +13,13 @@ function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
     if (draft.length !== 6 || !/^\d{6}$/.test(draft)) {
       setError("Debe ser exactamente 6 dígitos"); return;
     }
+    // Confirm before saving - no trace left visible
+    if (!window.confirm("¿Confirmas tu código único " + draft + "?\n\nAsegúrate de memorizarlo o guardarlo de forma segura. Puedes resetearlo con un administrador si lo olvidas.")) return;
     const {error: e} = await supabase.from("players").update({unique_code: draft}).eq("id", playerId);
     if (e) { setError("Error: "+e.message); return; }
-    setCode(draft); setEditing(false); setSaved(true);
+    setCode("✓ Registrado"); // Don't show actual code
+    setDraft("");
+    setEditing(false); setSaved(true);
     setTimeout(()=>setSaved(false), 2000);
   }
 
@@ -344,7 +348,9 @@ function PlayerProfile({ player, onBack }) {
         </div>
         ) : (
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px"}}>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>Para actualizar tus stats ve a <a href="/registro" style={{color:"#40E0FF"}}>registro</a> e identifícate como este jugador primero.</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>
+            Para acceder a este perfil, <a href="/" style={{color:"#40E0FF",cursor:"pointer"}} onClick={(e)=>{e.preventDefault();["aor_session","aor_player_id","aor_player_name","aor_user_identity"].forEach(k=>sessionStorage.removeItem(k));window.location.href="/";}}>cierra sesión</a> e ingresa con este jugador.
+          </div>
           </div>
         )}
 
