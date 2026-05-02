@@ -1021,6 +1021,10 @@ function MensajesTab({players}) {
 
   return (
     <div style={{padding:"0 16px"}}>
+      {/* NOTICIAS CLAN — publish news and requirements */}
+      <PostNewsPanel/>
+      <div style={{height:"1px",background:"rgba(255,255,255,0.06)",margin:"0 0 16px"}}/>
+
       <div style={{fontFamily:"serif",color:"#25D366",fontSize:"14px",marginBottom:"12px"}}>📱 Mensajes para WhatsApp</div>
       {(waCards||[]).map((m,i)=><WaCard key={m.id||i} title={m.title} desc={m.desc} initialValue={m.content} onDelete={()=>setWaCards(prev=>(prev||[]).filter((_,j)=>j!==i))}/>)}
       {extraWa.map(m=><WaCard key={m.id} title={m.title} initialValue={m.content} onDelete={()=>setExtraWa(prev=>prev.filter(x=>x.id!==m.id))}/>)}

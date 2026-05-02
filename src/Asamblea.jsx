@@ -365,10 +365,14 @@ const isDouble = isUniqueTop && winner===top.name;
                 <button onClick={async()=>{
                   if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
                   await supabase.from("assembly_votes").delete().eq("id",myVoteThisWeek.id);
-                  const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-                  await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                  try {
+                    const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+                    await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                  } catch(e) {}
+                  // Refresh ALL votes so tally updates immediately
                   const {data:v} = await supabase.from("assembly_votes").select("*").eq("week",week);
                   setVotes(v||[]);
+                  setMsg && setMsg("Voto eliminado.");
                 }} style={{padding:"4px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"4px",color:"rgba(255,107,107,0.6)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
                   Eliminar voto
                 </button>
