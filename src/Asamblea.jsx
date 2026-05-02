@@ -199,6 +199,8 @@ export default function Asamblea() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/asamblea"/>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(244,208,63,0.4)",marginBottom:"6px"}}>ASAMBLEA DE CENTURIAS</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Cada semana el clan elige al <strong style={{color:"#F4D03F"}}>Guerrero Implacable</strong> — el jugador más determinante de la jornada. Vota por el compañero que consideras mereció la distinción. Votar suma <strong style={{color:"#A8FF78"}}>+3 pts</strong>. El más votado recibe <strong style={{color:"#F4D03F"}}>+10 pts</strong>. Las votaciones se abren automáticamente al terminar la guerra.</div></div>
+        
         <PageHeader page="/asamblea"/>
         {/* Current standings — parallel display */}
         {(winner || players.length > 0) && (

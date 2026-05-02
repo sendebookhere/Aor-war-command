@@ -667,7 +667,8 @@ export default function PublicReport() {
 
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFD700",fontFamily:"serif",fontSize:"18px"}}>
-      CARGANDO...
+      <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.4em",color:"rgba(64,224,255,0.15)"}}>CARGANDO</div>
+      <div style={{fontFamily:"monospace",fontSize:"10px",letterSpacing:"0.2em",color:"#40E0FF",opacity:0.5}}>— RANKING [AOR] —</div>
     </div>
   );
 

@@ -19,10 +19,18 @@ export default function LoginGate({onLogin, children}) {
     if (currentPath !== "/" && !sessionStorage.getItem("aor_intended_url")) {
       sessionStorage.setItem("aor_intended_url", currentPath);
     }
-    // Clean up any stale bypass flags
+    // Cache auth_enabled in sessionStorage to avoid re-fetching on every page
+    const cached = sessionStorage.getItem("aor_auth_enabled_cache");
+    if (cached !== null) {
+      setAuthEnabled(cached === "true");
+      setChecking(false);
+      return;
+    }
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
-        setAuthEnabled(data?.value === "true");
+        const val = data?.value === "true";
+        sessionStorage.setItem("aor_auth_enabled_cache", String(val));
+        setAuthEnabled(val);
         setChecking(false);
       })
       .catch(()=>{ setAuthEnabled(false); setChecking(false); });
@@ -47,11 +55,8 @@ export default function LoginGate({onLogin, children}) {
 }
 
 function SplashScreen() {
-  return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.4em",color:"rgba(64,224,255,0.2)"}}>CARGANDO...</div>
-    </div>
-  );
+  // Invisible - just prevents flash, actual loading text comes from the page component
+  return <div style={{minHeight:"100vh",background:"#0d0d0f"}}/>;
 }
 
 function LoginScreen({onLogin}) {
