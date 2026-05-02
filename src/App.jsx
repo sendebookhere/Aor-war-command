@@ -1655,29 +1655,45 @@ function PinResetPanel({players}) {
   const [selected, setSelected] = useState("");
   const [saving, setSaving]     = useState(false);
   const [msg, setMsg]           = useState("");
+  const [revealCode, setRevealCode] = useState("");
 
   async function resetPin() {
     if (!selected) return;
     setSaving(true);
     await supabase.from("players").update({unique_code: null}).eq("id", parseInt(selected));
     setMsg("✓ Código reseteado. El jugador puede crear uno nuevo desde su perfil.");
+    setRevealCode("");
     setSaving(false); setTimeout(()=>setMsg(""),4000);
+  }
+
+  async function recoverCode() {
+    if (!selected) return;
+    const {data} = await supabase.from("players").select("unique_code,name").eq("id",parseInt(selected)).single();
+    if (data?.unique_code) setRevealCode(`${data.name}: ${data.unique_code}`);
+    else setRevealCode("Sin código registrado");
+    setTimeout(()=>setRevealCode(""),8000);
   }
 
   return (
     <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"12px",marginBottom:"12px"}}>
-      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>RESETEAR CÓDIGO ÚNICO DE JUGADOR</div>
-      <select value={selected} onChange={e=>setSelected(e.target.value)}
+      <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>GESTIÓN DE CÓDIGO ÚNICO</div>
+      <select value={selected} onChange={e=>{setSelected(e.target.value);setRevealCode("");}}
         style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"5px",color:"#d4c9a8",padding:"7px 10px",fontSize:"12px",outline:"none",marginBottom:"8px"}}>
         <option value="">Selecciona jugador...</option>
         {players.filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>(
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
       </select>
+      {revealCode&&<div style={{fontSize:"12px",color:"#FFD700",marginBottom:"6px",fontFamily:"monospace",padding:"6px 8px",background:"rgba(255,215,0,0.08)",borderRadius:"4px"}}>{revealCode}</div>}
       {msg&&<div style={{fontSize:"10px",color:"#A8FF78",marginBottom:"6px"}}>{msg}</div>}
-      <button onClick={resetPin} disabled={!selected||saving} style={{width:"100%",padding:"7px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer",fontFamily:"monospace"}}>
-        {saving?"Reseteando...":"Resetear código único"}
-      </button>
+      <div style={{display:"flex",gap:"6px"}}>
+        <button onClick={recoverCode} disabled={!selected} style={{flex:1,padding:"7px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"5px",color:"#FFD700",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>
+          Recuperar código
+        </button>
+        <button onClick={resetPin} disabled={!selected||saving} style={{flex:1,padding:"7px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>
+          {saving?"...":"Resetear código"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -2450,12 +2466,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
   async function addPlayer() {
     if (!newPlayer.name||!newPlayer.level||!newPlayer.bp) return;
     const maxId = Math.max(...players.map(p=>p.id),0);
-    await supabase.from("players").insert({
-      id: maxId+1, name: newPlayer.name, level: parseInt(newPlayer.level),
-      bp: parseInt(newPlayer.bp), clan_role:"Recruit", last_seen:"hoy",
+    const insertData = {
+      id: maxId+1, name: newPlayer.name,
+      level: parseInt(newPlayer.level)||0,
+      bp: parseInt(newPlayer.bp)||0,
+      player_level: parseInt(newPlayer.player_level)||1,
+      clan_role:"Recluta", last_seen:"hoy",
       active:true, role:"Sin_Rol", availability:"pendiente", hour_mx:"No sé",
       flags:10, status:"disponible"
-    });
+    };
+    if (newPlayer.phone?.trim()) insertData.phone = newPlayer.phone.trim();
+    await supabase.from("players").insert(insertData);
     setNewPlayer({name:"",level:"",bp:""});
     setAddingPlayer(false);
     reload();
@@ -2745,6 +2766,20 @@ function AdminPanel({players, update, loading, saving, reload}) {
                               {["Líder","Co-Líder","Oficial","Veterano","Guerrero","Soldado","Recluta"].map(r=><option key={r} value={r} style={{background:"#1a1a1f"}}>{r}</option>)}
                             </select>
                           </div>
+                          {/* Clave + Nivel */}
+                          <div style={{display:"flex",gap:"6px"}}>
+                            <div style={{flex:2}}>
+                              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"2px"}}>Clave de acceso</div>
+                              <input type="tel" autoComplete="off" id={"phone_"+p.id} placeholder="Ingresa clave sin rastro"
+                                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                              {p.phone&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.4)",marginTop:"1px"}}>{getCountry(p.phone).flag} {getCountry(p.phone).country}</div>}
+                            </div>
+                            <div style={{flex:1}}>
+                              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"2px"}}>Nivel (1-340)</div>
+                              <input type="number" min="1" max="340" id={"plevel_"+p.id} defaultValue={p.player_level||1}
+                                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"4px",color:"#fff",padding:"4px 8px",fontSize:"11px",outline:"none",boxSizing:"border-box"}}/>
+                            </div>
+                          </div>
                           <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
                             <button onClick={()=>{
@@ -2763,9 +2798,13 @@ function AdminPanel({players, update, loading, saving, reload}) {
                               const level = parseInt(document.getElementById("level_"+p.id).value);
                               const bp    = parseInt(document.getElementById("bp_"+p.id).value);
                               const clan_role = document.getElementById("clan_role_"+p.id).value;
+                              const phoneVal = document.getElementById("phone_"+p.id)?.value?.trim();
+                              const plevel = parseInt(document.getElementById("plevel_"+p.id)?.value)||1;
                               const honorMap = {"Líder":25000,"Co-Líder":25000,"Oficial":5000};
                               const pts_honorificos = honorMap[clan_role]||0;
-                              await update(p.id,{level,bp,clan_role,pts_honorificos});
+                              const updateData = {level,bp,clan_role,pts_honorificos,player_level:plevel};
+                              if (phoneVal) updateData.phone = phoneVal;
+                              await update(p.id,updateData);
                               await supabase.from("player_stats").insert({
                                 player_id: p.id, player_name: p.name,
                                 bp, level, updated_by: "admin"
@@ -2958,10 +2997,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
             <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"14px",marginBottom:"12px"}}>➕ Agregar jugador</div>
             {addingPlayer ? (
               <div style={{background:"rgba(64,224,255,0.05)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-                {[{label:"Nombre en el juego",key:"name",ph:"Exactamente como en el juego"},{label:"⚔ Poder",key:"level",ph:"Ej: 90825"},{label:"💀 Battle Points",key:"bp",ph:"Ej: 2936"}].map(f=>(
-                  <div key={f.key} style={{marginBottom:"10px"}}>
-                    <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"4px"}}>{f.label}</div>
-                    <input value={newPlayer[f.key]} onChange={e=>setNewPlayer({...newPlayer,[f.key]:e.target.value})} placeholder={f.ph} style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+                {[
+                  {label:"Nombre en el juego",key:"name",ph:"Exactamente como en el juego"},
+                  {label:"Poder",key:"level",ph:"Ej: 90825"},
+                  {label:"Battle Points (BP)",key:"bp",ph:"Ej: 2936"},
+                  {label:"Nivel (1-340)",key:"player_level",ph:"Ej: 45"},
+                  {label:"Clave de acceso",key:"phone",ph:"Ingresa la clave del jugador",type:"tel"},
+                ].map(f=>(
+                  <div key={f.key} style={{marginBottom:"8px"}}>
+                    <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>{f.label}</div>
+                    <input value={newPlayer[f.key]||""} onChange={e=>setNewPlayer({...newPlayer,[f.key]:e.target.value})} placeholder={f.ph} type={f.type||"text"} autoComplete="off"
+                      style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"6px",color:"#fff",padding:"7px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 ))}
                 <div style={{display:"flex",gap:"8px"}}>
