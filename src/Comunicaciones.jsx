@@ -145,7 +145,7 @@ export default function Comunicaciones() {
 
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(255,215,0,0.6)",fontFamily:"monospace",letterSpacing:"0.2em",fontSize:"11px"}}>
-      ANTIGUA ORDEN — CARGANDO
+      CARGANDO...
     </div>
   );
 

@@ -39,7 +39,7 @@ export default function Noticias() {
 
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,159,67,0.4)"}}>
-      NOTICIAS CLAN — CARGANDO
+      CARGANDO...
     </div>
   );
 
