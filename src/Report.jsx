@@ -155,18 +155,19 @@ function PlayerProfile({ player, onBack }) {
   const [statsMsg, setStatsMsg] = useState("");
 
   useEffect(() => {
-    Promise.all([
+    // Load all profile data - each query independent so one failure doesn't crash all
+    Promise.allSettled([
       supabase.from("war_history").select("*").eq("player_id", player.id).order("created_at", {ascending:false}),
       supabase.from("player_stats").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(10),
       supabase.from("message_logs").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(50),
       supabase.from("assembly_votes").select("week,voter_weight").eq("voted_player_id", player.id).order("created_at", {ascending:false}).limit(20),
-      supabase.from("pvp_battles").select("*").or(`challenger_id.eq.${player.id},opponent_id.eq.${player.id}`).order("created_at",{ascending:false}).limit(50).catch(()=>({data:[]})),
+      supabase.from("pvp_battles").select("*").or(`challenger_id.eq.${player.id},opponent_id.eq.${player.id}`).order("created_at",{ascending:false}).limit(50),
     ]).then(([h, s, m, av, pvp]) => {
-      setHistory(h.data || []);
-      setStatsList(s.data || []);
-      setMsgLogs(m.data || []);
-      setAssemblyWins(av.data || []);
-      setPvpBattles(pvp.data || []);
+      setHistory(h.value?.data || []);
+      setStatsList(s.value?.data || []);
+      setMsgLogs(m.value?.data || []);
+      setAssemblyWins(av.value?.data || []);
+      setPvpBattles(pvp.value?.data || []);
       setLoading(false);
     });
   }, [player.id]);

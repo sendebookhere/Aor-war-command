@@ -220,7 +220,10 @@ export default function Asamblea() {
                     {sorted.slice(1,3).map(([name,vts],i)=>(
                       <div key={name} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"3px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <span style={{color:"rgba(255,255,255,0.35)",fontFamily:"Georgia,serif"}}>{i+2}° {name}</span>
-                        <span style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{vts} votos</span>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace",fontSize:"9px"}}>{vts} votos</div>
+                          <div style={{color:"rgba(168,255,120,0.4)",fontFamily:"monospace",fontSize:"8px"}}>{livePlayerPts.find(x=>x.name===name)?.pts||0} pts</div>
+                        </div>
                       </div>
                     ))}
                     <div style={{fontSize:"8px",color:"rgba(255,215,0,0.3)",fontFamily:"monospace",marginTop:"6px"}}>{votes.length} votos emitidos</div>
@@ -233,8 +236,13 @@ export default function Asamblea() {
               {/* Highest points */}
               {(() => {
                 const eligible = ["siempre","intermitente","solo_una"];
-                // Use pts_acumulados which includes ALL points: war + propaganda + votes + bonuses
-                const ranked = [...livePlayerPts].sort((a,b)=>b.pts-a.pts);
+                // Only eligible players (registered for this war) are candidates
+                const eligibleIds = new Set(
+                  players.filter(p=>eligible.includes(p.availability)).map(p=>p.id)
+                );
+                const ranked = [...livePlayerPts]
+                  .filter(p=>eligibleIds.has(p.id))
+                  .sort((a,b)=>b.pts-a.pts);
                 const top = ranked[0] ? players.find(p=>p.id===ranked[0].id) : null;
                 if (!top) return null;
                 const tp = p => livePlayerPts.find(x=>x.id===p.id)?.pts || 0;
