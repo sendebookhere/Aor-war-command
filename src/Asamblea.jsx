@@ -194,13 +194,13 @@ export default function Asamblea() {
                   <>
                     {/* Winner - big */}
                     <div style={{fontFamily:"serif",fontSize:"17px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{winner}</div>
-                    <div style={{fontSize:"13px",color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",marginBottom:"6px"}}>{sorted[0]?.[1]} pts</div>
+                    <div style={{fontSize:"13px",color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",marginBottom:"6px"}}>{sorted[0]?.[1]} votos ponderados</div>
                     {sorted[1] && <div style={{fontSize:"9px",color:"rgba(255,107,107,0.5)",marginBottom:"8px",fontFamily:"monospace"}}>+{(sorted[0][1]-sorted[1][1])} sobre el 2°</div>}
                     {/* 2 runners up - smaller */}
-                    {sorted.slice(1,3).map(([name,pts],i)=>(
+                    {sorted.slice(1,3).map(([name,vts],i)=>(
                       <div key={name} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"3px 0",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <span style={{color:"rgba(255,255,255,0.35)",fontFamily:"Georgia,serif"}}>{i+2}° {name}</span>
-                        <span style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{pts}</span>
+                        <span style={{color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{vts} votos</span>
                       </div>
                     ))}
                     <div style={{fontSize:"8px",color:"rgba(255,215,0,0.3)",fontFamily:"monospace",marginTop:"6px"}}>{votes.length} votos emitidos</div>
