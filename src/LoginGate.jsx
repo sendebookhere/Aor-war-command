@@ -43,8 +43,8 @@ export default function LoginGate({onLogin, children}) {
     if (intended && intended !== "/") {
       window.location.href = intended;
     } else {
-      // Default: go to player's profile in /reporte
-      window.location.href = "/reporte";
+      // Default: go directly to own profile
+      window.location.href = "/reporte?own=1";
     }
   }}/>;
 }
@@ -256,10 +256,10 @@ function LoginScreen({onLogin}) {
                 }
               }}
               onKeyDown={e=>e.key==="Enter"&&verify()}
-              type={mode==="phone"?"tel":"tel"}
-              placeholder={mode==="phone"?"--- --- --- ---":"------"}
+              type={mode==="code"?"password":"tel"}
+              placeholder={mode==="phone"?"--- --- --- ---":""}
               autoComplete="off" autoCorrect="off" spellCheck="false"
-              style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",color:"#fff",padding:"12px 14px",fontSize:mode==="code"?"20px":"14px",outline:"none",boxSizing:"border-box",letterSpacing:mode==="code"?"0.4em":"normal",fontFamily:"monospace",marginBottom:"8px"}}/>
+              style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",color:"#fff",padding:"12px 14px",fontSize:mode==="code"?"20px":"14px",outline:"none",boxSizing:"border-box",letterSpacing:"normal",fontFamily:"monospace",marginBottom:"8px"}}/>
             {mode==="code" && <div style={{fontSize:"8px",color:"rgba(255,215,0,0.3)",fontFamily:"monospace",marginBottom:"8px",letterSpacing:"0.1em"}}>+1 PUNTO AL DÍA POR USAR TU CÓDIGO</div>}
             {mode==="phone" && <div style={{fontSize:"8px",color:"rgba(255,255,255,0.15)",fontFamily:"monospace",marginBottom:"8px",letterSpacing:"0.1em"}}>EL NÚMERO NO SE ALMACENA EN NINGÚN CACHÉ</div>}
 
