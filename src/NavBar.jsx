@@ -11,8 +11,7 @@ export const PAGES = [
 ];
 
 function logout() {
-  ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth","aor_session_bypass"].forEach(k=>sessionStorage.removeItem(k));
-  localStorage.removeItem("aor_admin_bypass");
+  ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth"].forEach(k=>sessionStorage.removeItem(k));
   window.location.href="/";
 }
 
