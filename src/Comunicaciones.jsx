@@ -174,7 +174,10 @@ export default function Comunicaciones() {
                   <span style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold"}}>{playerName}</span>
                   <span style={{fontSize:"10px",color:"rgba(64,224,255,0.5)",marginLeft:"8px"}}>— {logsToday(playerId).length}/{dailyLimit} publicaciones hoy</span>
                 </div>
-                <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",background:"transparent",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer"}}>cambiar</button>
+                <button onClick={()=>{
+                  ["aor_session","aor_player_id","aor_player_name","aor_user_identity"].forEach(k=>sessionStorage.removeItem(k));
+                  window.location.reload();
+                }} style={{fontSize:"9px",color:"rgba(255,107,107,0.6)",background:"transparent",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer"}}>cerrar sesión</button>
               </div>
             : <div>
                 <input value={nameInput} onChange={e=>handleNameInput(e.target.value)}

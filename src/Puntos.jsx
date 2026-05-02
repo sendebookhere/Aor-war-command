@@ -98,7 +98,7 @@ export default function Puntos() {
               <span style={{color:"rgba(255,255,255,0.3)"}}>{" · "}16:00h Ecuador · 15:00h México</span>
             </div>
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginTop:"4px"}}>
-              Clásico: guerra vie 9h → dom 9h España (vie 8h Ecuador) · Nuevo: vie 18h → sáb 18h España (vie 16h Ecuador)
+              Clásico: guerra vie 14:00h España (8:00h Ecuador · 7:00h México) → dom 14:00h España · Nuevo: vie 22:00h España (16:00h Ecuador) → sáb 22:00h España
             </div>
           </div>
 
