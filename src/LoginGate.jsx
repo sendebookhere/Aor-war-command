@@ -14,13 +14,15 @@ export default function LoginGate({onLogin, children}) {
   const [checking, setChecking] = useState(true);
 
   useEffect(()=>{
-    // Bypass if coming from admin panel links
-    if (sessionStorage.getItem("aor_admin_bypass") === "1") {
-      sessionStorage.removeItem("aor_admin_bypass"); // one-time use
+    // Bypass if coming from admin panel links (localStorage survives new tab)
+    const bypassExpiry = localStorage.getItem("aor_admin_bypass");
+    if (bypassExpiry && parseInt(bypassExpiry) > Date.now()) {
+      localStorage.removeItem("aor_admin_bypass"); // one-time use
       setAuthEnabled(false);
       setChecking(false);
       return;
     }
+    localStorage.removeItem("aor_admin_bypass"); // clean up expired
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
         setAuthEnabled(data?.value === "true");
