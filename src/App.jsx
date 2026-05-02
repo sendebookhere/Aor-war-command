@@ -3104,6 +3104,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               {label:"Inteligencia",url:"https://aor-war-command.vercel.app/inteligencia",color:"#FF6B6B",desc:"Resultados de guerra, rivales y votación de dificultad",icon:"🎯"},
               {label:"Asamblea",url:"https://aor-war-command.vercel.app/asamblea",color:"#FFD700",desc:"Vota al Guerrero Implacable de la semana",icon:"⚔"},
               {label:"Noticias Clan",url:"https://aor-war-command.vercel.app/noticias",color:"#FF9F43",desc:"Noticias y requerimientos del clan",icon:"📰"},
+              {label:"Versus",url:"https://aor-war-command.vercel.app/versus",color:"#FF6B6B",desc:"Sistema PvP de batallas entre jugadores",icon:"⚔"},
             ].map(link=>(
               <div key={link.url} style={{background:link.color+"0A",border:"2px solid "+link.color+"33",borderRadius:"12px",padding:"18px 20px",marginBottom:"14px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
@@ -3116,7 +3117,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 <div style={{fontFamily:"monospace",fontSize:"10px",color:link.color+"AA",background:"rgba(0,0,0,0.3)",padding:"5px 10px",borderRadius:"6px",marginBottom:"10px",wordBreak:"break-all"}}>{link.url}</div>
                 <div style={{display:"flex",gap:"8px"}}>
                   <button onClick={()=>navigator.clipboard.writeText(link.url)} style={{flex:1,padding:"8px",background:link.color+"22",border:"1px solid "+link.color+"44",borderRadius:"8px",color:link.color,fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>📋 Copiar link</button>
-                  <a href={link.url} target="_blank" rel="noreferrer" style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",color:"rgba(255,255,255,0.5)",fontSize:"12px",cursor:"pointer",textDecoration:"none",textAlign:"center",display:"block"}}>🔗 Abrir</a>
+                  <a href={link.url} target="_blank" rel="noreferrer" onClick={()=>sessionStorage.setItem("aor_admin_bypass","1")} style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",color:"rgba(255,255,255,0.5)",fontSize:"12px",cursor:"pointer",textDecoration:"none",textAlign:"center",display:"block"}}>🔗 Abrir</a>
                 </div>
               </div>
             ))}
@@ -3207,6 +3208,7 @@ function AdminAuth({onAuth}) {
           {href:"/inteligencia", color:"#FF6B6B", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
           {href:"/asamblea",     color:"#F4D03F", label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
           {href:"/noticias",     color:"#FF9F43", label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
+          {href:"/versus",      color:"#FF6B6B", label:"Versus — PvP",            desc:"Registra batallas 1v1 y sigue el ranking de combate"},
         ].map(l=>(
           <a key={l.href} href={l.href} style={{
             display:"flex",alignItems:"center",gap:"10px",
