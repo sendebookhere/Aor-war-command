@@ -50,6 +50,8 @@ export default function Noticias() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"50px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/noticias"/>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,159,67,0.4)",marginBottom:"6px"}}>NOTICIAS CLAN</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Comunicados y requerimientos del mando de <strong style={{color:"#FF9F43"}}>Antigua Orden [AOR]</strong>. Confirma haber leído cada noticia con el botón <strong style={{color:"#FF9F43"}}>✓ LEÍDA</strong> para sumar <strong style={{color:"#A8FF78"}}>+1 pt</strong>. Los requerimientos marcan acciones específicas que el clan necesita de ti.</div></div>
+        
         <PageHeader page="/noticias"/>
 
         {/* Requerimientos */}
