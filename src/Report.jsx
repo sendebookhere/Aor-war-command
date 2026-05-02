@@ -415,12 +415,12 @@ function PlayerProfile({ player, onBack }) {
           </div>
         )}
 
-        {/* Current war breakdown */}
+        {/* Points breakdown - uses warItems/directItems/penalties from above */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
           <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>⚔ Guerra actual</div>
-          {breakdown.length === 0
+          {warItems.length===0&&penalties.length===0
             ? <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Sin actividad registrada esta guerra</div>
-            : breakdown.map((item, i) => (
+            : [...warItems,...penalties].map((item,i)=>(
               <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"5px 8px",marginBottom:"3px",background:item.val>=0?"rgba(168,255,120,0.05)":"rgba(255,107,107,0.05)",borderRadius:"4px",border:"1px solid "+(item.val>=0?"rgba(168,255,120,0.1)":"rgba(255,107,107,0.1)")}}>
                 <span style={{fontSize:"11px",color:"rgba(255,255,255,0.6)"}}>{item.label}</span>
                 <span style={{fontSize:"13px",color:item.val>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{item.val>0?"+":""}{item.val}</span>
