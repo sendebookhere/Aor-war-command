@@ -1,13 +1,13 @@
 export const PAGES = [
-  { href:"/",             label:"HOME",               color:"#FFD700" },
-  { href:"/registro",     label:"Registro",           color:"#A8FF78", accent:"rgba(168,255,120,0.08)", border:"rgba(168,255,120,0.3)" },
-  { href:"/reporte",      label:"Ranking",            color:"#40E0FF", accent:"rgba(64,224,255,0.08)",  border:"rgba(64,224,255,0.3)"  },
-  { href:"/puntos",       label:"Puntos",             color:"#FF9F43", accent:"rgba(255,159,67,0.08)",  border:"rgba(255,159,67,0.3)"  },
-  { href:"/propaganda",   label:"Propaganda",         color:"#C8A2FF", accent:"rgba(200,162,255,0.08)", border:"rgba(200,162,255,0.3)" },
-  { href:"/inteligencia", label:"Inteligencia",       color:"#FF6B6B", accent:"rgba(255,107,107,0.08)", border:"rgba(255,107,107,0.3)" },
-  { href:"/asamblea",     label:"Asamblea",           color:"#F4D03F", accent:"rgba(244,208,63,0.08)",  border:"rgba(244,208,63,0.3)"  },
-  { href:"/noticias",     label:"Noticias Clan",      color:"#FF9F43", accent:"rgba(255,159,67,0.08)",  border:"rgba(255,159,67,0.3)"  },
-  { href:"/versus",       label:"Versus",             color:"#FF6B6B", accent:"rgba(255,107,107,0.08)", border:"rgba(255,107,107,0.3)" },
+  { href:"/",             label:"HOME",         color:"#FFD700" },
+  { href:"/puntos",       label:"Puntos",       color:"#FF9F43", accent:"rgba(255,159,67,0.1)",  border:"rgba(255,159,67,0.3)"  },
+  { href:"/registro",     label:"Registro",     color:"#A8FF78", accent:"rgba(168,255,120,0.1)", border:"rgba(168,255,120,0.3)" },
+  { href:"/reporte",      label:"Ranking",      color:"#40E0FF", accent:"rgba(64,224,255,0.1)",  border:"rgba(64,224,255,0.3)"  },
+  { href:"/propaganda",   label:"Propaganda",   color:"#C8A2FF", accent:"rgba(200,162,255,0.1)", border:"rgba(200,162,255,0.3)" },
+  { href:"/inteligencia", label:"Intel.",       color:"#FF6B6B", accent:"rgba(255,107,107,0.1)", border:"rgba(255,107,107,0.3)" },
+  { href:"/asamblea",     label:"Asamblea",     color:"#F4D03F", accent:"rgba(244,208,63,0.1)",  border:"rgba(244,208,63,0.3)"  },
+  { href:"/noticias",     label:"Noticias",     color:"#FF9F43", accent:"rgba(255,159,67,0.1)",  border:"rgba(255,159,67,0.3)"  },
+  { href:"/versus",       label:"Versus",       color:"#FF6B6B", accent:"rgba(255,107,107,0.1)", border:"rgba(255,107,107,0.3)" },
 ];
 
 function logout() {
@@ -15,18 +15,18 @@ function logout() {
   window.location.href="/";
 }
 
-function PageBtn({p, cur}) {
+function Btn({p, cur}) {
   const active = cur===p.href;
   return (
     <a href={p.href} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      padding:"9px 4px",textDecoration:"none",
+      padding:"8px 2px",textDecoration:"none",
       background: active ? p.accent : "rgba(255,255,255,0.02)",
       border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
-      borderRadius:"8px",textAlign:"center",
+      borderRadius:"7px",textAlign:"center",
       pointerEvents: active ? "none" : "auto",
     }}>
-      <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
+      <div style={{fontSize:"9px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.03em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
         {p.label}
       </div>
     </a>
@@ -36,47 +36,81 @@ function PageBtn({p, cur}) {
 export default function NavBar({current}) {
   const cur = current || "";
   const isHome = cur === "/";
+  const playerId = sessionStorage.getItem("aor_player_id");
+  const playerName = sessionStorage.getItem("aor_player_name");
+
+  // Layout: HOME (full width top)
+  // Row 1: Puntos | Registro (center) | Ranking
+  // Row 2: Propaganda | Inteligencia | Asamblea
+  // Row 3: Noticias | Cerrar Sesión | Versus
+  // + Mi Perfil button (below HOME, always visible when logged in)
 
   return (
-    <div style={{marginBottom:"24px"}}>
-      {/* HOME — colored only when on home */}
+    <div style={{marginBottom:"20px"}}>
+      {/* HOME — full width */}
       <a href="/" style={{
-        display:"block",textAlign:"center",padding:"12px 10px 10px",
+        display:"block",textAlign:"center",padding:"10px",
         background: isHome ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.02)",
-        border:"1px solid "+(isHome ? "rgba(255,215,0,0.35)" : "rgba(255,255,255,0.06)"),
-        borderRadius:"10px",textDecoration:"none",marginBottom:"8px",
+        border:"1px solid "+(isHome ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.06)"),
+        borderRadius:"10px",textDecoration:"none",marginBottom:"6px",
         pointerEvents: isHome ? "none" : "auto",
       }}>
-        <div style={{fontSize:"8px",letterSpacing:"0.5em",color:"rgba(255,255,255,0.2)",fontFamily:"monospace",marginBottom:"3px"}}>ANTIGUA ORDEN</div>
-        <div style={{fontSize:"11px",color:"rgba(255,255,255,0.15)",marginBottom:"3px"}}>⚔</div>
-        <div style={{fontSize:"8px",letterSpacing:"0.4em",color:isHome?"rgba(255,215,0,0.5)":"rgba(255,255,255,0.15)",fontFamily:"monospace",marginBottom:"3px"}}>[AOR]</div>
-        <div style={{fontSize:"13px",color:isHome?"#FFD700":"rgba(255,255,255,0.2)",fontFamily:"monospace",fontWeight:"bold",letterSpacing:"0.25em"}}>HOME</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"10px"}}>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:"7px",letterSpacing:"0.4em",color:"rgba(255,255,255,0.15)",fontFamily:"monospace"}}>ANTIGUA ORDEN</div>
+            <div style={{fontSize:"12px",color:isHome?"#FFD700":"rgba(255,255,255,0.2)",fontFamily:"monospace",fontWeight:"bold",letterSpacing:"0.2em"}}>HOME</div>
+          </div>
+          <div style={{fontSize:"16px",color:"rgba(255,255,255,0.1)"}}>⚔</div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:"7px",letterSpacing:"0.3em",color:isHome?"rgba(255,215,0,0.4)":"rgba(255,255,255,0.1)",fontFamily:"monospace"}}>[AOR]</div>
+            <div style={{fontSize:"7px",color:"rgba(255,255,255,0.1)",fontFamily:"monospace",letterSpacing:"0.1em"}}>WAR COMMAND</div>
+          </div>
+        </div>
       </a>
 
-      {/* 3×3 grid: exactly 9 slots */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px"}}>
-        {/* Row 1 */}
-        <PageBtn p={PAGES[1]} cur={cur}/>
-        <PageBtn p={PAGES[2]} cur={cur}/>
-        <PageBtn p={PAGES[3]} cur={cur}/>
-        {/* Row 2 */}
-        <PageBtn p={PAGES[4]} cur={cur}/>
-        <PageBtn p={PAGES[5]} cur={cur}/>
-        <PageBtn p={PAGES[6]} cur={cur}/>
+      {/* Mi Perfil — visible when logged in */}
+      {playerId && (
+        <a href="/reporte" style={{
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          padding:"7px 12px",marginBottom:"6px",textDecoration:"none",
+          background: cur==="/reporte" ? "rgba(64,224,255,0.08)" : "rgba(255,255,255,0.02)",
+          border:"1px solid "+(cur==="/reporte" ? "rgba(64,224,255,0.25)" : "rgba(255,255,255,0.07)"),
+          borderRadius:"8px",
+          pointerEvents: cur==="/reporte" ? "none" : "auto",
+        }}>
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:cur==="/reporte"?"#40E0FF":"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>
+            MI PERFIL
+          </div>
+          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:cur==="/reporte"?"#40E0FF":"rgba(255,255,255,0.4)"}}>
+            {playerName||""}
+          </div>
+        </a>
+      )}
+
+      {/* 3×3 grid */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"4px"}}>
+        {/* Row 1: Puntos | Registro | Ranking */}
+        <Btn p={PAGES[1]} cur={cur}/>
+        <Btn p={PAGES[2]} cur={cur}/>
+        <Btn p={PAGES[3]} cur={cur}/>
+        {/* Row 2: Propaganda | Inteligencia | Asamblea */}
+        <Btn p={PAGES[4]} cur={cur}/>
+        <Btn p={PAGES[5]} cur={cur}/>
+        <Btn p={PAGES[6]} cur={cur}/>
         {/* Row 3: Noticias | Cerrar Sesión | Versus */}
-        <PageBtn p={PAGES[7]} cur={cur}/>
+        <Btn p={PAGES[7]} cur={cur}/>
         <button onClick={logout} style={{
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          padding:"9px 4px",cursor:"pointer",
-          background:"rgba(255,107,107,0.05)",
+          padding:"8px 2px",cursor:"pointer",
+          background:"rgba(255,107,107,0.04)",
           border:"1px solid rgba(255,107,107,0.15)",
-          borderRadius:"8px",
+          borderRadius:"7px",
         }}>
-          <div style={{fontSize:"10px",color:"rgba(255,107,107,0.55)",fontFamily:"monospace",letterSpacing:"0.04em",lineHeight:"1.3"}}>
-            Cerrar Sesión
+          <div style={{fontSize:"9px",color:"rgba(255,107,107,0.5)",fontFamily:"monospace",letterSpacing:"0.03em"}}>
+            Salir
           </div>
         </button>
-        <PageBtn p={PAGES[8]} cur={cur}/>
+        <Btn p={PAGES[8]} cur={cur}/>
       </div>
     </div>
   );

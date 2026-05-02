@@ -247,13 +247,14 @@ export default function Asamblea() {
                 if (!top) return null;
                 const tp = p => livePlayerPts.find(x=>x.id===p.id)?.pts || 0;
                 const topPts = tp(top);
-                const warPts = (top.pt_registro||0)+(top.pt_disponibilidad_declarada||0)+(top.pt_disponibilidad||0)+(top.pt_obediencia||0)+(top.pt_batallas_ganadas||0)*2+(top.pt_batallas_perdidas||0)+(top.pt_defensas||0)+(top.pt_bonus||0)+(top.pt_bandido_post||0)+((top.pt_batallas_ganadas||0)>=6?10:0)-(top.pt_penalizacion||0)-(top.pt_no_aparecio||0)-(top.pt_ignoro_orden||0)*2-(top.pt_abandono||0)*2-(top.pt_inactivo_4h||0)*3-(top.pt_bandido_pre||0);
+                const warPts = (top.pt_registro||0)+(top.pt_disponibilidad_declarada||0)+(top.pt_disponibilidad||0)+(top.pt_obediencia||0)+(top.pt_batallas_ganadas||0)*2+(top.pt_batallas_perdidas||0)+(top.pt_defensas||0)+(top.pt_bonus||0)+(top.pt_bandido_post||0)+(top.pt_stats||0)+((top.pt_batallas_ganadas||0)>=6?10:0)-(top.pt_penalizacion||0)-(top.pt_no_aparecio||0)-(top.pt_ignoro_orden||0)*2-(top.pt_abandono||0)*2-(top.pt_inactivo_4h||0)*3-(top.pt_bandido_pre||0);
+                const totalPeriod = tp(top); // pts_acumulados + warPts
                 const breakdown = [
-                  {l:"Puntos de guerra",v:warPts},
-                  {l:"Propaganda",v:(top.pts_acumulados||0)-warPts-(top.pt_whatsapp||0)-(top.pts_honorificos||0) > 0 ? (top.pts_acumulados||0)-warPts-(top.pt_whatsapp||0)-(top.pts_honorificos||0) : 0},
-                  {l:"WhatsApp",v:top.pt_whatsapp||0},
-                  {l:"Honoríficos",v:top.pts_honorificos||0},
-                ].filter(x=>x.v!==0);
+                  warPts>0 && {l:"⚔ Guerra",v:warPts},
+                  (top.pt_whatsapp||0)>0 && {l:"📱 WhatsApp",v:top.pt_whatsapp||0},
+                  {l:"📡 Propaganda + Votos + PvP", v: (top.pts_acumulados||0)-(top.pt_whatsapp||0)-(top.pts_honorificos||0)},
+                  (top.pts_honorificos||0)>0 && {l:"🏅 Rango honorífico",v:top.pts_honorificos||0},
+                ].filter(x=>x&&x.v>0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
 const topPts2 = ranked[1]?tp(ranked[1]):0;
 const isUniqueTop = topPts > topPts2;

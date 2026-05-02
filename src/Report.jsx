@@ -15,7 +15,9 @@ function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
     }
     // Confirm before saving - no trace left visible
     if (!window.confirm("¿Confirmas tu código único " + draft + "?\n\nAsegúrate de memorizarlo o guardarlo de forma segura. Puedes resetearlo con un administrador si lo olvidas.")) return;
-    const {error: e} = await supabase.from("players").update({unique_code: draft}).eq("id", playerId);
+    // Save current as prev before updating
+    const {data:curr} = await supabase.from("players").select("unique_code").eq("id",playerId).single();
+    const {error: e} = await supabase.from("players").update({unique_code: draft, prev_code: curr?.unique_code||null}).eq("id", playerId);
     if (e) { setError("Error: "+e.message); return; }
     setCode("✓ Registrado"); // Don't show actual code
     setDraft("");
@@ -34,11 +36,13 @@ function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
       <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"10px",lineHeight:"1.5"}}>
         Usa tu código de 6 dígitos para acceder a la app en lugar de tu número. Ganas <strong style={{color:"#FFD700"}}>+1 punto</strong> por día al usarlo.
       </div>
-      {code ? (
+      {code && code !== "✓ Registrado" ? (
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,215,0,0.06)",borderRadius:"5px",padding:"8px 12px",marginBottom:"8px"}}>
-          <span style={{fontFamily:"monospace",fontSize:"20px",color:"#FFD700",letterSpacing:"0.3em"}}>{code}</span>
-          <button onClick={()=>{setDraft(code);setEditing(true);}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
+          <span style={{fontFamily:"monospace",fontSize:"20px",color:"#FFD700",letterSpacing:"0.3em"}}>{"•".repeat(6)}</span>
+          <button onClick={()=>{setDraft("");setEditing(true);}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
         </div>
+      ) : code === "✓ Registrado" ? (
+        <div style={{padding:"8px 12px",marginBottom:"8px",background:"rgba(168,255,120,0.06)",borderRadius:"5px",fontFamily:"monospace",fontSize:"10px",color:"#A8FF78"}}>✓ Código configurado</div>
       ) : (
         <div style={{marginBottom:"8px"}}>
           <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",marginBottom:"6px",fontFamily:"monospace"}}>Sin código registrado</div>

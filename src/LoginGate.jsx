@@ -37,10 +37,15 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // Navigate to the originally requested page, not always HOME
-    const intended = sessionStorage.getItem("aor_intended_url") || "/";
+    // Navigate to the originally requested page, or to player's profile if going to HOME
+    const intended = sessionStorage.getItem("aor_intended_url");
     sessionStorage.removeItem("aor_intended_url");
-    if (window.location.pathname !== intended) window.location.href = intended;
+    if (intended && intended !== "/") {
+      window.location.href = intended;
+    } else {
+      // Default: go to player's profile in /reporte
+      window.location.href = "/reporte";
+    }
   }}/>;
 }
 
