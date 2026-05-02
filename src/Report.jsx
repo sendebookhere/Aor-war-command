@@ -579,13 +579,12 @@ export default function PublicReport() {
           return (b.bp||0) - (a.bp||0);
         });
         setPlayers(data);
-        // Auto-open own profile when session active OR ?own=1 in URL
+        // Auto-open own profile when ?own=1 is in URL
         const sid = sessionStorage.getItem("aor_player_id");
         const ownParam = new URLSearchParams(window.location.search).get("own");
-        if (sid && ownParam === "1") {
+        if (ownParam === "1" && sid) {
           const own = data.find(p=>String(p.id)===sid);
-          if (own) setSelected(own);
-          // Clean URL
+          if (own) { setSelected(own); }
           window.history.replaceState({}, "", "/reporte");
         }
       }
