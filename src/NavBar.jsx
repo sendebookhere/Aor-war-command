@@ -15,8 +15,9 @@ function logout() {
   window.location.href="/";
 }
 
-function Btn({p, cur}) {
-  const active = cur===p.href;
+function Btn({p, cur, current}) {
+  // Ranking (/reporte) is NOT active when viewing own profile
+  const active = cur===p.href && !(p.href==="/reporte" && current==="profile");
   return (
     <a href={p.href} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
@@ -73,14 +74,14 @@ export default function NavBar({current}) {
         <a href="/reporte?own=1" style={{
           display:"flex",alignItems:"center",justifyContent:"space-between",
           padding:"7px 12px",marginBottom:"6px",textDecoration:"none",
-          background:"rgba(64,224,255,0.06)",
-          border:"1px solid rgba(64,224,255,0.18)",
+          background: current==="profile" ? "rgba(64,224,255,0.08)" : "rgba(255,255,255,0.02)",
+          border:"1px solid "+(current==="profile" ? "rgba(64,224,255,0.25)" : "rgba(255,255,255,0.07)"),
           borderRadius:"8px",
         }}>
-          <div style={{fontFamily:"monospace",fontSize:"9px",color:"#40E0FF",letterSpacing:"0.1em"}}>
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:current==="profile"?"#40E0FF":"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>
             MI PERFIL
           </div>
-          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"rgba(64,224,255,0.7)"}}>
+          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:current==="profile"?"rgba(64,224,255,0.8)":"rgba(255,255,255,0.3)"}}>
             {playerName||""}
           </div>
         </a>
@@ -89,15 +90,15 @@ export default function NavBar({current}) {
       {/* 3×3 grid */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"4px"}}>
         {/* Row 1: Puntos | Registro | Ranking */}
-        <Btn p={PAGES[1]} cur={cur}/>
-        <Btn p={PAGES[2]} cur={cur}/>
-        <Btn p={PAGES[3]} cur={cur}/>
+        <Btn p={PAGES[1]} cur={cur} current={current}/>
+        <Btn p={PAGES[2]} cur={cur} current={current}/>
+        <Btn p={PAGES[3]} cur={cur} current={current}/>
         {/* Row 2: Propaganda | Inteligencia | Asamblea */}
-        <Btn p={PAGES[4]} cur={cur}/>
-        <Btn p={PAGES[5]} cur={cur}/>
-        <Btn p={PAGES[6]} cur={cur}/>
+        <Btn p={PAGES[4]} cur={cur} current={current}/>
+        <Btn p={PAGES[5]} cur={cur} current={current}/>
+        <Btn p={PAGES[6]} cur={cur} current={current}/>
         {/* Row 3: Noticias | Cerrar Sesión | Versus */}
-        <Btn p={PAGES[7]} cur={cur}/>
+        <Btn p={PAGES[7]} cur={cur} current={current}/>
         <button onClick={logout} style={{
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
           padding:"8px 2px",cursor:"pointer",
@@ -109,7 +110,7 @@ export default function NavBar({current}) {
             Salir
           </div>
         </button>
-        <Btn p={PAGES[8]} cur={cur}/>
+        <Btn p={PAGES[8]} cur={cur} current={current}/>
       </div>
     </div>
   );
