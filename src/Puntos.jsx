@@ -216,6 +216,19 @@ export default function Puntos() {
           <a href="/asamblea" style={S.link("#FFD700")}>→ ABRIR ASAMBLEA</a>
         </div>
 
+        {/* ── VERSUS — PvP ─────────────────────────────────────────────── */}
+        <div style={S.card("#FF6B6B")}>
+          <div style={S.title("#FF6B6B")}>VERSUS — SISTEMA PvP</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",marginBottom:"8px",lineHeight:"1.6"}}>
+            Registra resultados de batallas 1v1 contra otros jugadores. El rival debe confirmar el resultado. Máximo 5 desafíos por día, de lunes a domingo.
+          </div>
+          <Row label="Registrar set de 3 batallas (tú o el rival)" pts="+1" color="#FF6B6B" desc="Al enviar el resultado"/>
+          <Row label="Rival confirma tu resultado" pts="+1" color="#FF6B6B" desc="El rival también gana +1pt al confirmar"/>
+          <Row label="Claim resuelto por admins con videos" pts="+5 c/u" color="#FFD700" desc="Ambos jugadores reciben +5pts si los videos son consistentes"/>
+          <Row label="Máximo desafíos por día" pts="5/día" color="rgba(255,255,255,0.4)" desc="Lunes a domingo, se reinicia cada día"/>
+          <a href="/versus" style={S.link("#FF6B6B")}>→ ABRIR VERSUS</a>
+        </div>
+
         {/* ── RANGOS ────────────────────────────────────────────────────── */}
         <div style={S.card("#FF9F43")}>
           <div style={S.title("#FF9F43")}>RANGOS — PUNTOS ACUMULADOS</div>

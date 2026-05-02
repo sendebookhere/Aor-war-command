@@ -148,6 +148,7 @@ function PlayerProfile({ player, onBack }) {
   const [statsList, setStatsList] = useState([]);
   const [msgLogs,  setMsgLogs]  = useState([]);
   const [assemblyWins, setAssemblyWins] = useState([]);
+  const [pvpBattles,   setPvpBattles]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [newBp, setNewBp]       = useState("");
   const [newLevel, setNewLevel] = useState("");
@@ -159,11 +160,13 @@ function PlayerProfile({ player, onBack }) {
       supabase.from("player_stats").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(10),
       supabase.from("message_logs").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(50),
       supabase.from("assembly_votes").select("week,voter_weight").eq("voted_player_id", player.id).order("created_at", {ascending:false}).limit(20),
-    ]).then(([h, s, m, av]) => {
+      supabase.from("pvp_battles").select("*").or(`challenger_id.eq.${player.id},opponent_id.eq.${player.id}`).order("created_at",{ascending:false}).limit(50).catch(()=>({data:[]})),
+    ]).then(([h, s, m, av, pvp]) => {
       setHistory(h.data || []);
       setStatsList(s.data || []);
       setMsgLogs(m.data || []);
       setAssemblyWins(av.data || []);
+      setPvpBattles(pvp.data || []);
       setLoading(false);
     });
   }, [player.id]);
@@ -467,6 +470,41 @@ function PlayerProfile({ player, onBack }) {
             </div>
           </div>
         )}
+
+        {/* PvP Record */}
+        {pvpBattles.length>0&&(()=>{
+          let w=0,l=0;
+          pvpBattles.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed").forEach(b=>{
+            const isC=String(b.challenger_id)===String(player.id);
+            const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
+            const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
+            if(isC){w+=cW;l+=oW;}else{w+=oW;l+=cW;}
+          });
+          return(
+            <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,107,107,0.5)",marginBottom:"8px"}}>HISTORIAL PvP</div>
+              <div style={{display:"flex",gap:"16px",marginBottom:"10px"}}>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"#A8FF78",fontFamily:"monospace",fontWeight:"bold"}}>{w}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>VICTORIAS</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"#FF6B6B",fontFamily:"monospace",fontWeight:"bold"}}>{l}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>DERROTAS</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace",fontWeight:"bold"}}>{pvpBattles.length}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>SETS</div></div>
+              </div>
+              {pvpBattles.slice(0,5).map(b=>{
+                const isC=String(b.challenger_id)===String(player.id);
+                const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
+                const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
+                const mW=isC?cW:oW,thW=isC?oW:cW,rival=isC?b.opponent_name:b.challenger_name;
+                return<div key={b.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px"}}>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif"}}>vs {rival}</span>
+                  <div style={{fontFamily:"monospace",fontSize:"11px"}}>
+                    <span style={{color:mW>thW?"#A8FF78":"rgba(255,107,107,0.6)"}}>{mW}</span>
+                    <span style={{color:"rgba(255,255,255,0.2)"}}> - </span>
+                    <span style={{color:thW>mW?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{thW}</span>
+                  </div>
+                </div>;
+              })}
+            </div>
+          );
+        })()}
 
         {/* War history */}
         <div style={{color:"#FFD700",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📅 Historial de guerras</div>

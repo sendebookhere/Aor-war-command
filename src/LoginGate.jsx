@@ -89,10 +89,17 @@ function LoginScreen({onLogin}) {
 
   function selectPlayer(p) {
     setSelected(p); setNameInput(p.name); setSugg([]);
-    // Pre-fill unique code from cache (NOT phone - never cached)
-    const cachedCode = localStorage.getItem("aor_saved_code_"+p.name.toLowerCase().slice(0,8));
-    if (cachedCode && mode==="code") setPhoneInput(cachedCode);
-    else setPhoneInput("");
+    // Restore preferred mode for this player
+    const prefMode = localStorage.getItem("aor_pref_mode_"+p.id);
+    const cachedCode = localStorage.getItem("aor_code_"+p.id);
+    if (prefMode && authMethod !== "phone_only" && !(prefMode==="code" && authMethod==="phone_only")) {
+      setMode(prefMode);
+      if (prefMode==="code" && cachedCode) setPhoneInput(cachedCode);
+      else setPhoneInput("");
+    } else {
+      if (cachedCode && mode==="code") setPhoneInput(cachedCode);
+      else setPhoneInput("");
+    }
     setTimeout(()=>phoneRef.current?.focus(), 100);
   }
 
@@ -213,10 +220,10 @@ function LoginScreen({onLogin}) {
           <div className="login-in-d2">
             {authMethod !== "code_only" && authMethod !== "phone_only" && (
               <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
-                <button onClick={()=>{setMode("phone");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+                <button onClick={()=>{setMode("phone");setPhoneInput("");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"phone");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
                   CLAVE
                 </button>
-                <button onClick={()=>{setMode("code");setPhoneInput("");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+                <button onClick={()=>{setMode("code");const c=selected?localStorage.getItem("aor_code_"+selected.id):"";setPhoneInput(c||"");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"code");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
                   CÓDIGO ÚNICO
                 </button>
               </div>
@@ -227,7 +234,15 @@ function LoginScreen({onLogin}) {
             <input
               ref={phoneRef}
               value={phoneInput}
-              onChange={e=>setPhoneInput(mode==="code"?e.target.value.replace(/\D/g,"").slice(0,6):e.target.value)}
+              onChange={e=>{
+                const v = mode==="code" ? e.target.value.replace(/\D/g,"").slice(0,6) : e.target.value;
+                setPhoneInput(v);
+                if (mode==="code" && v.length===6 && selected) {
+                  // Save code to localStorage keyed by player id (more reliable than name)
+                  localStorage.setItem("aor_code_"+selected.id, v);
+                  localStorage.setItem("aor_pref_mode_"+selected.id, "code");
+                }
+              }}
               onKeyDown={e=>e.key==="Enter"&&verify()}
               type={mode==="phone"?"tel":"tel"}
               placeholder={mode==="phone"?"--- --- --- ---":"------"}
