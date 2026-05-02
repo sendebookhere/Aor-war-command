@@ -7,19 +7,26 @@ export const PAGES = [
   { href:"/inteligencia", label:"Inteligencia",       color:"#FF6B6B", accent:"rgba(255,107,107,0.08)", border:"rgba(255,107,107,0.3)" },
   { href:"/asamblea",     label:"Asamblea",           color:"#F4D03F", accent:"rgba(244,208,63,0.08)",  border:"rgba(244,208,63,0.3)"  },
   { href:"/noticias",     label:"Noticias Clan",      color:"#FF9F43", accent:"rgba(255,159,67,0.08)",  border:"rgba(255,159,67,0.3)"  },
+  { href:"/versus",       label:"Versus",             color:"#FF6B6B", accent:"rgba(255,107,107,0.08)", border:"rgba(255,107,107,0.3)" },
 ];
 
 function logout() {
   ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth"].forEach(k=>sessionStorage.removeItem(k));
-  window.location.reload();
+  window.location.href="/";
 }
 
 export default function NavBar({current}) {
   const cur = current || "";
   const isHome = cur === "/";
+
+  // 3 rows of 3: [Registro,Ranking,Puntos] [Propaganda,Intel,Asamblea] [Noticias,CerrarSesión,Versus]
+  const row1 = PAGES.slice(1,4);
+  const row2 = PAGES.slice(4,7);
+  const row3_pages = PAGES.slice(7,9); // Noticias, Versus
+
   return (
     <div style={{marginBottom:"24px"}}>
-      {/* HOME — colored ONLY when on home page */}
+      {/* HOME */}
       <a href="/" style={{
         display:"block", textAlign:"center", padding:"12px 10px 10px",
         background: isHome ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.02)",
@@ -33,17 +40,17 @@ export default function NavBar({current}) {
         <div style={{fontSize:"13px",color:isHome?"#FFD700":"rgba(255,255,255,0.2)",fontFamily:"monospace",fontWeight:"bold",letterSpacing:"0.25em"}}>HOME</div>
       </a>
 
-      {/* 6 pages in 3-col grid */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px",marginBottom:"5px"}}>
-        {PAGES.slice(1,7).map(p=>{
+      {/* Grid 3x3 */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"5px"}}>
+        {[...row1,...row2].map(p=>{
           const active = cur===p.href;
           return (
             <a key={p.href} href={p.href} style={{
               display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-              padding:"9px 4px",textDecoration:"none",
+              padding:"9px 4px", textDecoration:"none",
               background: active ? p.accent : "rgba(255,255,255,0.02)",
               border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
-              borderRadius:"8px",textAlign:"center",
+              borderRadius:"8px", textAlign:"center",
               pointerEvents: active ? "none" : "auto",
             }}>
               <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
@@ -52,37 +59,34 @@ export default function NavBar({current}) {
             </a>
           );
         })}
-      </div>
-
-      {/* Bottom row: Noticias + Cerrar Sesión — equal width side by side */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px"}}>
-        {[PAGES[7]].map(p=>{
+        {/* Row 3: Noticias | Cerrar Sesión | Versus */}
+        {row3_pages.map(p=>{
           const active = cur===p.href;
           return (
             <a key={p.href} href={p.href} style={{
               display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-              padding:"9px 4px",textDecoration:"none",
+              padding:"9px 4px", textDecoration:"none",
               background: active ? p.accent : "rgba(255,255,255,0.02)",
               border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
-              borderRadius:"8px",textAlign:"center",
+              borderRadius:"8px", textAlign:"center",
               pointerEvents: active ? "none" : "auto",
             }}>
-              <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal"}}>
+              <div style={{fontSize:"10px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.04em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
                 {p.label}
               </div>
             </a>
           );
         })}
-        {/* CERRAR SESIÓN — same height, fills remaining column */}
+        {/* Cerrar Sesión — center of bottom row */}
         <button onClick={logout} style={{
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          padding:"9px 4px",cursor:"pointer",
+          padding:"9px 4px", cursor:"pointer",
           background:"rgba(255,107,107,0.05)",
-          border:"1px solid rgba(255,107,107,0.18)",
-          borderRadius:"8px",textAlign:"center",
-          width:"100%",
+          border:"1px solid rgba(255,107,107,0.15)",
+          borderRadius:"8px",
+          gridColumn:"2", gridRow:"3",
         }}>
-          <div style={{fontSize:"10px",color:"rgba(255,107,107,0.55)",fontFamily:"monospace",letterSpacing:"0.04em"}}>
+          <div style={{fontSize:"10px",color:"rgba(255,107,107,0.55)",fontFamily:"monospace",letterSpacing:"0.04em",lineHeight:"1.3"}}>
             Cerrar Sesión
           </div>
         </button>

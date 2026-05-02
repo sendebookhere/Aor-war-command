@@ -8,6 +8,7 @@ export const PAGE_COLORS = {
   "/inteligencia": "#FF6B6B",  // Inteligencia — rojo coral
   "/asamblea":     "#F4D03F",  // Asamblea — dorado cálido
   "/noticias":     "#FF9F43",  // Noticias Clan — naranja
+  "/versus":       "#FF6B6B",  // Versus — rojo coral
 };
 
 export const PAGE_NAMES = {

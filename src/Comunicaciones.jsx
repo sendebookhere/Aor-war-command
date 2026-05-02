@@ -119,6 +119,11 @@ export default function Comunicaciones() {
       created_at:  new Date().toISOString(),
     });
     if (error) { setFeedback(f=>({...f,[msg.id]:"Error: "+error.message})); return; }
+    // Award +1 pt acumulado for each confirmed propaganda message
+    if (playerId) {
+      const {data:pl} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
+      if (pl) await supabase.from("players").update({pts_acumulados:(pl.pts_acumulados||0)+1}).eq("id",parseInt(playerId));
+    }
     const blockEnd = Date.now() + 60*60*1000;
     setBlockUntil(blockEnd);
     localStorage.setItem("aor_prop_block", String(blockEnd));

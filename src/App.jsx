@@ -8,6 +8,7 @@ import Comunicaciones from "./Comunicaciones";
 import Inteligencia from "./Inteligencia";
 import Asamblea from "./Asamblea";
 import Noticias from "./Noticias";
+import Versus from "./Versus";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import PublicReport from "./Report";
@@ -204,14 +205,17 @@ function RegistrationTimer({warMode="classic"}) {
       const spain = new Date(now.getTime()+2*60*60*1000); // Spain CEST
       const day=ec.getDay(); const hour=ec.getHours();
       // Find next Friday close time
-      const closeHour = warMode==="new" ? 17 : 8; // Ecuador
+      // Close 1h before war start
+      // New mode: starts 22:00 Spain = 16:00 Ecuador → closes 21:00 Spain = 15:00 Ecuador
+      // Classic: starts 14:00 Spain = 8:00 Ecuador → closes 13:00 Spain = 7:00 Ecuador
+      const closeHourEc = warMode==="new" ? 15 : 7; // Ecuador UTC-5
       let daysUntilFri = (5-day+7)%7;
-      if (day===5 && hour>=closeHour) { setClosed(true); setTimeLeft(null); return; }
-      if (day===5 && hour<closeHour) daysUntilFri=0;
-      if (day===6||day===0) { setClosed(true); setTimeLeft(null); return; } // Sat/Sun closed
+      if (day===5 && hour>=closeHourEc) { setClosed(true); setTimeLeft(null); return; }
+      if (day===5 && hour<closeHourEc) daysUntilFri=0;
+      if (day===6||day===0) { setClosed(true); setTimeLeft(null); return; }
       const target = new Date(ec);
       target.setDate(ec.getDate()+daysUntilFri);
-      target.setHours(closeHour,0,0,0);
+      target.setHours(closeHourEc,0,0,0);
       const diff = target-ec;
       if(diff<=0){setClosed(true);setTimeLeft(null);return;}
       const d=Math.floor(diff/86400000);
@@ -241,7 +245,13 @@ function RegistrationTimer({warMode="classic"}) {
   const urgency = timeLeft.totalMs < 3600000; // last hour
   return (
     <div style={{background:urgency?"rgba(255,107,107,0.06)":"rgba(255,255,255,0.02)",border:"1px solid "+(urgency?"rgba(255,107,107,0.2)":"rgba(255,255,255,0.06)"),borderRadius:"8px",padding:"10px 14px",marginBottom:"12px"}}>
-      <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"6px"}}>REGISTRO CIERRA EN</div>
+      <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"2px"}}>REGISTRO CIERRA EN</div>
+      <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginBottom:"6px"}}>
+        {warMode==="new"
+          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>21:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 15:00h Ecuador · 14:00h México</span></span>
+          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>13:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 7:00h Ecuador · 6:00h México</span></span>
+        }
+      </div>
       <div style={{display:"flex",gap:"8px",alignItems:"baseline"}}>
         {timeLeft.d>0&&<><span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"#40E0FF",fontWeight:"bold"}}>{timeLeft.d}</span><span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>d </span></>}
         <span style={{fontFamily:"monospace",fontSize:"22px",color:urgency?"#FF6B6B":"#40E0FF",fontWeight:"bold"}}>{String(timeLeft.h).padStart(2,"0")}</span>
@@ -1816,6 +1826,32 @@ function SeguridadTab({players}) {
 
 
 
+
+// ── Auth Method Toggle ─────────────────────────────────────────────────────
+function AuthMethodToggle() {
+  const [method, setMethod] = useState("both"); // "both" | "phone_only" | "code_only"
+  useEffect(()=>{
+    supabase.from("app_settings").select("value").eq("key","auth_method").single()
+      .then(({data})=>{ if(data?.value) setMethod(data.value); });
+  },[]);
+  async function toggle(m) {
+    setMethod(m);
+    await supabase.from("app_settings").upsert({key:"auth_method",value:m},{onConflict:"key"});
+  }
+  return (
+    <div style={{marginTop:"8px",padding:"8px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
+      <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",marginBottom:"6px"}}>MÉTODO DE ACCESO PERMITIDO</div>
+      <div style={{display:"flex",gap:"4px"}}>
+        {[{v:"both",l:"Ambos"},{v:"phone_only",l:"Solo clave"},{v:"code_only",l:"Solo código"}].map(opt=>(
+          <button key={opt.v} onClick={()=>toggle(opt.v)} style={{flex:1,padding:"5px 4px",background:method===opt.v?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(method===opt.v?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"5px",color:method===opt.v?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
+            {opt.l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── User Access Toggle ─────────────────────────────────────────────────────
 function UserAccessToggle() {
   const [enabled, setEnabled] = useState(null);
@@ -1937,6 +1973,7 @@ function WarModeSwitch() {
       </div>
       {/* User access control */}
       <UserAccessToggle/>
+      <AuthMethodToggle/>
       {mode==="new" && (
         <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(255,159,67,0.06)",borderRadius:"4px",fontSize:"9px",color:"rgba(255,159,67,0.6)",fontFamily:"monospace"}}>
           AVISO: Modo en prueba — el juego puede revertir a configuración clásica
