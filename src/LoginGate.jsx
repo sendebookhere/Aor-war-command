@@ -14,6 +14,13 @@ export default function LoginGate({onLogin, children}) {
   const [checking, setChecking] = useState(true);
 
   useEffect(()=>{
+    // Bypass if coming from admin panel links
+    if (sessionStorage.getItem("aor_admin_bypass") === "1") {
+      sessionStorage.removeItem("aor_admin_bypass"); // one-time use
+      setAuthEnabled(false);
+      setChecking(false);
+      return;
+    }
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
         setAuthEnabled(data?.value === "true");

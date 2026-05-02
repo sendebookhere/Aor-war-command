@@ -40,7 +40,12 @@ function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
           <button onClick={()=>{setDraft(code);setEditing(true);}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",padding:"2px 8px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
         </div>
       ) : (
-        <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",marginBottom:"8px",fontFamily:"monospace"}}>Sin código — usa tu número de WhatsApp para acceder</div>
+        <div style={{marginBottom:"8px"}}>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",marginBottom:"6px",fontFamily:"monospace"}}>Sin código registrado</div>
+          <button onClick={()=>setEditing(true)} style={{width:"100%",padding:"8px",background:"rgba(255,215,0,0.08)",border:"1px dashed rgba(255,215,0,0.25)",borderRadius:"6px",color:"#FFD700",fontSize:"10px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+            + CREAR CÓDIGO ÚNICO DE 6 DÍGITOS
+          </button>
+        </div>
       )}
       {editing && (
         <div style={{marginBottom:"8px"}}>

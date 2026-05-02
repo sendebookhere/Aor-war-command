@@ -43,6 +43,7 @@ export default function Asamblea() {
   const [votes, setVotes]       = useState([]);
   const [history, setHistory]   = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [livePlayerPts, setLivePlayerPts] = useState([]); // live pts_acumulados
   const [votingEnabled, setVotingEnabled] = useState(true);
   const [warModeLocal, setWarModeLocal]   = useState("classic");
 
@@ -89,16 +90,20 @@ export default function Asamblea() {
   const week = getWarWeek();
 
   useEffect(()=>{
-    Promise.all([
-      supabase.from("players").select("*").eq("active",true).order("name"),
-      supabase.from("assembly_votes").select("*").eq("week",week),
-      supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(100),
-    ]).then(([p,v,h])=>{
+    async function loadAll() {
+      const [p,v,h,pp] = await Promise.all([
+        supabase.from("players").select("*").eq("active",true).order("name"),
+        supabase.from("assembly_votes").select("*").eq("week",week),
+        supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(100),
+        supabase.from("players").select("id,name,pts_acumulados").eq("active",true),
+      ]);
       setPlayers(p.data||[]);
       setVotes(v.data||[]);
       setHistory(h.data||[]);
+      setLivePlayerPts((pp.data||[]).map(x=>({id:x.id,name:x.name,pts:x.pts_acumulados||0})));
       setLoading(false);
-    });
+    }
+    loadAll();
   },[]);
 
   function handleNameInput(val) {
@@ -169,6 +174,9 @@ export default function Asamblea() {
       }
     }
 
+    // Refresh live pts so the display updates immediately
+    const {data:pp} = await supabase.from("players").select("id,name,pts_acumulados").eq("active",true);
+    setLivePlayerPts((pp||[]).map(x=>({id:x.id,name:x.name,pts:x.pts_acumulados||0})));
     setMsg("✓ Voto enviado. +3 puntos acreditados.");
     setSaving(false);
   }
@@ -213,26 +221,18 @@ export default function Asamblea() {
               {/* Highest points */}
               {(() => {
                 const eligible = ["siempre","intermitente","solo_una"];
-                const ranked = [...players].filter(p=>p.active && eligible.includes(p.availability)).sort((a,b)=>{
-                  const pa = (a.pt_registro||0)+(a.pt_disponibilidad_declarada||0)+(a.pt_disponibilidad||0)+(a.pt_obediencia||0)+(a.pt_batallas_ganadas||0)*2+(a.pt_batallas_perdidas||0)+(a.pt_defensas||0)+(a.pt_bonus||0)+(a.pt_bandido_post||0)+((a.pt_batallas_ganadas||0)>=6?10:0)-(a.pt_penalizacion||0)-(a.pt_no_aparecio||0)-(a.pt_ignoro_orden||0)*2-(a.pt_abandono||0)*2-(a.pt_inactivo_4h||0)*3-(a.pt_bandido_pre||0);
-                  const pb = (b.pt_registro||0)+(b.pt_disponibilidad_declarada||0)+(b.pt_disponibilidad||0)+(b.pt_obediencia||0)+(b.pt_batallas_ganadas||0)*2+(b.pt_batallas_perdidas||0)+(b.pt_defensas||0)+(b.pt_bonus||0)+(b.pt_bandido_post||0)+((b.pt_batallas_ganadas||0)>=6?10:0)-(b.pt_penalizacion||0)-(b.pt_no_aparecio||0)-(b.pt_ignoro_orden||0)*2-(b.pt_abandono||0)*2-(b.pt_inactivo_4h||0)*3-(b.pt_bandido_pre||0);
-                  return pb-pa;
-                });
-                const top = ranked[0];
+                // Use pts_acumulados which includes ALL points: war + propaganda + votes + bonuses
+                const ranked = [...livePlayerPts].sort((a,b)=>b.pts-a.pts);
+                const top = ranked[0] ? players.find(p=>p.id===ranked[0].id) : null;
                 if (!top) return null;
-                const tp = p=>(p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)+(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)+(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+((p.pt_batallas_ganadas||0)>=6?10:0)-(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)-(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0);
+                const tp = p => livePlayerPts.find(x=>x.id===p.id)?.pts || 0;
                 const topPts = tp(top);
+                const warPts = (top.pt_registro||0)+(top.pt_disponibilidad_declarada||0)+(top.pt_disponibilidad||0)+(top.pt_obediencia||0)+(top.pt_batallas_ganadas||0)*2+(top.pt_batallas_perdidas||0)+(top.pt_defensas||0)+(top.pt_bonus||0)+(top.pt_bandido_post||0)+((top.pt_batallas_ganadas||0)>=6?10:0)-(top.pt_penalizacion||0)-(top.pt_no_aparecio||0)-(top.pt_ignoro_orden||0)*2-(top.pt_abandono||0)*2-(top.pt_inactivo_4h||0)*3-(top.pt_bandido_pre||0);
                 const breakdown = [
-                  {l:"Registro",v:top.pt_registro||0},
-                  {l:"Apareció",v:top.pt_disponibilidad||0},
-                  {l:"Órdenes",v:(top.pt_obediencia||0)*2},
-                  {l:"Batallas ganadas",v:(top.pt_batallas_ganadas||0)*2},
-                  {l:"Bonus 6+ bat.",v:(top.pt_batallas_ganadas||0)>=6?10:0},
-                  {l:"Batallas perdidas",v:top.pt_batallas_perdidas||0},
-                  {l:"Defensas",v:top.pt_defensas||0},
-                  {l:"Bonus completo",v:(top.pt_bonus||0)*5},
-                  {l:"Bandido post",v:top.pt_bandido_post||0},
-                  {l:"Penalizaciones",v:-((top.pt_penalizacion||0)+(top.pt_no_aparecio||0)+(top.pt_ignoro_orden||0)*2+(top.pt_abandono||0)*2+(top.pt_inactivo_4h||0)*3+(top.pt_bandido_pre||0))},
+                  {l:"Puntos de guerra",v:warPts},
+                  {l:"Propaganda",v:(top.pts_acumulados||0)-warPts-(top.pt_whatsapp||0)-(top.pts_honorificos||0) > 0 ? (top.pts_acumulados||0)-warPts-(top.pt_whatsapp||0)-(top.pts_honorificos||0) : 0},
+                  {l:"WhatsApp",v:top.pt_whatsapp||0},
+                  {l:"Honoríficos",v:top.pts_honorificos||0},
                 ].filter(x=>x.v!==0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
 const topPts2 = ranked[1]?tp(ranked[1]):0;
