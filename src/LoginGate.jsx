@@ -14,6 +14,11 @@ export default function LoginGate({onLogin, children}) {
   const [checking, setChecking] = useState(true);
 
   useEffect(()=>{
+    // Save the page the user wanted to visit
+    const currentPath = window.location.pathname;
+    if (currentPath !== "/" && !sessionStorage.getItem("aor_intended_url")) {
+      sessionStorage.setItem("aor_intended_url", currentPath);
+    }
     // Clean up any stale bypass flags
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
@@ -32,8 +37,10 @@ export default function LoginGate({onLogin, children}) {
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
-    // Always navigate to HOME after login
-    if (window.location.pathname !== "/") window.location.href = "/";
+    // Navigate to the originally requested page, not always HOME
+    const intended = sessionStorage.getItem("aor_intended_url") || "/";
+    sessionStorage.removeItem("aor_intended_url");
+    if (window.location.pathname !== intended) window.location.href = intended;
   }}/>;
 }
 
@@ -258,6 +265,9 @@ function LoginScreen({onLogin}) {
             <div style={{marginTop:"10px",textAlign:"center",fontSize:"8px",color:"rgba(255,255,255,0.15)",fontFamily:"monospace",lineHeight:"1.6"}}>
               Si olvidaste tu código único, usa tu clave de acceso.
               Si no estás en el sistema, contacta a un administrador.
+            </div>
+            <div style={{marginTop:"24px",textAlign:"center",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.06)",fontFamily:"monospace"}}>
+              DEVELOPED BY NALGUITAS TECH
             </div>
           </div>
         )}
