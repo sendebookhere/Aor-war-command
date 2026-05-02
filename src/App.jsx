@@ -3117,7 +3117,10 @@ function AdminPanel({players, update, loading, saving, reload}) {
                 <div style={{fontFamily:"monospace",fontSize:"10px",color:link.color+"AA",background:"rgba(0,0,0,0.3)",padding:"5px 10px",borderRadius:"6px",marginBottom:"10px",wordBreak:"break-all"}}>{link.url}</div>
                 <div style={{display:"flex",gap:"8px"}}>
                   <button onClick={()=>navigator.clipboard.writeText(link.url)} style={{flex:1,padding:"8px",background:link.color+"22",border:"1px solid "+link.color+"44",borderRadius:"8px",color:link.color,fontSize:"12px",cursor:"pointer",fontWeight:"bold"}}>📋 Copiar link</button>
-                  <a href={link.url} target="_blank" rel="noreferrer" onClick={()=>sessionStorage.setItem("aor_admin_bypass","1")} style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",color:"rgba(255,255,255,0.5)",fontSize:"12px",cursor:"pointer",textDecoration:"none",textAlign:"center",display:"block"}}>🔗 Abrir</a>
+                  <a href={link.url} target="_blank" rel="noreferrer" onClick={()=>{
+                    // Use localStorage with expiry - persists across tabs
+                    localStorage.setItem("aor_admin_bypass", String(Date.now() + 30000)); // 30s window
+                  }} style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"8px",color:"rgba(255,255,255,0.5)",fontSize:"12px",cursor:"pointer",textDecoration:"none",textAlign:"center",display:"block"}}>🔗 Abrir</a>
                 </div>
               </div>
             ))}
