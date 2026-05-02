@@ -10,51 +10,49 @@ export const PAGES = [
   { href:"/versus",       label:"Versus",       color:"#FF6B6B", accent:"rgba(255,107,107,0.1)", border:"rgba(255,107,107,0.3)" },
 ];
 
+function nav(href) {
+  if (window.__aorNavigate) window.__aorNavigate(href);
+  else window.location.href = href;
+}
+
 function logout() {
-  ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth"].forEach(k=>sessionStorage.removeItem(k));
-  window.location.href="/";
+  ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth",
+   "aor_auth_enabled_cache"].forEach(k=>sessionStorage.removeItem(k));
+  nav("/");
 }
 
 function Btn({p, cur, current}) {
-  // Ranking (/reporte) is NOT active when viewing own profile
-  const active = cur===p.href && !(p.href==="/reporte" && current==="profile");
+  const isRanking = p.href==="/reporte";
+  const active = cur===p.href && !(isRanking && current==="profile");
   return (
-    <a href={p.href} style={{
+    <button onClick={()=>nav(p.href)} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      padding:"8px 2px",textDecoration:"none",
+      padding:"8px 2px",cursor:active?"default":"pointer",
       background: active ? p.accent : "rgba(255,255,255,0.02)",
       border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
-      borderRadius:"7px",textAlign:"center",
-      pointerEvents: active ? "none" : "auto",
+      borderRadius:"7px",textAlign:"center",width:"100%",
     }}>
       <div style={{fontSize:"9px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.03em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
         {p.label}
       </div>
-    </a>
+    </button>
   );
 }
 
 export default function NavBar({current}) {
-  const cur = current || "";
+  const cur = (current||"").split("?")[0];
   const isHome = cur === "/";
   const playerId = sessionStorage.getItem("aor_player_id");
   const playerName = sessionStorage.getItem("aor_player_name");
 
-  // Layout: HOME (full width top)
-  // Row 1: Puntos | Registro (center) | Ranking
-  // Row 2: Propaganda | Inteligencia | Asamblea
-  // Row 3: Noticias | Cerrar Sesión | Versus
-  // + Mi Perfil button (below HOME, always visible when logged in)
-
   return (
     <div style={{marginBottom:"20px"}}>
-      {/* HOME — full width */}
-      <a href="/" style={{
-        display:"block",textAlign:"center",padding:"10px",
+      {/* HOME */}
+      <button onClick={()=>nav("/")} style={{
+        display:"block",width:"100%",textAlign:"center",padding:"10px",
         background: isHome ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.02)",
         border:"1px solid "+(isHome ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.06)"),
-        borderRadius:"10px",textDecoration:"none",marginBottom:"6px",
-        pointerEvents: isHome ? "none" : "auto",
+        borderRadius:"10px",marginBottom:"6px",cursor:isHome?"default":"pointer",
       }}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"10px"}}>
           <div style={{textAlign:"left"}}>
@@ -67,48 +65,33 @@ export default function NavBar({current}) {
             <div style={{fontSize:"7px",color:"rgba(255,255,255,0.1)",fontFamily:"monospace",letterSpacing:"0.1em"}}>WAR COMMAND</div>
           </div>
         </div>
-      </a>
+      </button>
 
-      {/* Mi Perfil — visible when logged in */}
+      {/* Mi Perfil */}
       {playerId && (
-        <a href="/reporte?own=1" style={{
+        <button onClick={()=>nav("/reporte?own=1")} style={{
           display:"flex",alignItems:"center",justifyContent:"space-between",
-          padding:"7px 12px",marginBottom:"6px",textDecoration:"none",
+          padding:"7px 12px",marginBottom:"6px",width:"100%",cursor:"pointer",
           background: current==="profile" ? "rgba(64,224,255,0.08)" : "rgba(255,255,255,0.02)",
           border:"1px solid "+(current==="profile" ? "rgba(64,224,255,0.25)" : "rgba(255,255,255,0.07)"),
           borderRadius:"8px",
         }}>
-          <div style={{fontFamily:"monospace",fontSize:"9px",color:current==="profile"?"#40E0FF":"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>
-            MI PERFIL
-          </div>
-          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:current==="profile"?"rgba(64,224,255,0.8)":"rgba(255,255,255,0.3)"}}>
-            {playerName||""}
-          </div>
-        </a>
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:current==="profile"?"#40E0FF":"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>MI PERFIL</div>
+          <div style={{fontFamily:"Georgia,serif",fontSize:"11px",color:current==="profile"?"rgba(64,224,255,0.8)":"rgba(255,255,255,0.3)"}}>{playerName||""}</div>
+        </button>
       )}
 
-      {/* 3×3 grid */}
+      {/* 3×3 grid: Row1 | Row2 | Row3 */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"4px"}}>
-        {/* Row 1: Puntos | Registro | Ranking */}
         <Btn p={PAGES[1]} cur={cur} current={current}/>
         <Btn p={PAGES[2]} cur={cur} current={current}/>
         <Btn p={PAGES[3]} cur={cur} current={current}/>
-        {/* Row 2: Propaganda | Inteligencia | Asamblea */}
         <Btn p={PAGES[4]} cur={cur} current={current}/>
         <Btn p={PAGES[5]} cur={cur} current={current}/>
         <Btn p={PAGES[6]} cur={cur} current={current}/>
-        {/* Row 3: Noticias | Cerrar Sesión | Versus */}
         <Btn p={PAGES[7]} cur={cur} current={current}/>
-        <button onClick={logout} style={{
-          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          padding:"8px 2px",cursor:"pointer",
-          background:"rgba(255,107,107,0.04)",
-          border:"1px solid rgba(255,107,107,0.15)",
-          borderRadius:"7px",
-        }}>
-          <div style={{fontSize:"9px",color:"rgba(255,107,107,0.5)",fontFamily:"monospace",letterSpacing:"0.03em"}}>
-            Salir
-          </div>
+        <button onClick={logout} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 2px",cursor:"pointer",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"7px",width:"100%"}}>
+          <div style={{fontSize:"9px",color:"rgba(255,107,107,0.5)",fontFamily:"monospace",letterSpacing:"0.03em"}}>Salir</div>
         </button>
         <Btn p={PAGES[8]} cur={cur} current={current}/>
       </div>

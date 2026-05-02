@@ -1,3 +1,4 @@
+import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NavBar from "./NavBar";
@@ -37,11 +38,7 @@ export default function Noticias() {
     load();
   }
 
-  if (loading) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,159,67,0.4)"}}>
-      CARGANDO...
-    </div>
-  );
+  if (loading) return <LoadingScreen page="/noticias"/>;
 
   const news = posts.filter(p=>p.type==="noticia");
   const reqs  = posts.filter(p=>p.type==="requerimiento");

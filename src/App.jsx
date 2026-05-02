@@ -1,6 +1,7 @@
 import NavBar from "./NavBar";
 import UserAuthGate from "./UserAuth";
 import LoginGate from "./LoginGate";
+import { LoadingScreen } from "./LoadingScreen";
 import { getCountry } from "./SessionManager";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
@@ -3281,7 +3282,20 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [warMode, setWarMode] = useState(localStorage.getItem("aor_war_mode_cache")||"classic");
-  const path = window.location.pathname;
+  const [path, setPath]       = useState(window.location.pathname+(window.location.search||""));
+
+  // SPA navigation - intercept browser back/forward
+  useEffect(()=>{
+    function onPop() { setPath(window.location.pathname+(window.location.search||"")); }
+    window.addEventListener("popstate", onPop);
+    return ()=>window.removeEventListener("popstate", onPop);
+  },[]);
+
+  // Expose navigate function globally so NavBar can use it
+  window.__aorNavigate = (href) => {
+    window.history.pushState({}, "", href);
+    setPath(href);
+  };
   // Clear auth when user navigates away from admin — forces PIN on return
   if (path !== "/") sessionStorage.removeItem("aor_auth");
   const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
@@ -3325,7 +3339,7 @@ export default function App() {
 
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFD700",fontFamily:"serif",fontSize:"18px"}}>
-      CARGANDO...
+    <LoadingScreen page="/"/>
     </div>
   );
 

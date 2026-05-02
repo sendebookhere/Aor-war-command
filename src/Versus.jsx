@@ -1,3 +1,4 @@
+import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import NavBar from "./NavBar";
