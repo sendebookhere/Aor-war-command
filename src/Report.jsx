@@ -286,7 +286,7 @@ function PlayerProfile({ player, onBack }) {
           ← Volver al ranking
         </button>
 
-        <NavBar current="/reporte"/>
+        <NavBar current="profile"/>
         {/* Header */}
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
