@@ -164,7 +164,7 @@ export default function Inteligencia() {
           ) : (
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",padding:"6px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
               <span style={{fontFamily:"Georgia,serif",fontSize:"12px",color:"#FFD700"}}>{playerName}</span>
-              <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"4px",padding:"2px 7px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
+              <button onClick={()=>{["aor_session","aor_player_id","aor_player_name","aor_user_identity"].forEach(k=>sessionStorage.removeItem(k));window.location.reload();}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"4px",padding:"2px 7px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
             </div>
           )}
 

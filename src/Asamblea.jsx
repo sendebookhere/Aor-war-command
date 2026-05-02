@@ -90,17 +90,29 @@ export default function Asamblea() {
   const week = getWarWeek();
 
   useEffect(()=>{
+    function calcPeriodScore(p) {
+      // Total score for current period = archived + current war performance
+      const warPts = (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+        +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
+        +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+        +((p.pt_batallas_ganadas||0)>=6?10:0)
+        -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+        -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2
+        -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0);
+      return (p.pts_acumulados||0) + warPts;
+    }
     async function loadAll() {
-      const [p,v,h,pp] = await Promise.all([
+      const [p,v,h] = await Promise.all([
         supabase.from("players").select("*").eq("active",true).order("name"),
         supabase.from("assembly_votes").select("*").eq("week",week),
         supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(100),
-        supabase.from("players").select("id,name,pts_acumulados").eq("active",true),
       ]);
-      setPlayers(p.data||[]);
+      const allP = p.data||[];
+      setPlayers(allP);
       setVotes(v.data||[]);
       setHistory(h.data||[]);
-      setLivePlayerPts((pp.data||[]).map(x=>({id:x.id,name:x.name,pts:x.pts_acumulados||0})));
+      // Live pts = pts_acumulados + current war performance
+      setLivePlayerPts(allP.map(x=>({id:x.id,name:x.name,pts:calcPeriodScore(x)})));
       setLoading(false);
     }
     loadAll();
@@ -175,8 +187,8 @@ export default function Asamblea() {
     }
 
     // Refresh live pts so the display updates immediately
-    const {data:pp} = await supabase.from("players").select("id,name,pts_acumulados").eq("active",true);
-    setLivePlayerPts((pp||[]).map(x=>({id:x.id,name:x.name,pts:x.pts_acumulados||0})));
+    const {data:pp} = await supabase.from("players").select("*").eq("active",true);
+    setLivePlayerPts((pp||[]).map(x=>({id:x.id,name:x.name,pts:calcPeriodScore(x)})));
     setMsg("✓ Voto enviado. +3 puntos acreditados.");
     setSaving(false);
   }
@@ -378,10 +390,16 @@ const isDouble = isUniqueTop && winner===top.name;
                 </button>
               </div>
             </div>
+          ) : !votingEnabled ? (
+            <div style={{textAlign:"center",padding:"12px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"8px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,107,107,0.6)",letterSpacing:"0.15em"}}>VOTACIONES CERRADAS</div>
+              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"4px"}}>{warModeLocal==="new"?"Se abren automáticamente el sábado a las 18:00h España":"Se abren el domingo a las 8:00h España"}</div>
+            </div>
           ) : !canVote ? (
             <div style={{textAlign:"center",padding:"12px",background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px"}}>
               <div style={{fontSize:"11px",color:"#FF6B6B"}}>Solo pueden votar jugadores registrados en Conquistador, Refuerzos o Reserva.</div>
               {!sessionLockedId && <button onClick={()=>{setPlayerId(null);setPlayerName("");setNameInput("");}} style={{marginTop:"8px",padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"4px",color:"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer"}}>Cambiar jugador</button>}
+              {sessionLockedId && <button onClick={()=>{["aor_session","aor_player_id","aor_player_name","aor_user_identity"].forEach(k=>sessionStorage.removeItem(k));window.location.reload();}} style={{marginTop:"4px",padding:"3px 8px",background:"transparent",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"4px",color:"rgba(255,107,107,0.4)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>CERRAR SESIÓN</button>}
             </div>
           ) : (
             <div>
