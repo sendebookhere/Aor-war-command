@@ -493,20 +493,34 @@ function PlayerProfile({ player, onBack }) {
                 <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"#FF6B6B",fontFamily:"monospace",fontWeight:"bold"}}>{l}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>DERROTAS</div></div>
                 <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace",fontWeight:"bold"}}>{pvpBattles.length}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>SETS</div></div>
               </div>
-              {pvpBattles.slice(0,5).map(b=>{
-                const isC=String(b.challenger_id)===String(player.id);
-                const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
-                const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
-                const mW=isC?cW:oW,thW=isC?oW:cW,rival=isC?b.opponent_name:b.challenger_name;
-                return<div key={b.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px"}}>
-                  <span style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif"}}>vs {rival}</span>
-                  <div style={{fontFamily:"monospace",fontSize:"11px"}}>
-                    <span style={{color:mW>thW?"#A8FF78":"rgba(255,107,107,0.6)"}}>{mW}</span>
-                    <span style={{color:"rgba(255,255,255,0.2)"}}> - </span>
-                    <span style={{color:thW>mW?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{thW}</span>
+              {/* H2H desglose por rival */}
+              {(()=>{
+                const h2h={};
+                pvpBattles.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed").forEach(b=>{
+                  const isC=String(b.challenger_id)===String(player.id);
+                  const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
+                  const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
+                  const rival=isC?b.opponent_name:b.challenger_name;
+                  const mW=isC?cW:oW, thW=isC?oW:cW;
+                  if(!h2h[rival]) h2h[rival]={w:0,l:0};
+                  h2h[rival].w+=mW; h2h[rival].l+=thW;
+                });
+                return Object.entries(h2h).sort((a,b)=>b[1].w-a[1].w).map(([rival,r])=>(
+                  <div key={rival} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",marginBottom:"2px",background:"rgba(255,255,255,0.02)",borderRadius:"4px",border:"1px solid rgba(255,255,255,0.04)"}}>
+                    <span style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif"}}>vs {rival}</span>
+                    <div style={{fontFamily:"monospace",fontSize:"11px"}}>
+                      <span style={{color:r.w>r.l?"#A8FF78":"rgba(255,107,107,0.7)"}}>{r.w}V</span>
+                      <span style={{color:"rgba(255,255,255,0.2)"}}> / </span>
+                      <span style={{color:r.l>r.w?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{r.l}D</span>
+                    </div>
                   </div>
-                </div>;
-              })}
+                ));
+              })()}
+              {pvpBattles.filter(b=>b.status==="pending").length>0&&(
+                <div style={{fontSize:"8px",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginTop:"4px"}}>
+                  {pvpBattles.filter(b=>b.status==="pending").length} resultado(s) pendiente(s) de confirmar
+                </div>
+              )}
             </div>
           );
         })()}
@@ -559,6 +573,12 @@ export default function PublicReport() {
           return (b.bp||0) - (a.bp||0);
         });
         setPlayers(data);
+        // Auto-open own profile when session active
+        const sid = sessionStorage.getItem("aor_player_id");
+        if (sid) {
+          const own = data.find(p=>String(p.id)===sid);
+          if (own) setSelected(own);
+        }
       }
       setLoading(false);
     });
