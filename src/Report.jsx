@@ -271,7 +271,13 @@ function PlayerProfile({ player, onBack }) {
     { label:"🏰 Fuera del castillo (-2 c/u)", val: -(player.pt_fuera_castillo||0)*2,     show: (player.pt_fuera_castillo||0) > 0 },
     { label:"Inactivo +12h",             val: -(player.pt_inactivo_4h||0)*3,         show: (player.pt_inactivo_4h||0) > 0 },
     { label:"Bandido pre-guerra",        val: -(player.pt_bandido_pre||0),           show: (player.pt_bandido_pre||0) > 0 },
+    // pts_acumulados includes: propaganda, PvP, código único, asamblea/inteligencia votes, previous wars
+    { label:"📡 Propaganda + Votos + PvP + Código Único (acumulado)", val: acc, show: acc > 0 },
+    { label:"🏅 Honorífico de rango", val: hon, show: hon > 0 },
   ].filter(item => item.show);
+
+  // Grand total = war pts this week + all acumulados + honorificos
+  const grandTotal = pts + acc + hon;
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
@@ -573,11 +579,14 @@ export default function PublicReport() {
           return (b.bp||0) - (a.bp||0);
         });
         setPlayers(data);
-        // Auto-open own profile when session active
+        // Auto-open own profile when session active OR ?own=1 in URL
         const sid = sessionStorage.getItem("aor_player_id");
-        if (sid) {
+        const ownParam = new URLSearchParams(window.location.search).get("own");
+        if (sid && ownParam === "1") {
           const own = data.find(p=>String(p.id)===sid);
           if (own) setSelected(own);
+          // Clean URL
+          window.history.replaceState({}, "", "/reporte");
         }
       }
       setLoading(false);
