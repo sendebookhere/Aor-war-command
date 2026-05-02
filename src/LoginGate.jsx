@@ -76,7 +76,8 @@ function LoginScreen({onLogin}) {
   function handleName(val) {
     setNameInput(val); setSelected(null); setPhoneInput(""); setError(null);
     if (val.length<1){setSugg([]);return;}
-    setSugg(players.filter(p=>p.name.toLowerCase().startsWith(val.toLowerCase())).slice(0,6));
+    const normalize = s => s.toLowerCase().replace(/[''`]/g,"'");
+    setSugg(players.filter(p=>normalize(p.name).startsWith(normalize(val))).slice(0,6));
   }
 
   function selectPlayer(p) {
