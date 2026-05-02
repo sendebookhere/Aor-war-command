@@ -667,7 +667,7 @@ export default function PublicReport() {
 
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",color:"#FFD700",fontFamily:"serif",fontSize:"18px"}}>
-      Cargando ranking...
+      CARGANDO...
     </div>
   );
 

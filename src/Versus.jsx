@@ -122,7 +122,7 @@ export default function Versus() {
 
   const myBattles=battles.filter(b=>String(b.challenger_id)===String(playerId)||String(b.opponent_id)===String(playerId));
 
-  if(loading)return<div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)"}}>VERSUS — CARGANDO</div>;
+  if(loading)return<div style={{minHeight:"100vh",background:"#0d0d0f",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.4em",color:"rgba(64,224,255,0.2)"}}>CARGANDO...</div></div>;
 
   return(
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"50px"}}>
