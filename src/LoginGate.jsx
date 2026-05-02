@@ -14,22 +14,7 @@ export default function LoginGate({onLogin, children}) {
   const [checking, setChecking] = useState(true);
 
   useEffect(()=>{
-    // Bypass if coming from admin panel links (localStorage survives new tab)
-    const bypassExpiry = localStorage.getItem("aor_admin_bypass");
-    if (bypassExpiry && parseInt(bypassExpiry) > Date.now()) {
-      localStorage.removeItem("aor_admin_bypass"); // consume the flag
-      sessionStorage.setItem("aor_session_bypass","1"); // persist for this session tab
-      setAuthEnabled(false);
-      setChecking(false);
-      return;
-    }
-    localStorage.removeItem("aor_admin_bypass"); // clean up expired
-    // Check if this tab already has a bypass session
-    if (sessionStorage.getItem("aor_session_bypass") === "1") {
-      setAuthEnabled(false);
-      setChecking(false);
-      return;
-    }
+    // Clean up any stale bypass flags
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
         setAuthEnabled(data?.value === "true");
@@ -93,12 +78,21 @@ function LoginScreen({onLogin}) {
     setNameInput(val); setSelected(null); setPhoneInput(""); setError(null);
     if (val.length<1){setSugg([]);return;}
     const normalize = s => s.toLowerCase().replace(/[''`]/g,"'");
-    setSugg(players.filter(p=>normalize(p.name).startsWith(normalize(val))).slice(0,6));
+    const matches = players.filter(p=>normalize(p.name).startsWith(normalize(val))).slice(0,6);
+    setSugg(matches);
+    // Auto-switch to code mode if this player has a cached code
+    if (matches.length===1) {
+      const cached = localStorage.getItem("aor_saved_code_"+matches[0].name.toLowerCase().slice(0,8));
+      if (cached && authMethod !== "phone_only") setMode("code");
+    }
   }
 
   function selectPlayer(p) {
     setSelected(p); setNameInput(p.name); setSugg([]);
-    setPhoneInput(""); // Never pre-fill phone
+    // Pre-fill unique code from cache (NOT phone - never cached)
+    const cachedCode = localStorage.getItem("aor_saved_code_"+p.name.toLowerCase().slice(0,8));
+    if (cachedCode && mode==="code") setPhoneInput(cachedCode);
+    else setPhoneInput("");
     setTimeout(()=>phoneRef.current?.focus(), 100);
   }
 
