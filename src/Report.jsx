@@ -156,6 +156,7 @@ function PlayerProfile({ player, onBack }) {
   const [loading, setLoading]   = useState(true);
   const [newBp, setNewBp]       = useState("");
   const [newLevel, setNewLevel] = useState("");
+  const [newNivel, setNewNivel] = useState("");
   const [statsMsg, setStatsMsg] = useState("");
 
   useEffect(() => {
@@ -202,45 +203,49 @@ function PlayerProfile({ player, onBack }) {
         return;
       }
     }
-    const hasBp    = newBp.trim() !== "";
-    const hasLevel = newLevel.trim() !== "";
-    // 30% tolerance check
+    const hasBp      = newBp.trim() !== "";
+    const hasLevel   = newLevel.trim() !== "";
+    const hasNivel   = newNivel.trim() !== "";
+    if (!hasBp && !hasLevel && !hasNivel) return;
+    // 30% tolerance check for BP
     if (hasBp) {
       const current = player.bp || 0;
       const newVal  = parseInt(newBp);
-      if (current > 0) {
-        const pct = Math.abs(newVal - current) / current;
-        if (pct > 0.30) {
-          setStatsMsg("⚠ El nuevo BP ("+newVal.toLocaleString()+") difiere más del 30% del actual ("+current.toLocaleString()+"). Pide al admin que lo ajuste manualmente.");
-          return;
-        }
+      if (current > 0 && Math.abs(newVal-current)/current > 0.30) {
+        setStatsMsg("⚠ El nuevo BP difiere más del 30%. Pide al admin que lo ajuste.");
+        return;
       }
     }
+    // 30% tolerance for Poder
     if (hasLevel) {
       const current = player.level || 0;
       const newVal  = parseInt(newLevel);
-      if (current > 0) {
-        const pct = Math.abs(newVal - current) / current;
-        if (pct > 0.30) {
-          setStatsMsg("⚠ El nuevo Poder difiere más del 30% del actual. Pide al admin que lo ajuste manualmente.");
-          return;
-        }
+      if (current > 0 && Math.abs(newVal-current)/current > 0.30) {
+        setStatsMsg("⚠ El nuevo Poder difiere más del 30%. Pide al admin que lo ajuste.");
+        return;
       }
     }
-    const pts = hasBp && hasLevel ? 5 : 2;
-    const updates = { pt_stats: (player.pt_stats||0) + pts };
-    if (hasBp)    updates.bp    = parseInt(newBp);
-    if (hasLevel) updates.level = parseInt(newLevel);
+    // Nivel range check (1-340)
+    if (hasNivel) {
+      const n = parseInt(newNivel);
+      if (n < 1 || n > 340) { setStatsMsg("⚠ Nivel debe estar entre 1 y 340."); return; }
+    }
+    // Points: BP=+1, Poder=+1, Nivel=+1, all three=+5
+    const count = (hasBp?1:0)+(hasLevel?1:0)+(hasNivel?1:0);
+    const ptEarned = count===3 ? 5 : count;
+    const updates = { pt_stats: (player.pt_stats||0) + ptEarned };
+    if (hasBp)    updates.bp           = parseInt(newBp);
+    if (hasLevel) updates.level        = parseInt(newLevel);
+    if (hasNivel) updates.player_level = parseInt(newNivel);
     await supabase.from("players").update(updates).eq("id", player.id);
     await supabase.from("player_stats").insert({
-      player_id: player.id,
-      player_name: player.name,
+      player_id: player.id, player_name: player.name,
       bp:    hasBp    ? parseInt(newBp)    : (player.bp||0),
       level: hasLevel ? parseInt(newLevel) : (player.level||0),
       updated_by: "jugador",
     });
-    setStatsMsg("✓ +" + pts + " pts acreditados");
-    setNewBp(""); setNewLevel("");
+    setStatsMsg("✓ +" + ptEarned + " pts — " + [hasBp&&"BP",hasLevel&&"Poder",hasNivel&&"Nivel"].filter(Boolean).join(" · "));
+    setNewBp(""); setNewLevel(""); setNewNivel("");
   }
 
   const pts   = totalPts(player);
@@ -250,34 +255,42 @@ function PlayerProfile({ player, onBack }) {
   const avail = AVAILABILITY[player.availability] || AVAILABILITY.pendiente;
   const waLabel = (player.pt_whatsapp||0) === 50 ? "📱 WhatsApp Fundador (+50)" : "📱 WhatsApp Grupo (+25)";
 
-  const breakdown = [
-    { label:"Registro",                   val: player.pt_registro||0,                 show: (player.pt_registro||0) > 0 },
-    { label:"⭐ Registro anticipado (antes mié 23:59 España)", val: player.pt_registro_temprano||0, show: (player.pt_registro_temprano||0) > 0 },
-    { label:"Disponibilidad declarada",   val: player.pt_disponibilidad_declarada||0, show: (player.pt_disponibilidad_declarada||0) > 0 },
-    { label:"Apareció / Participó (+3)",  val: player.pt_disponibilidad||0,           show: (player.pt_disponibilidad||0) > 0 },
-    { label:"Siguió órdenes",            val: (player.pt_obediencia||0)*2,            show: (player.pt_obediencia||0) > 0 },
-    { label:"Batallas ganadas",           val: (player.pt_batallas_ganadas||0)*2,     show: (player.pt_batallas_ganadas||0) > 0 },
-    { label:"🌟 Bonus 6+ batallas",      val: 10,                                    show: (player.pt_batallas_ganadas||0) >= 6 },
-    { label:"Batallas perdidas",          val: player.pt_batallas_perdidas||0,        show: (player.pt_batallas_perdidas||0) > 0 },
-    { label:"Defensas de castillo",       val: player.pt_defensas||0,                show: (player.pt_defensas||0) > 0 },
-    { label:"Bonus completo",            val: (player.pt_bonus||0)*5,                show: (player.pt_bonus||0) > 0 },
-    { label:"Bandido post-guerra",        val: player.pt_bandido_post||0,             show: (player.pt_bandido_post||0) > 0 },
-    { label:"Actualización de stats",     val: player.pt_stats||0,                   show: (player.pt_stats||0) > 0 },
-    { label: waLabel,                     val: player.pt_whatsapp||0,                show: (player.pt_whatsapp||0) > 0 },
-    { label:"No apareció",               val: -(player.pt_no_aparecio||0),           show: (player.pt_no_aparecio||0) > 0 },
-    { label:"Sin registro ni participación", val: -(player.pt_penalizacion||0),      show: (player.pt_penalizacion||0) > 0 },
-    { label:"Ignoró órdenes",            val: -(player.pt_ignoro_orden||0)*2,        show: (player.pt_ignoro_orden||0) > 0 },
-    { label:"Abandonó defensa",          val: -(player.pt_abandono||0)*2,            show: (player.pt_abandono||0) > 0 },
-    { label:"🏰 Fuera del castillo (-2 c/u)", val: -(player.pt_fuera_castillo||0)*2,     show: (player.pt_fuera_castillo||0) > 0 },
-    { label:"Inactivo +12h",             val: -(player.pt_inactivo_4h||0)*3,         show: (player.pt_inactivo_4h||0) > 0 },
-    { label:"Bandido pre-guerra",        val: -(player.pt_bandido_pre||0),           show: (player.pt_bandido_pre||0) > 0 },
-    // pts_acumulados includes: propaganda, PvP, código único, asamblea/inteligencia votes, previous wars
-    { label:"📡 Propaganda + Votos + PvP + Código Único (acumulado)", val: acc, show: acc > 0 },
-    { label:"🏅 Honorífico de rango", val: hon, show: hon > 0 },
-  ].filter(item => item.show);
+  // Breakdown by category - NO honorificos
+  const warItems = [
+    { label:"Registro de disponibilidad",         val: player.pt_registro||0,                  show: (player.pt_registro||0)>0 },
+    { label:"⭐ Registro anticipado",             val: player.pt_registro_temprano||0,          show: (player.pt_registro_temprano||0)>0 },
+    { label:"Disponibilidad declarada",           val: player.pt_disponibilidad_declarada||0,  show: (player.pt_disponibilidad_declarada||0)>0 },
+    { label:"Apareció / Participó",               val: player.pt_disponibilidad||0,            show: (player.pt_disponibilidad||0)>0 },
+    { label:"Siguió órdenes del admin",          val: (player.pt_obediencia||0)*2,             show: (player.pt_obediencia||0)>0 },
+    { label:"Batallas ganadas (×2)",              val: (player.pt_batallas_ganadas||0)*2,      show: (player.pt_batallas_ganadas||0)>0 },
+    { label:"🌟 Bonus 6+ batallas",              val: 10,                                      show: (player.pt_batallas_ganadas||0)>=6 },
+    { label:"Batallas perdidas",                  val: player.pt_batallas_perdidas||0,         show: (player.pt_batallas_perdidas||0)>0 },
+    { label:"Defensas de castillo",               val: player.pt_defensas||0,                  show: (player.pt_defensas||0)>0 },
+    { label:"Bonus completo",                     val: (player.pt_bonus||0)*5,                 show: (player.pt_bonus||0)>0 },
+    { label:"Bandido post-guerra",                val: player.pt_bandido_post||0,              show: (player.pt_bandido_post||0)>0 },
+  ].filter(i=>i.show);
 
-  // Grand total = war pts this week + all acumulados + honorificos
-  const grandTotal = pts + acc + hon;
+  const directItems = [
+    { label:"📡 Propaganda publicada",            val: null, note:"×1pt c/mensaje" },
+    { label:"🗳 Votos Asamblea / Intel.",         val: null, note:"×3pts c/voto" },
+    { label:"⚔ Batallas PvP registradas",        val: null, note:"×1pt c/set" },
+    { label:"🔑 Código único (1pt/día)",          val: null, note:"×1pt/día" },
+    { label:waLabel,                              val: player.pt_whatsapp||0, note:null, show:(player.pt_whatsapp||0)>0 },
+    { label:"📊 Actualización BP/Poder/Nivel",   val: player.pt_stats||0, note:null, show:(player.pt_stats||0)>0 },
+  ];
+
+  const penalties = [
+    { label:"No apareció",                        val: -(player.pt_no_aparecio||0),            show:(player.pt_no_aparecio||0)>0 },
+    { label:"Sin registro ni participación",      val: -(player.pt_penalizacion||0),           show:(player.pt_penalizacion||0)>0 },
+    { label:"Ignoró órdenes",                     val: -(player.pt_ignoro_orden||0)*2,         show:(player.pt_ignoro_orden||0)>0 },
+    { label:"Abandonó defensa",                   val: -(player.pt_abandono||0)*2,             show:(player.pt_abandono||0)>0 },
+    { label:"Fuera del castillo",                 val: -(player.pt_fuera_castillo||0)*2,       show:(player.pt_fuera_castillo||0)>0 },
+    { label:"Inactivo +12h",                      val: -(player.pt_inactivo_4h||0)*3,          show:(player.pt_inactivo_4h||0)>0 },
+    { label:"Bandido pre-guerra",                 val: -(player.pt_bandido_pre||0),            show:(player.pt_bandido_pre||0)>0 },
+  ].filter(i=>i.show);
+
+  // Grand total = pts_acumulados(includes everything direct) + war pts this week
+  const grandTotal = acc + pts;
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
@@ -305,7 +318,36 @@ function PlayerProfile({ player, onBack }) {
             <span style={{color:rank.color, fontWeight:"bold"}}>{acc} pts acumulados</span>
           </div>
 
-          {hon > 0 && (
+          {/* Points breakdown by category */}
+          <div style={{marginTop:"10px"}}>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"6px"}}>DESGLOSE SEMANAL</div>
+            {warItems.length>0&&(<>
+              <div style={{fontSize:"8px",color:"rgba(64,224,255,0.5)",fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:"3px"}}>⚔ GUERRA</div>
+              {warItems.map(i=><div key={i.label} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
+                <span style={{color:"rgba(255,255,255,0.45)"}}>{i.label}</span>
+                <span style={{color:"#40E0FF",fontFamily:"monospace"}}>{i.val>0?"+":""}{i.val}</span>
+              </div>)}
+            </>)}
+            <div style={{marginTop:"6px"}}>
+              <div style={{fontSize:"8px",color:"rgba(200,162,255,0.5)",fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:"3px"}}>📡 ACUMULADO DIRECTO</div>
+              {directItems.filter(i=>i.val===null||i.show).map(i=><div key={i.label} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
+                <span style={{color:"rgba(255,255,255,0.45)"}}>{i.label}</span>
+                {i.val!==null?<span style={{color:"#C8A2FF",fontFamily:"monospace"}}>+{i.val}</span>:<span style={{color:"rgba(255,255,255,0.2)",fontFamily:"monospace",fontSize:"9px"}}>{i.note}</span>}
+              </div>)}
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.06)",marginTop:"2px"}}>
+                <span style={{color:"rgba(200,162,255,0.6)",fontFamily:"monospace",fontSize:"9px"}}>Total acumulado</span>
+                <span style={{color:"#C8A2FF",fontFamily:"monospace",fontWeight:"bold"}}>+{acc}</span>
+              </div>
+            </div>
+            {penalties.length>0&&(<div style={{marginTop:"6px"}}>
+              <div style={{fontSize:"8px",color:"rgba(255,107,107,0.5)",fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:"3px"}}>⚠ PENALIZACIONES</div>
+              {penalties.map(i=><div key={i.label} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
+                <span style={{color:"rgba(255,107,107,0.6)"}}>{i.label}</span>
+                <span style={{color:"#FF6B6B",fontFamily:"monospace"}}>{i.val}</span>
+              </div>)}
+            </div>)}
+          </div>
+          {false && hon > 0 && (
             <div style={{marginTop:"10px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"6px",padding:"8px 12px"}}>
               <div style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",marginBottom:"6px"}}>Desglose de puntos:</div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:"11px",color:"rgba(255,255,255,0.7)",marginBottom:"3px"}}>
@@ -485,7 +527,7 @@ function PlayerProfile({ player, onBack }) {
         {/* PvP Record */}
         {pvpBattles.length>0&&(()=>{
           let w=0,l=0;
-          pvpBattles.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed").forEach(b=>{
+          pvpBattles.filter(b=>b.status!=="disputed").forEach(b=>{
             const isC=String(b.challenger_id)===String(player.id);
             const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
             const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
@@ -499,10 +541,10 @@ function PlayerProfile({ player, onBack }) {
                 <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"#FF6B6B",fontFamily:"monospace",fontWeight:"bold"}}>{l}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>DERROTAS</div></div>
                 <div style={{textAlign:"center"}}><div style={{fontSize:"22px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace",fontWeight:"bold"}}>{pvpBattles.length}</div><div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>SETS</div></div>
               </div>
-              {/* H2H desglose por rival */}
+              {/* H2H desglose por rival - includes pending (unconfirmed) */}
               {(()=>{
                 const h2h={};
-                pvpBattles.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed").forEach(b=>{
+                pvpBattles.filter(b=>b.status!=="disputed").forEach(b=>{
                   const isC=String(b.challenger_id)===String(player.id);
                   const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
                   const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
