@@ -1,6 +1,7 @@
 import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { awardPts, revokePts } from "./PtsLedger";
 import NavBar from "./NavBar";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
@@ -8,8 +9,7 @@ import NalguitasFooter from "./NalguitasFooter";
 function getWarWeek(){const now=new Date(),ec=new Date(now.getTime()-5*3600000);const fri=new Date(ec);fri.setDate(ec.getDate()-((ec.getDay()+2)%7));const y=fri.getFullYear(),w=Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);return`${y}-W${w}`;}
 function getMonth(){return new Date().toISOString().slice(0,7);}
 function today(){return new Date().toISOString().slice(0,10);}
-async function awardPts(pid,pts){try{const{data:p}=await supabase.from("players").select("pts_acumulados").eq("id",parseInt(pid)).single();await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+pts}).eq("id",parseInt(pid));}catch(e){}}
-async function revokePts(pid,pts){try{const{data:p}=await supabase.from("players").select("pts_acumulados").eq("id",parseInt(pid)).single();await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-pts)}).eq("id",parseInt(pid));}catch(e){}}
+
 
 export default function Versus(){
   const [players,setPlayers]=useState([]);
@@ -46,9 +46,9 @@ export default function Versus(){
     if(error){setMsg("Error: "+error.message);setSaving(false);return;}
     // +1pt for registering, +1pt extra if won majority (2+)
     const regPts=myWins>=2?2:1;
-    await awardPts(playerId,regPts);
+    await awardPts(playerId,regPts,"pvp_registro",`vs ${opponent?.name}`);
     // +1pt to declared winner (if not tie)
-    if(myWins>1) await awardPts(playerId,1); // challenger won majority, already counted above
+    // majority bonus already in regPts // challenger won majority, already counted above
     await load();
     setMsg(`✓ Batalla registrada (+${regPts}pt). ${opponent.name} debe confirmar o DUDAR.`);
     setSaving(false);setFormOpen(false);setOpponent(null);setMyWins(null);
@@ -57,9 +57,9 @@ export default function Versus(){
 
   async function confirm(b){
     await supabase.from("pvp_battles").update({status:"confirmed"}).eq("id",b.id);
-    await awardPts(b.opponent_id,1); // confirming gets +1pt
+    await awardPts(b.opponent_id,1,"pvp_confirmo",`vs ${b.challenger_name}`);
     // +1pt to winner (opponent wins if challenger_wins < 2)
-    if(b.opponent_wins>=2) await awardPts(b.opponent_id,1);
+    if(b.opponent_wins>=2) await awardPts(b.opponent_id,1,"pvp_ganador",`vs ${b.challenger_name}`);
     await load();
   }
 
@@ -71,9 +71,9 @@ export default function Versus(){
     await supabase.from("pvp_battles").update({status:"disputed",disc_wins:dudoWins,disc_losses:dudoLosses}).eq("id",dudoBattle.id);
     // If disputant wins majority (3+): +3pts to disputant, revoke challenger's pts
     if(dudoWins>=3){
-      await awardPts(dudoBattle.opponent_id,3);
+      await awardPts(dudoBattle.opponent_id,3,"pvp_dudo_exitoso",`vs ${dudoBattle.challenger_name}`);
       const challPts=dudoBattle.challenger_wins>=2?2:1;
-      await revokePts(dudoBattle.challenger_id,challPts);
+      await revokePts(dudoBattle.challenger_id,challPts,"penalizacion",`DUDO perdido vs ${dudoBattle.opponent_name}`);
     }
     await load();
     const out=dudoWins>=3?`DUDO exitoso — +3pts para ti, se anulan los puntos del desafiador.`:`El desafiador decide si acepta o escala a admins.`;
@@ -84,7 +84,7 @@ export default function Versus(){
 
   async function acceptDudo(b){
     await supabase.from("pvp_battles").update({status:"disc_accepted"}).eq("id",b.id);
-    await awardPts(b.challenger_id,1); // accepts = +1pt
+    await awardPts(b.challenger_id,1,"pvp_acepto_dudo",`vs ${b.opponent_name}`);
     await load();
     setMsg("DUDO aceptado. +1pt para ti.");
     setTimeout(()=>setMsg(""),5000);
@@ -92,7 +92,7 @@ export default function Versus(){
 
   async function submitClaim(b){
     await supabase.from("pvp_battles").update({status:"claimed"}).eq("id",b.id);
-    await awardPts(b.challenger_id,5);
+    await awardPts(b.challenger_id,5,"pvp_escalo",`vs ${b.opponent_name}`);
     try{await supabase.from("clan_news").insert({type:"requerimiento",title:`DUDO ESCALADO — ${b.challenger_name} vs ${b.opponent_name}`,body:`${b.challenger_name} escala el DUDO a admins. Original: ${b.challenger_wins}V de 3. DUDO de ${b.opponent_name}: ${b.disc_wins||"?"}V de 5. Se requieren videos sin cortes en WhatsApp. El que gane las 5 en video recibe +5pts.`,author:"Sistema Versus",target:"admin",completions:[]});}catch(e){}
     await load();
     setMsg("Escalado a admins (+5pts). Envía tu video en WhatsApp.");
@@ -104,7 +104,7 @@ export default function Versus(){
 
   async function resolveAdmin(b,challWins){
     await supabase.from("pvp_battles").update({status:challWins?"confirmed":"confirmed_reversed"}).eq("id",b.id);
-    await awardPts(challWins?b.challenger_id:b.opponent_id,5);
+    await awardPts(challWins?b.challenger_id:b.opponent_id,5,"pvp_gano_video",`admin resolvió`);
     await load();
   }
 
@@ -125,9 +125,9 @@ export default function Versus(){
     bList.forEach(b=>{const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0};if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0};r[b.challenger_name].w+=cW;r[b.challenger_name].l+=oW;r[b.opponent_name].w+=oW;r[b.opponent_name].l+=cW;});
     return Object.entries(r).sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
   }
-  const rankGeneral=buildRecord(allConf);
-  const rankWeek=buildRecord(allConf.filter(b=>b.week===week));
-  const rankMonth=buildRecord(allConf.filter(b=>(b.month||b.created_at?.slice(0,7))===month));
+  const rankGeneral=buildRecord(allConf); // ALL confirmed battles
+  const rankWeek=buildRecord(allConf.filter(b=>b.week===week)); // current week
+  const rankMonth=buildRecord(allConf.filter(b=>(b.created_at||"").slice(0,7)===month)); // current month from created_at
 
   // Dudo stats: who has most duds
   const dudoCounts={};
