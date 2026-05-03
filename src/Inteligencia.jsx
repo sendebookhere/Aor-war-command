@@ -86,7 +86,7 @@ export default function Inteligencia() {
     });
     if (error) { setMsg("Error: "+error.message); setSaving(false); return; }
     // Give 3 points to voter
-    await awardPts(parseInt(playerId), 3, "intel_voto", `Voto inteligencia`);
+    await awardPts(parseInt(playerId), 1, "intel_voto", `Voto inteligencia`);
     setMyVotes({votes:JSON.stringify(votes)});
     setMsg("✓ Votos registrados. +3 puntos acreditados.");
     setSaving(false);

@@ -119,7 +119,7 @@ export const PTS = {
 
   // INTELIGENCIA MILITAR
   intel: {
-    voto_dificultad: 3,          // pesos según disponibilidad
+    voto_dificultad: 1,          // +1pt por voto (corrección sesión mayo 2026)
   },
   INTEL_VOTE_WEIGHTS: {
     siempre:       3,            // Conquistador

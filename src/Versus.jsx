@@ -149,6 +149,19 @@ export default function Versus(){
   const rankGeneral=buildRecord(allConf); // ALL confirmed battles
   const rankWeek=buildRecord(allConf.filter(b=>b.week===week)); // current week
   const rankMonth=buildRecord(allConf.filter(b=>(b.created_at||"").slice(0,7)===month)); // current month from created_at
+  // Top losers ranking (most losses)
+  const rankLosers=Object.entries((() => {
+    const r={};
+    allConf.forEach(b=>{
+      const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
+      const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
+      if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0};
+      if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0};
+      r[b.challenger_name].l+=oW; r[b.opponent_name].l+=cW;
+      r[b.challenger_name].w+=cW; r[b.opponent_name].w+=oW;
+    });
+    return r;
+  })()).sort((a,b)=>b[1].l-a[1].l);
 
   // Dudo stats: who has most duds
   const dudoCounts={};
@@ -296,7 +309,7 @@ export default function Versus(){
                     <div style={{fontSize:"8px",fontFamily:"monospace",color:statusColors[b.status]||"rgba(255,255,255,0.3)"}}>{b.week} · {statusLabels[b.status]||b.status}</div>
                   </div>
                   <div style={{fontFamily:"monospace",fontSize:"13px",fontWeight:"bold",textAlign:"right"}}>
-                    <span style={{color:"#A8FF78"}}>{b.challenger_wins}</span><span style={{color:"rgba(255,255,255,0.2)"}}> - </span><span style={{color:"#FF6B6B"}}>{b.opponent_wins}</span>
+                    <span style={{color:b.challenger_wins>0?"#A8FF78":"rgba(255,255,255,0.3)"}}>{b.challenger_wins}</span><span style={{color:"rgba(255,255,255,0.2)"}}> - </span><span style={{color:b.opponent_wins>0?"#FF6B6B":"rgba(255,255,255,0.3)"}}>{b.opponent_wins}</span>
                     {b.disc_wins!=null&&<div style={{fontSize:"8px",color:"#FFD700"}}>🎲{b.disc_wins}-{b.disc_losses}</div>}
                   </div>
                 </div>
@@ -358,7 +371,7 @@ export default function Versus(){
               <div style={{fontFamily:"monospace",fontSize:"6px",letterSpacing:"0.15em",color:"rgba(255,215,0,0.4)",marginBottom:"2px"}}>{title}</div>
               {bonus&&<div style={{fontFamily:"monospace",fontSize:"6px",color:"rgba(255,255,255,0.2)",marginBottom:"4px"}}>{bonus}</div>}
               {isAdmin&&type&&<button onClick={()=>awardPvpRankingBonus(type)} style={{width:"100%",padding:"3px",marginBottom:"4px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"3px",color:"rgba(255,215,0,0.6)",fontSize:"7px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS</button>}
-              {data.length===0?<div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",textAlign:"center"}}>—</div>
+              {data.length===0?<div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",textAlign:"center"}}>{battles.length>0?"sin confirmadas":"—"}</div>
               :data.slice(0,5).map(([name,r],i)=>(
                 <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
                   <span style={{fontSize:"9px",color:i===0?"#FFD700":"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"70px"}}>{i+1}. {name}</span>
@@ -368,6 +381,23 @@ export default function Versus(){
             </div>
           ))}
         </div>
+
+        {/* Losers ranking */}
+        {rankLosers.filter(([,r])=>r.l>0).length>0&&(
+          <div style={{background:"rgba(255,107,107,0.03)",border:"1px solid rgba(255,107,107,0.1)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.4)",marginBottom:"8px"}}>MÁS DERROTAS</div>
+            {rankLosers.filter(([,r])=>r.l>0).slice(0,5).map(([name,r],i)=>(
+              <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 8px",marginBottom:"2px",background:"rgba(255,255,255,0.01)",borderRadius:"4px"}}>
+                <span style={{fontFamily:"Georgia,serif",fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>{i+1}. {name}</span>
+                <div style={{fontFamily:"monospace",fontSize:"10px"}}>
+                  <span style={{color:r.w>0?"#A8FF78":"rgba(255,255,255,0.3)"}}>{r.w}V</span>
+                  <span style={{color:"rgba(255,255,255,0.2)"}}>/</span>
+                  <span style={{color:"#FF6B6B"}}>{r.l}D</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {msg&&!formOpen&&!dudoOpen&&<div style={{marginTop:"8px",fontSize:"10px",color:msg.startsWith("✓")||msg.startsWith("DUDO a")?"#A8FF78":"#FF9F43",fontFamily:"monospace"}}>{msg}</div>}
       </div>
