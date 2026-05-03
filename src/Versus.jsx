@@ -2,6 +2,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { awardPts, revokePts } from "./PtsLedger";
+import { PTS } from "./GameRules";
 import NavBar from "./NavBar";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";

@@ -112,30 +112,8 @@ function getRank(acc, hon, name, clanRole) {
   return RANKS.find(r => total >= r.min) || RANKS[RANKS.length-1];
 }
 
-function totalPts(p) {
-  const sb = (p.pt_batallas_ganadas||0) >= 6 ? 10 : 0;
-  return (p.pt_registro||0)
-    + (p.pt_registro_temprano||0)
-    + (p.pt_disponibilidad_declarada||0)
-    + (p.pt_disponibilidad||0)
-    + (p.pt_obediencia||0)
-    + (p.pt_batallas_ganadas||0)*2
-    + (p.pt_batallas_perdidas||0)
-    + (p.pt_defensas||0)
-    + (p.pt_bonus||0)
-    + (p.pt_bandido_post||0)
-    + (p.pt_stats||0)
-    // pt_whatsapp is already included in pts_acumulados
-    // (added at player creation and at weekly archiving)
-    + sb
-    - (p.pt_penalizacion||0)
-    - (p.pt_no_aparecio||0)
-    - (p.pt_ignoro_orden||0)*2
-    - (p.pt_abandono||0)*2
-    - (p.pt_inactivo_4h||0)*3
-    - (p.pt_fuera_castillo||0)*2
-  - (p.pt_bandido_pre||0);
-}
+import { calcWarPts, calcGrandTotal } from "./GameRules";
+function totalPts(p) { return calcWarPts(p); }
 
 function Pill({ color, children }) {
   return (
@@ -293,9 +271,8 @@ function PlayerProfile({ player, onBack }) {
     { label:"Bandido pre-guerra",                 val: -(player.pt_bandido_pre||0),            show:(player.pt_bandido_pre||0)>0 },
   ].filter(i=>i.show);
 
-  // Grand total = pts_acumulados(all direct) + war pts this week
-  // pts_honorificos excluded — they are a rank buffer, not earned points
-  const grandTotal = acc + pts;
+  // Grand total from GameRules.calcGrandTotal
+  const grandTotal = calcGrandTotal(player);
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
