@@ -25,7 +25,7 @@ function Btn({p, cur, current}) {
   const isRanking = p.href==="/reporte";
   const active = cur===p.href && !(isRanking && current==="profile");
   return (
-    <button onClick={()=>nav(p.href)} style={{
+    <button onClick={()=>{nav(p.href); if(isRanking) setTimeout(()=>window.__reportNav&&window.__reportNav(),50);}} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
       padding:"8px 2px",cursor:active?"default":"pointer",
       background: active ? p.accent : "rgba(255,255,255,0.02)",
@@ -70,13 +70,11 @@ export default function NavBar({current}) {
       {/* Mi Perfil */}
       {playerId && (
         <button onClick={()=>{
-          if (window.__openOwnProfile) {
-            // Already on /reporte - just open profile without navigation
-            window.__openOwnProfile();
-            if(window.__aorNavigate) window.__aorNavigate("/reporte?own=1");
-          } else {
-            nav("/reporte?own=1");
-          }
+          // Always navigate with SPA router - PublicReport will handle opening profile
+          if(window.__aorNavigate) window.__aorNavigate("/reporte?own=1");
+          else window.location.href="/reporte?own=1";
+          // Also fire reportNav in case we're already on /reporte
+          setTimeout(()=>window.__reportNav&&window.__reportNav(),50);
         }} style={{
           display:"flex",alignItems:"center",justifyContent:"space-between",
           padding:"7px 12px",marginBottom:"6px",width:"100%",cursor:"pointer",
