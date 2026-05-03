@@ -129,9 +129,8 @@ export default function Versus() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"50px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/versus"/>
-        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>VERSUS — SISTEMA PvP</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Registra el resultado de <strong style={{color:"#FF6B6B"}}>3 batallas</strong> contra cualquier rival del clan. Cada set registrado suma <strong style={{color:"#A8FF78"}}>+1 pt</strong> (máx. 5 desafíos/día). El rival debe confirmar — si refuta, puedes presentar un <strong style={{color:"#FFD700"}}>claim</strong> que resuelven los administradores con videos. Resolución exitosa: <strong style={{color:"#A8FF78"}}>+5 pts para ambos</strong>.</div></div>
-        
         <PageHeader page="/versus"/>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>VERSUS — PvP</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.7"}}>Registra resultados de 3 batallas contra rivales del clan (+1 pt por set, máx 5/día). El rival confirma o refuta. Discrepancias se resuelven con video. Resolución exitosa: +5 pts para ambos.</div></div>
 
         {isAdmin&&claimedAdmin.length>0&&(
           <div style={{marginBottom:"16px"}}>
@@ -211,20 +210,7 @@ export default function Versus() {
         </div>
 
         {ranked.length>0&&(
-          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-            <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",marginBottom:"10px"}}>RANKING PvP — BATALLAS CONFIRMADAS</div>
-            {ranked.map(([name,r],i)=>(
-              <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",marginBottom:"3px",background:i===0?"rgba(255,215,0,0.05)":"rgba(255,255,255,0.01)",borderRadius:"5px"}}>
-                <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
-                  <span style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.2)",width:"16px"}}>{i+1}</span>
-                  <span style={{fontFamily:"Georgia,serif",fontSize:"12px",color:i===0?"#FFD700":"rgba(255,255,255,0.6)"}}>{name}</span>
-                </div>
-                <div style={{fontFamily:"monospace",fontSize:"10px"}}>
-                  <span style={{color:"#A8FF78"}}>{r.w}V</span><span style={{color:"rgba(255,255,255,0.2)"}}>/</span><span style={{color:"#FF6B6B"}}>{r.l}D</span>
-                  <span style={{color:"rgba(255,255,255,0.2)",fontSize:"8px"}}> {r.sets}sets</span>
-                </div>
-              </div>
-            ))}
+          ))}
           </div>
         )}
 
