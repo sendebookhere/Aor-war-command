@@ -97,8 +97,6 @@ export default function Inteligencia() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/inteligencia"/>
-        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>INTELIGENCIA MILITAR</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Registro histórico de guerras y análisis de rivales. Evalúa la dificultad de los clanes enemigos para preparar mejor la siguiente batalla. Cada voto de dificultad suma <strong style={{color:"#A8FF78"}}>+3 pts</strong>.</div></div>
-        
         <PageHeader page="/inteligencia"/>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px"}}>
           <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>INTELIGENCIA MILITAR</div>
