@@ -28,12 +28,13 @@ export default function LoginGate({onLogin, children}) {
     }
     supabase.from("app_settings").select("value").eq("key","user_auth_enabled").single()
       .then(({data})=>{
-        const val = data?.value === "true";
+        // Default to TRUE if no setting exists yet (require auth by default)
+        const val = data?.value !== "false"; // true unless explicitly set to "false"
         sessionStorage.setItem("aor_auth_enabled_cache", String(val));
         setAuthEnabled(val);
         setChecking(false);
       })
-      .catch(()=>{ setAuthEnabled(false); setChecking(false); });
+      .catch(()=>{ setAuthEnabled(true); setChecking(false); }); // fail safe: require auth
   },[]);
 
   if (checking) return <SplashScreen/>;
