@@ -125,7 +125,8 @@ function totalPts(p) {
     + (p.pt_bonus||0)
     + (p.pt_bandido_post||0)
     + (p.pt_stats||0)
-    + (p.pt_whatsapp||0)
+    // pt_whatsapp is already included in pts_acumulados
+    // (added at player creation and at weekly archiving)
     + sb
     - (p.pt_penalizacion||0)
     - (p.pt_no_aparecio||0)
@@ -434,7 +435,7 @@ function PlayerProfile({ player, onBack }) {
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(200,162,255,0.4)",marginBottom:"4px"}}>📡 ACTIVIDAD SEMANAL</div>
             {[
               {l:"📊 BP / Poder / Nivel actualizado", v:player.pt_stats||0, show:(player.pt_stats||0)>0},
-              {l:`${(player.pt_whatsapp||0)===50?"📱 WhatsApp Fundador":"📱 WhatsApp Grupo"}`, v:player.pt_whatsapp||0, show:(player.pt_whatsapp||0)>0},
+              // pt_whatsapp is already included in pts_acumulados (no double display)
               {l:"📡 Propaganda publicada", v:null, note:"+1pt c/mensaje"},
               {l:"🗳 Asamblea / Inteligencia votadas", v:null, note:"+3pts c/voto"},
               {l:"⚔ Batallas PvP registradas", v:null, note:"+1pt c/set"},

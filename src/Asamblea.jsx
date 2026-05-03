@@ -93,14 +93,18 @@ export default function Asamblea() {
 
   useEffect(()=>{
     function calcPeriodScore(p) {
-      // Total score for current period = archived + current war performance
-      const warPts = (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+      // Total = ALL point columns + pts_acumulados (propaganda/votos/PvP/código)
+      const warPts = (p.pt_registro||0)+(p.pt_registro_temprano||0)
+        +(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
         +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
         +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+        // pt_whatsapp already in pts_acumulados (set at player creation)
+        +(p.pts_honorificos||0)      // rank honorific pts (not in acc)
         +((p.pt_batallas_ganadas||0)>=6?10:0)
         -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
         -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2
-        -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0);
+        -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0)
+        -(p.pt_fuera_castillo||0)*2;
       return (p.pts_acumulados||0) + warPts;
     }
     async function loadAll() {
@@ -256,7 +260,7 @@ export default function Asamblea() {
                 const acum = top.pts_acumulados||0;
                 const breakdown = [
                   warPts>0 && {l:"⚔ Esta guerra",v:warPts,c:"#40E0FF"},
-                  (top.pt_whatsapp||0)>0 && {l:"📱 WhatsApp",v:top.pt_whatsapp||0,c:"#A8FF78"},
+                  // pt_whatsapp included in acumulado row below
                   acum>0 && {l:"📡 Acumulado (propaganda · votos · PvP · código)",v:acum,c:"#C8A2FF"},
                 ].filter(x=>x&&x.v>0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
