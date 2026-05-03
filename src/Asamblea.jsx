@@ -249,9 +249,12 @@ export default function Asamblea() {
                 const eligibleIds = new Set(
                   players.filter(p=>eligible.includes(p.availability)).map(p=>p.id)
                 );
-                const ranked = [...livePlayerPts]
+                // "Mayor puntaje jornada" = only THIS week's war pts (not historical acc)
+                const rankedByJornada = players
                   .filter(p=>eligibleIds.has(p.id))
+                  .map(p=>({id:p.id, name:p.name, pts:calcWarPts(p)}))
                   .sort((a,b)=>b.pts-a.pts);
+                const ranked = rankedByJornada; // war pts only for jornada award
                 const top = ranked[0] ? players.find(p=>p.id===ranked[0].id) : null;
                 if (!top) return null;
                 const tp = p => livePlayerPts.find(x=>x.id===p.id)?.pts || 0;
