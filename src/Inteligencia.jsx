@@ -163,8 +163,7 @@ export default function Inteligencia() {
                 </div>
               )}
             </div>
-          ) : (
-            ) : rivalClans.length === 0 ? (
+          ) : rivalClans.length === 0 ? (
             <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.25)",textAlign:"center",padding:"12px",letterSpacing:"0.1em"}}>SIN CLANES REGISTRADOS PARA VOTAR</div>
           ) : rivalClans.length === 1 ? (
             /* Single clan: vote if you want to face them again */
