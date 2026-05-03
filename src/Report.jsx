@@ -133,6 +133,7 @@ function PlayerProfile({ player, onBack }) {
   const [msgLogs,  setMsgLogs]  = useState([]);
   const [assemblyWins, setAssemblyWins] = useState([]);
   const [pvpBattles,   setPvpBattles]   = useState([]);
+  const [ptsLedger,    setPtsLedger]    = useState([]);
   const [loading, setLoading]   = useState(true);
   const [newBp, setNewBp]       = useState("");
   const [newLevel, setNewLevel] = useState("");
@@ -147,12 +148,14 @@ function PlayerProfile({ player, onBack }) {
       supabase.from("message_logs").select("*").eq("player_id", player.id).order("created_at", {ascending:false}).limit(50),
       supabase.from("assembly_votes").select("week,voter_weight").eq("voted_player_id", player.id).order("created_at", {ascending:false}).limit(20),
       supabase.from("pvp_battles").select("*").or(`challenger_id.eq.${player.id},opponent_id.eq.${player.id}`).order("created_at",{ascending:false}).limit(50),
-    ]).then(([h, s, m, av, pvp]) => {
+      supabase.from("pts_ledger").select("*").eq("player_id",player.id).order("created_at",{ascending:false}).limit(50),
+    ]).then(([h, s, m, av, pvp, ledger]) => {
       setHistory(h.value?.data || []);
       setStatsList(s.value?.data || []);
       setMsgLogs(m.value?.data || []);
       setAssemblyWins(av.value?.data || []);
       setPvpBattles(pvp.value?.data || []);
+      setPtsLedger(ledger.value?.data || []);
       setLoading(false);
     });
   }, [player.id]);

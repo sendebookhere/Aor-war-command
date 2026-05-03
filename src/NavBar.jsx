@@ -103,6 +103,9 @@ export default function NavBar({current}) {
         </button>
         <Btn p={PAGES[8]} cur={cur} current={current}/>
       </div>
+      <button onClick={()=>nav("/acerca")} style={{width:"100%",marginTop:"6px",padding:"5px",background:"rgba(255,255,255,0.01)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"6px",color:"rgba(255,255,255,0.15)",fontSize:"8px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+        ACERCA DE LA APP
+      </button>
     </div>
   );
 }

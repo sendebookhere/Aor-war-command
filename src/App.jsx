@@ -1,4 +1,5 @@
 import NavBar from "./NavBar";
+import AcercaDe from "./AcercaDe";
 import UserAuthGate from "./UserAuth";
 import LoginGate from "./LoginGate";
 import { LoadingScreen } from "./LoadingScreen";
@@ -1955,6 +1956,80 @@ function WarModeSwitch() {
     const next = !votingEnabled;
     setVotingEnabled(next);
     await supabase.from("app_settings").upsert({key:"voting_enabled",value:String(next)},{onConflict:"key"});
+    // When CLOSING voting (true→false): award pts to winners
+    if (!next) {
+      await awardAssamblyWinners();
+    }
+  }
+
+  async function awardAssamblyWinners() {
+    // Load current votes + players to determine winners
+    try {
+      const week = getWarWeek();
+      const [{data:votes},{data:allP}] = await Promise.all([
+        supabase.from("assembly_votes").select("*").eq("week",week),
+        supabase.from("players").select("*").eq("active",true),
+      ]);
+      if (!votes?.length || !allP?.length) return;
+
+      // Calculate vote totals (weighted)
+      const rankWeights = {"Líder 👑":5,"Co-Líder 👑":4,"Oficial ⚜":3,"Veterano ★★★":2,"Leyenda 🌟":2};
+      const voteTotals = {};
+      for (const v of votes) {
+        const voter = allP.find(p=>String(p.id)===String(v.voter_id));
+        const total = (voter?.pts_acumulados||0)+calcWarPts(voter||{});
+        const rank = getRank(total, voter?.name||"");
+        const w = rankWeights[rank.label] || 1;
+        voteTotals[v.voted_player_id] = (voteTotals[v.voted_player_id]||0) + w;
+      }
+
+      // Find top voted player(s)
+      const maxVotes = Math.max(...Object.values(voteTotals));
+      const topVoted = Object.entries(voteTotals).filter(([,v])=>v===maxVotes).map(([id])=>id);
+
+      // Find highest score player(s) among eligible
+      const eligible = ["siempre","intermitente","solo_una"];
+      const eligiblePlayers = allP.filter(p=>eligible.includes(p.availability));
+      const scores = eligiblePlayers.map(p=>({id:String(p.id),name:p.name,pts:(p.pts_acumulados||0)+calcWarPts(p)}));
+      const maxScore = Math.max(...scores.map(s=>s.pts));
+      const topScore = scores.filter(s=>s.pts===maxScore).map(s=>s.id);
+
+      const awardedIds = new Set();
+
+      if (topVoted.length > 1) {
+        // Empate en votos: +3 cada uno
+        for (const id of topVoted) {
+          await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:3,source:"asamblea_empate_votos",note:`Empate más votado semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+          const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
+          await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+3}).eq("id",parseInt(id));
+          awardedIds.add(id);
+        }
+      } else if (topVoted.length === 1) {
+        const id = topVoted[0];
+        awardedIds.add(id);
+        const bonus = topScore.includes(id) ? 20 : 10; // pichichi = 10+10
+        const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
+        await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+bonus}).eq("id",parseInt(id));
+        await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:bonus,source:bonus===20?"asamblea_pichichi":"asamblea_ganador",note:`Guerrero Implacable semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+      }
+
+      if (topScore.length > 1) {
+        // Empate en puntaje: +3 cada uno
+        for (const id of topScore) {
+          if (awardedIds.has(id)) continue;
+          const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
+          await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+3}).eq("id",parseInt(id));
+          await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:3,source:"asamblea_empate_puntaje",note:`Empate mayor puntaje semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+        }
+      } else if (topScore.length === 1 && !awardedIds.has(topScore[0])) {
+        const id = topScore[0];
+        const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
+        await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+10}).eq("id",parseInt(id));
+        await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:10,source:"asamblea_mayor_puntaje",note:`Mayor puntaje semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+      }
+
+      console.log("✓ Asamblea winners awarded");
+    } catch(e) { console.error("awardAssamblyWinners:", e); }
   }
 
   return (
@@ -3340,6 +3415,13 @@ export default function App() {
         if (lastReset && lastReset >= thisMonday) return; // already done
         console.log("Auto weekly reset triggered: Monday 9am Spain");
         await weeklyReset(true);
+        // Show notification to any admin viewing the app
+        try {
+          await supabase.from("app_settings").upsert({
+            key:"last_reset_notification",
+            value:`Cierre automático ejecutado el ${new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"})} a las 9:00h España`
+          },{onConflict:"key"});
+        } catch(e){}
       } catch(e) { console.warn("Auto-reset check failed:", e); }
     }
     // Run check after players are loaded
