@@ -639,7 +639,7 @@ export default function PublicReport() {
           if (p.name === "PUNK'Z" || p.clan_role === "Líder") return 0;
           if (p.clan_role === "Co-Líder") return 1;
           if (p.clan_role === "Oficial")  return 2;
-          const total = (p.pts_acumulados||0) + totalPts(p); // pts_honorificos excluded (rank buffer, not earned pts)
+          const total = (p.pts_acumulados||0) + totalPts(p); // honorificos excluded (buffer only)
           if (total >= 1000) return 3;
           if (total >= 500)  return 4;
           if (total >= 100)  return 5;
