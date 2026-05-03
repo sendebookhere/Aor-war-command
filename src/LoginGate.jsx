@@ -233,16 +233,27 @@ function LoginScreen({onLogin}) {
         {/* Auth mode + input */}
         {selected && (
           <div className="login-in-d2">
-            {authMethod !== "code_only" && authMethod !== "phone_only" && (
-              <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
-                <button onClick={()=>{setMode("phone");setPhoneInput("");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"phone");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
-                  CLAVE
-                </button>
-                <button onClick={()=>{setMode("code");const c=selected?localStorage.getItem("aor_code_"+selected.id):"";setPhoneInput(c||"");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"code");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
-                  CÓDIGO ÚNICO
-                </button>
-              </div>
-            )}
+            {(()=>{
+              // If player has a cached code, hide phone option entirely
+              const hasCachedCode = selected && !!localStorage.getItem("aor_code_"+selected.id);
+              const showPhone = authMethod !== "code_only" && !hasCachedCode;
+              const showCode = authMethod !== "phone_only";
+              if (!showPhone && !showCode) return null;
+              if (showPhone && showCode) return (
+                <div style={{display:"flex",gap:"4px",marginBottom:"10px"}}>
+                  <button onClick={()=>{setMode("phone");setPhoneInput("");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"phone");}} style={{flex:1,padding:"7px",background:mode==="phone"?"rgba(64,224,255,0.08)":"transparent",border:"1px solid "+(mode==="phone"?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="phone"?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>CLAVE</button>
+                  <button onClick={()=>{setMode("code");const c=selected?localStorage.getItem("aor_code_"+selected.id):"";setPhoneInput(c||"");if(selected)localStorage.setItem("aor_pref_mode_"+selected.id,"code");}} style={{flex:1,padding:"7px",background:mode==="code"?"rgba(255,215,0,0.08)":"transparent",border:"1px solid "+(mode==="code"?"rgba(255,215,0,0.25)":"rgba(255,255,255,0.06)"),borderRadius:"6px",color:mode==="code"?"#FFD700":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>CÓDIGO ÚNICO</button>
+                </div>
+              );
+              // Only code mode (has cached code or code_only)
+              if (hasCachedCode) return (
+                <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"10px",padding:"6px 10px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"6px"}}>
+                  <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",letterSpacing:"0.1em"}}>CÓDIGO ÚNICO</div>
+                  <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)"}}>•••••• guardado</div>
+                </div>
+              );
+              return null;
+            })()}
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(255,255,255,0.2)",marginBottom:"4px"}}>
               {mode==="phone"?"CLAVE DE ACCESO — no se almacena":"CÓDIGO ÚNICO DE 6 DÍGITOS"}
             </div>
