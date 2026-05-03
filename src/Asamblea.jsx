@@ -2,6 +2,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { getWeeklyBreakdown } from "./PtsLedger";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 
@@ -438,6 +439,58 @@ const isDouble = isUniqueTop && winner===top.name;
             </div>
           )}
         </div>
+
+        {/* Top 3 de la semana con desglose */}
+        {(()=>{
+          const eligible = ["siempre","intermitente","solo_una"];
+          const top3 = [...livePlayerPts]
+            .filter(p=>{
+              const pl=players.find(x=>x.id===p.id);
+              return pl && eligible.includes(pl.availability);
+            })
+            .sort((a,b)=>b.pts-a.pts)
+            .slice(0,3);
+          if(!top3.length) return null;
+          const medals=["🥇","🥈","🥉"];
+          const medalColors=["#FFD700","rgba(192,192,192,0.9)","rgba(205,127,50,0.9)"];
+          return(
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,255,255,0.3)",marginBottom:"12px"}}>TOP 3 — PUNTOS DE LA SEMANA</div>
+              {top3.map((p,i)=>{
+                const pl=players.find(x=>x.id===p.id);
+                if(!pl) return null;
+                const warPts=(pl.pt_registro||0)+(pl.pt_disponibilidad_declarada||0)+(pl.pt_disponibilidad||0)+(pl.pt_obediencia||0)+(pl.pt_batallas_ganadas||0)*2+(pl.pt_batallas_perdidas||0)+(pl.pt_defensas||0)+(pl.pt_bonus||0)+(pl.pt_bandido_post||0)+(pl.pt_stats||0)+((pl.pt_batallas_ganadas||0)>=6?10:0)-(pl.pt_penalizacion||0)-(pl.pt_no_aparecio||0)-(pl.pt_ignoro_orden||0)*2-(pl.pt_abandono||0)*2-(pl.pt_inactivo_4h||0)*3-(pl.pt_bandido_pre||0);
+                const acc=pl.pts_acumulados||0;
+                const breakdownItems=[
+                  warPts>0&&{l:"⚔ Guerra",v:warPts,c:"#40E0FF"},
+                  (pl.pt_whatsapp||0)>0&&{l:"📱 WhatsApp",v:pl.pt_whatsapp,c:"#A8FF78"},
+                  acc>0&&{l:"📡 Acumulado (propaganda·votos·PvP·código)",v:acc,c:"#C8A2FF"},
+                ].filter(Boolean);
+                return(
+                  <div key={p.id} style={{marginBottom:"12px",padding:"10px 12px",background:`rgba(255,255,255,0.0${4-i})`,borderRadius:"8px",border:`1px solid ${medalColors[i]}22`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                        <span style={{fontSize:"18px"}}>{medals[i]}</span>
+                        <span style={{fontFamily:"Georgia,serif",fontSize:"14px",color:medalColors[i],fontWeight:"bold"}}>{pl.name}</span>
+                      </div>
+                      <span style={{fontFamily:"monospace",fontSize:"16px",color:medalColors[i],fontWeight:"bold"}}>{p.pts} pts</span>
+                    </div>
+                    {breakdownItems.length>0&&(
+                      <div style={{paddingLeft:"26px"}}>
+                        {breakdownItems.map(x=>(
+                          <div key={x.l} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",padding:"1px 0"}}>
+                            <span style={{color:"rgba(255,255,255,0.4)"}}>{x.l}</span>
+                            <span style={{color:x.c,fontFamily:"monospace"}}>+{x.v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Historical winners */}
         {weekWinners.length > 0 && (
