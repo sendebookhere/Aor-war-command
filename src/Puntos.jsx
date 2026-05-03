@@ -169,11 +169,12 @@ export default function Puntos(){
           </div>
           {[
             {r:"Lider",pts:"Punk'Z — intocable",col:"#FFD700",buf:"—"},
-            {r:"Co-Lider",pts:"10,000+ acumulados",col:"#FFD700",buf:"Colchon: 25,000 pts"},
-            {r:"Oficial",pts:"1,000+ acumulados",col:"#40E0FF",buf:"Colchon: 5,000 pts"},
-            {r:"Veterano",pts:"600+ acumulados",col:"#A8FF78",buf:"Sin colchon"},
-            {r:"Guerrero",pts:"300+ acumulados",col:"#FF9F43",buf:"Sin colchon"},
-            {r:"Soldado",pts:"100+ acumulados",col:"rgba(255,255,255,0.5)",buf:"Sin colchon"},
+            {r:"Co-Lider",pts:"Colchon de 25,000 pts otorgado — a defender",col:"#FFD700",buf:"Colchon: 25,000 pts"},
+            {r:"Oficial",pts:"Colchon de 5,000 pts otorgado — a defender",col:"#40E0FF",buf:"Colchon: 5,000 pts"},
+            {r:"Leyenda",pts:"2,500+ acumulados",col:"#C8A2FF",buf:"Sin colchon"},
+            {r:"Veterano",pts:"1,000+ acumulados",col:"#A8FF78",buf:"Sin colchon"},
+            {r:"Guerrero",pts:"500+ acumulados",col:"#FF9F43",buf:"Sin colchon"},
+            {r:"Soldado",pts:"100 – 499 acumulados",col:"rgba(255,255,255,0.5)",buf:"Sin colchon"},
             {r:"Recluta",pts:"0 – 99 acumulados",col:"rgba(255,255,255,0.3)",buf:"Sin colchon"},
             {r:"Vigilado",pts:"Puntos negativos",col:"#FF6B6B",buf:"Sin colchon"},
           ].map(x=>(
