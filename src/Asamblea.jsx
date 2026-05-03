@@ -99,7 +99,7 @@ export default function Asamblea() {
         +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
         +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
         // pt_whatsapp already in pts_acumulados (set at player creation)
-        +(p.pts_honorificos||0)      // rank honorific pts (not in acc)
+        // pts_honorificos excluded — rank buffer only, not counted in rankings
         +((p.pt_batallas_ganadas||0)>=6?10:0)
         -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
         -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2

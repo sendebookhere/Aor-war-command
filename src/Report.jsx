@@ -293,7 +293,8 @@ function PlayerProfile({ player, onBack }) {
     { label:"Bandido pre-guerra",                 val: -(player.pt_bandido_pre||0),            show:(player.pt_bandido_pre||0)>0 },
   ].filter(i=>i.show);
 
-  // Grand total = pts_acumulados(includes everything direct) + war pts this week
+  // Grand total = pts_acumulados(all direct) + war pts this week
+  // pts_honorificos excluded — they are a rank buffer, not earned points
   const grandTotal = acc + pts;
 
   return (
@@ -638,7 +639,7 @@ export default function PublicReport() {
           if (p.name === "PUNK'Z" || p.clan_role === "Líder") return 0;
           if (p.clan_role === "Co-Líder") return 1;
           if (p.clan_role === "Oficial")  return 2;
-          const total = (p.pts_acumulados||0) + totalPts(p) + (p.pts_honorificos||0);
+          const total = (p.pts_acumulados||0) + totalPts(p); // pts_honorificos excluded (rank buffer, not earned pts)
           if (total >= 1000) return 3;
           if (total >= 500)  return 4;
           if (total >= 100)  return 5;
@@ -648,8 +649,8 @@ export default function PublicReport() {
         data.sort((a, b) => {
           const ra = rankOrder(a), rb = rankOrder(b);
           if (ra !== rb) return ra - rb;
-          const totalA = (a.pts_acumulados||0) + totalPts(a) + (a.pts_honorificos||0);
-          const totalB = (b.pts_acumulados||0) + totalPts(b) + (b.pts_honorificos||0);
+          const totalA = (a.pts_acumulados||0) + totalPts(a);
+          const totalB = (b.pts_acumulados||0) + totalPts(b);
           if (totalB !== totalA) return totalB - totalA;
           return (b.bp||0) - (a.bp||0);
         });
