@@ -3,6 +3,7 @@ import PageHeader from "./PageHeader";
 import NavBar from "./NavBar";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { awardPts } from "./PtsLedger";
 import NalguitasFooter from "./NalguitasFooter";
 
 // ── Comunicaciones — public page for approved clan messages ───────────────

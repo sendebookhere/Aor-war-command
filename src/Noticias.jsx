@@ -1,6 +1,7 @@
 import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { awardPts } from "./PtsLedger";
 import NavBar from "./NavBar";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
@@ -32,8 +33,7 @@ export default function Noticias() {
     await supabase.from("clan_news").update({completions}).eq("id", post.id);
     // +1 pt for requirement completion
     if (post.type === "requerimiento") {
-      const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-      await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+1}).eq("id",parseInt(playerId));
+      await awardPts(parseInt(playerId), 1, "noticia_leida", post.title?.slice(0,40));
     }
     load();
   }
