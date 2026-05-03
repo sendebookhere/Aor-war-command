@@ -42,6 +42,7 @@ export default function LoginGate({onLogin, children}) {
 
   // Not logged in → show login screen
   return <LoginScreen onLogin={(player)=>{
+    if (mode === "code") awardDailyCodePt(player); // +1pt first daily code login
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
@@ -116,6 +117,20 @@ function LoginScreen({onLogin}) {
       else setPhoneInput("");
     }
     setTimeout(()=>phoneRef.current?.focus(), 100);
+  }
+
+  // Award +1pt for first daily login with unique code
+  async function awardDailyCodePt(player) {
+    const todayKey = "aor_code_day_"+player.id;
+    const lastDay  = localStorage.getItem(todayKey);
+    const today    = new Date().toISOString().slice(0,10);
+    if (lastDay === today) return; // already awarded today
+    localStorage.setItem(todayKey, today);
+    try {
+      const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(player.id)).single();
+      await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+1}).eq("id",parseInt(player.id));
+      await supabase.from("pts_ledger").insert({player_id:parseInt(player.id),pts:1,source:"codigo_unico",note:"Primera entrada del dia con codigo unico",week:new Date().toISOString().slice(0,7)+"W",created_at:new Date().toISOString()}).catch(()=>{});
+    } catch(e){}
   }
 
   async function verify() {

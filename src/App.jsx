@@ -2486,18 +2486,27 @@ function AdminPanel({players, update, loading, saving, reload}) {
     reload();
   }
 
-  async function weeklyReset() {
-    if (!confirm("¿Archivar puntos de esta guerra y resetear para la siguiente? Esta acción no se puede deshacer.")) return;
+  async function weeklyReset(auto=false) {
+    if (!auto && !confirm("¿Archivar puntos de esta guerra y resetear para la siguiente? Esta acción no se puede deshacer.")) return;
     const currentWeek = getWarWeek();
-    // Archive all active players' points
-    const activePlayers = players.filter(p=>p.active);
-    for (const p of activePlayers) {
-      const total = totalPts(p);
-      if (total !== 0 || p.registered_form) {
+    const month = new Date().toISOString().slice(0,7);
+    const activePlayers = players.length > 0 ? players.filter(p=>p.active) : [];
+    // If auto-reset and no players loaded, fetch them
+    let playersToReset = activePlayers;
+    if (playersToReset.length === 0) {
+      const {data} = await supabase.from("players").select("*").eq("active",true);
+      playersToReset = data || [];
+    }
+
+    for (const p of playersToReset) {
+      const warPts = calcWarPts(p); // from GameRules
+      // Archive to war_history
+      if (warPts !== 0 || p.registered_form) {
         await supabase.from("war_history").insert({
           player_id: p.id, player_name: p.name, week: currentWeek,
           availability: p.availability,
           pt_registro: p.pt_registro||0,
+          pt_registro_temprano: p.pt_registro_temprano||0,
           pt_disponibilidad_declarada: p.pt_disponibilidad_declarada||0,
           pt_disponibilidad: p.pt_disponibilidad||0,
           pt_obediencia: p.pt_obediencia||0,
@@ -2505,35 +2514,46 @@ function AdminPanel({players, update, loading, saving, reload}) {
           pt_batallas_perdidas: p.pt_batallas_perdidas||0,
           pt_defensas: p.pt_defensas||0,
           pt_bonus: p.pt_bonus||0,
+          pt_bandido_post: p.pt_bandido_post||0,
+          pt_stats: p.pt_stats||0,
           pt_penalizacion: p.pt_penalizacion||0,
           pt_no_aparecio: p.pt_no_aparecio||0,
           pt_ignoro_orden: p.pt_ignoro_orden||0,
           pt_abandono: p.pt_abandono||0,
           pt_inactivo_4h: p.pt_inactivo_4h||0,
-          total,
-        });
+          pt_fuera_castillo: p.pt_fuera_castillo||0,
+          pt_bandido_pre: p.pt_bandido_pre||0,
+          total: warPts,
+        }).catch(()=>{});
+      }
+      // Add war pts to pts_acumulados
+      if (warPts !== 0) {
+        const newAcc = (p.pts_acumulados||0) + warPts;
+        await supabase.from("players").update({pts_acumulados: newAcc}).eq("id", p.id);
+        // Log to pts_ledger
+        await supabase.from("pts_ledger").insert({
+          player_id: p.id, pts: warPts, source: "weekly_archive",
+          note: `Cierre semana ${currentWeek}`, week: currentWeek, month,
+          created_at: new Date().toISOString(),
+        }).catch(()=>{});
       }
     }
-    // Reset weekly points for all players
+
+    // Reset all weekly pt columns
     await supabase.from("players").update({
       availability: "pendiente", registered_form: false, registered_week: "",
-      hour_mx: "No sé", task_period1: "",
-      pt_registro: 0, pt_disponibilidad_declarada: 0, pt_disponibilidad: 0,
-      pt_obediencia: 0, pt_batallas_ganadas: 0, pt_batallas_perdidas: 0,
-      pt_defensas: 0, pt_bonus: 0, pt_penalizacion: 0, pt_no_aparecio: 0,
-      pt_ignoro_orden: 0, pt_abandono: 0, pt_inactivo_4h: 0, pt_fuera_castillo: 0,
+      pt_registro: 0, pt_registro_temprano: 0, pt_disponibilidad_declarada: 0,
+      pt_disponibilidad: 0, pt_obediencia: 0, pt_batallas_ganadas: 0,
+      pt_batallas_perdidas: 0, pt_defensas: 0, pt_bonus: 0, pt_bandido_post: 0,
+      pt_stats: 0, pt_penalizacion: 0, pt_no_aparecio: 0, pt_ignoro_orden: 0,
+      pt_abandono: 0, pt_inactivo_4h: 0, pt_fuera_castillo: 0, pt_bandido_pre: 0,
     }).eq("active", true);
-    // Add weekly points to accumulated for each player
-    for (const p of activePlayers) {
-      const weekPts = totalPts(p);
-      if (weekPts !== 0) {
-        await supabase.from("players").update({
-          pts_acumulados: (p.pts_acumulados||0) + weekPts
-        }).eq("id", p.id);
-      }
-    }
-    reload();
-    alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana.");
+
+    // Save last reset time to app_settings
+    await supabase.from("app_settings").upsert({key:"last_weekly_reset",value:new Date().toISOString()}).catch(()=>{});
+
+    if (!auto) { reload(); alert("✓ Guerra archivada. Puntos reseteados para la siguiente semana."); }
+    else { console.log("✓ Auto weekly reset completed:", currentWeek); reload(); }
   }
 
   async function removePlayer(id) {
@@ -3296,6 +3316,35 @@ export default function App() {
   // Clear auth when user navigates away from admin — forces PIN on return
   if (route !== "/") sessionStorage.removeItem("aor_auth");
   const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
+
+  // Auto weekly reset: Monday 9:00am Spain time (UTC+1 winter / UTC+2 summer)
+  useEffect(()=>{
+    async function checkAutoReset() {
+      try {
+        // Get last reset from DB
+        const {data} = await supabase.from("app_settings").select("value").eq("key","last_weekly_reset").single();
+        const lastReset = data?.value ? new Date(data.value) : null;
+        // Spain time = UTC+2 (summer CEST) / UTC+1 (winter CET)
+        // Simple approach: use UTC+2 offset
+        const now = new Date();
+        const spainOffset = 2; // CEST
+        const spainNow = new Date(now.getTime() + spainOffset*3600000);
+        const day = spainNow.getUTCDay(); // 1 = Monday
+        const hour = spainNow.getUTCHours();
+        const isResetWindow = day === 1 && hour >= 9; // Monday 9am+
+        if (!isResetWindow) return;
+        // Check if already reset this Monday
+        const thisMonday = new Date(spainNow);
+        thisMonday.setUTCDate(spainNow.getUTCDate() - (spainNow.getUTCDay() - 1));
+        thisMonday.setUTCHours(9,0,0,0);
+        if (lastReset && lastReset >= thisMonday) return; // already done
+        console.log("Auto weekly reset triggered: Monday 9am Spain");
+        await weeklyReset(true);
+      } catch(e) { console.warn("Auto-reset check failed:", e); }
+    }
+    // Run check after players are loaded
+    setTimeout(checkAutoReset, 5000);
+  },[]);
 
   useEffect(()=>{
     loadPlayers();

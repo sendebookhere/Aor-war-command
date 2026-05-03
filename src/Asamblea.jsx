@@ -3,6 +3,7 @@ import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { calcWarPts, PTS, RANKS, getRank } from "./GameRules";
+import { awardPts } from "./PtsLedger";
 import { getWeeklyBreakdown } from "./PtsLedger";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
@@ -173,7 +174,7 @@ export default function Asamblea() {
 
     // +3 pts to voter immediately
     const {data:voterData} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-    await supabase.from("players").update({pts_acumulados:(voterData?.pts_acumulados||0)+3}).eq("id",parseInt(playerId));
+    await awardPts(parseInt(playerId), 3, "asamblea_voto", `Voto semana ${week}`);
 
     // Refresh votes and recalculate winner (+10 to current leader)
     const {data:newVotes} = await supabase.from("assembly_votes").select("*").eq("week",week);
