@@ -200,9 +200,8 @@ export default function Asamblea() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/asamblea"/>
-        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(244,208,63,0.4)",marginBottom:"6px"}}>ASAMBLEA DE CENTURIAS</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Cada semana el clan elige al <strong style={{color:"#F4D03F"}}>Guerrero Implacable</strong> — el jugador más determinante de la jornada. Vota por el compañero que consideras mereció la distinción. Votar suma <strong style={{color:"#A8FF78"}}>+3 pts</strong>. El más votado recibe <strong style={{color:"#F4D03F"}}>+10 pts</strong>. Las votaciones se abren automáticamente al terminar la guerra.</div></div>
-        
         <PageHeader page="/asamblea"/>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(244,208,63,0.4)",marginBottom:"6px"}}>ASAMBLEA DE CENTURIAS</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.7"}}>Cada semana el clan elige al Guerrero Implacable — el jugador más determinante de la jornada. Vota por quien mereció la distinción. Votar: +3 pts. El más votado: +10 pts. Votaciones se abren al terminar la guerra.</div></div>
         {/* Current standings — parallel display */}
         {(winner || players.length > 0) && (
           <div style={{marginBottom:"20px"}}>
@@ -442,15 +441,7 @@ const isDouble = isUniqueTop && winner===top.name;
 
         {/* Historical winners */}
         {weekWinners.length > 0 && (
-          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px"}}>
-            <div style={{fontSize:"10px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",marginBottom:"10px"}}>GUERREROS IMPLACABLES — HISTORIAL</div>
-            {weekWinners.slice(0,8).map((w,i)=>(
-              <div key={w.week} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",marginBottom:"4px",background:i===0?"rgba(255,215,0,0.06)":"rgba(255,255,255,0.01)",borderRadius:"6px",border:"1px solid "+(i===0?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.04)")}}>
-                <div>
-                  <div style={{fontSize:"12px",color:i===0?"#FFD700":"rgba(255,255,255,0.6)",fontWeight:i===0?"bold":"normal"}}>{w.winner}</div>
-                  <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{w.week}</div>
-                </div>
-                <div style={{fontSize:"11px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace"}}>{w.votes} pts</div>
+          <div style={{fontSize:"11px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace"}}>{w.votes} pts</div>
               </div>
             ))}
           </div>

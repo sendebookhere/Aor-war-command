@@ -97,9 +97,8 @@ export default function Inteligencia() {
     <div style={{minHeight:"100vh",background:"#0d0d0f",fontFamily:"Georgia,serif",color:"#d4c9a8",padding:"20px",paddingBottom:"40px"}}>
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/inteligencia"/>
-        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px",lineHeight:"1.7"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>INTELIGENCIA MILITAR</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>Registro histórico de guerras y análisis de rivales. Evalúa la dificultad de los clanes enemigos para preparar mejor la siguiente batalla. Cada voto de dificultad suma <strong style={{color:"#A8FF78"}}>+3 pts</strong>.</div></div>
-        
         <PageHeader page="/inteligencia"/>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px"}}><div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>INTELIGENCIA MILITAR</div><div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.7"}}>Registro histórico de guerras y análisis de rivales. Evalúa la dificultad de clanes enemigos. Cada voto de dificultad suma +3 pts.</div></div>
         {/* War results */}
         {intel ? (
           <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
@@ -165,30 +164,7 @@ export default function Inteligencia() {
               )}
             </div>
           ) : (
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",padding:"6px 10px",background:"rgba(255,255,255,0.02)",borderRadius:"6px",border:"1px solid rgba(255,255,255,0.06)"}}>
-              <span style={{fontFamily:"Georgia,serif",fontSize:"12px",color:"#FFD700"}}>{playerName}</span>
-              <button onClick={()=>{["aor_session","aor_player_id","aor_player_name","aor_user_identity"].forEach(k=>sessionStorage.removeItem(k));window.location.reload();}} style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"4px",padding:"2px 7px",cursor:"pointer",fontFamily:"monospace"}}>CAMBIAR</button>
-            </div>
-          )}
-
-          {playerId && (myVotes ? (
-            <div style={{padding:"10px",background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{fontFamily:"monospace",fontSize:"10px",color:"#A8FF78",letterSpacing:"0.1em"}}>VOTO REGISTRADO</div>
-              <button onClick={async()=>{
-                if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
-                await supabase.from("difficulty_votes").delete().eq("player_id",parseInt(playerId)).eq("week",week);
-                const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-                await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
-                setMyVotes(null);
-              }} style={{padding:"3px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"4px",color:"rgba(255,107,107,0.6)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
-                Eliminar voto
-              </button>
-            </div>
-          ) : !canVote ? (
-            <div style={{padding:"10px",background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"6px"}}>
-              <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,107,107,0.7)",letterSpacing:"0.1em"}}>SOLO PUEDEN VOTAR: CONQUISTADOR · REFUERZOS · RESERVA</div>
-            </div>
-          ) : rivalClans.length === 0 ? (
+            ) : rivalClans.length === 0 ? (
             <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.25)",textAlign:"center",padding:"12px",letterSpacing:"0.1em"}}>SIN CLANES REGISTRADOS PARA VOTAR</div>
           ) : rivalClans.length === 1 ? (
             /* Single clan: vote if you want to face them again */
