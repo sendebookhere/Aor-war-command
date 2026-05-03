@@ -676,17 +676,28 @@ export default function PublicReport() {
     });
   }, []);
 
-  // Handle /reporte?own=1 navigation (from MI PERFIL button)
+  // React to URL changes within the same SPA component
   useEffect(()=>{
-    const ownParam = new URLSearchParams(window.location.search).get("own");
-    const gotoProfile = sessionStorage.getItem("aor_goto_profile");
-    const sid = sessionStorage.getItem("aor_player_id");
-    if ((ownParam==="1"||gotoProfile==="1") && sid && players.length>0) {
-      sessionStorage.removeItem("aor_goto_profile");
-      const own = players.find(p=>String(p.id)===sid);
-      if (own) setSelected(own);
-      window.history.replaceState({},""," /reporte");
+    function handleNav() {
+      const ownParam = new URLSearchParams(window.location.search).get("own");
+      const gotoProfile = sessionStorage.getItem("aor_goto_profile");
+      const sid = sessionStorage.getItem("aor_player_id");
+      if (ownParam==="1" || gotoProfile==="1") {
+        sessionStorage.removeItem("aor_goto_profile");
+        if (sid && players.length>0) {
+          const own = players.find(p=>String(p.id)===sid);
+          if (own) setSelected(own);
+        }
+        window.history.replaceState({},"","/reporte");
+      } else if (!window.location.search) {
+        // /reporte with no query = ranking view
+        setSelected(null);
+      }
     }
+    window.addEventListener("popstate", handleNav);
+    // Also expose for __aorNavigate calls
+    window.__reportNav = handleNav;
+    return ()=>window.removeEventListener("popstate", handleNav);
   },[players]);
 
   if (loading) return <LoadingScreen page="/reporte"/>;
