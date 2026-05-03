@@ -100,21 +100,8 @@ function totalPts(p) {
 
 function acumulado(p) { return p.pts_acumulados||0; }
 
-const RANKS = [
-  { label:"Co-Líder 👑",   color:"#FFD700", min:25000 }, // colchon 25,000 pts a defender
-  { label:"Oficial ⚜",    color:"#40E0FF", min:5000  }, // colchon 5,000 pts a defender
-  { label:"Leyenda 🌟",    color:"#C8A2FF", min:2500  }, // 2,500+ acumulados
-  { label:"Veterano ★★★",  color:"#A8FF78", min:1000  }, // 1,000+ acumulados
-  { label:"Guerrero ★★",   color:"#FF9F43", min:500   }, // 500+ acumulados
-  { label:"Soldado ★",     color:"rgba(255,255,255,0.5)", min:100 }, // 100+ acumulados
-  { label:"Recluta",       color:"rgba(255,255,255,0.3)", min:0   }, // 0-99 acumulados
-  { label:"⚠ Vigilado",   color:"#FF6B6B", min:-999  }, // negativo
-];
-function getRank(pts, name) {
-  if (name==="PUNK'Z") return { label:"Líder 👑", color:"#FFD700", min:Infinity };
-  if(pts<0) return RANKS[RANKS.length-1];
-  return RANKS.find(r=>pts>=r.min)||RANKS[RANKS.length-2];
-}
+// Ranks and points imported from central rules file
+import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS } from "./GameRules";
 
 function Pill({color,children}) {
   return <span style={{fontSize:"9px",padding:"1px 6px",borderRadius:"10px",background:color+"22",color,border:"1px solid "+color+"44"}}>{children}</span>;

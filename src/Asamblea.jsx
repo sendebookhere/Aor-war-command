@@ -2,6 +2,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { calcWarPts, PTS, RANKS, getRank } from "./GameRules";
 import { getWeeklyBreakdown } from "./PtsLedger";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
