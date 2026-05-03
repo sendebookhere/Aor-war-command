@@ -103,6 +103,26 @@ export default function Versus(){
   const myPlayer=players.find(p=>String(p.id)===String(playerId));
   const isAdmin=["Líder","Co-Líder"].includes(myPlayer?.clan_role);
 
+  async function awardPvpRankingBonus(type) {
+    // type: "weekly" (+5pts) or "monthly" (+10pts)
+    const data = type==="weekly" ? rankWeek : rankMonth;
+    if (!data.length) return;
+    const pts = type==="weekly" ? 5 : 10;
+    const label = type==="weekly" ? "ranking_semanal" : "ranking_mensual";
+    const note = type==="weekly" ? `Top 1 PvP semana ${week}` : `Top 1 PvP mes ${month}`;
+    // Find top player(s)
+    const maxW = data[0][1].w;
+    const top = data.filter(([,r])=>r.w===maxW);
+    const topPlayer = players.find(p=>p.name===top[0][0]);
+    if (!topPlayer) return;
+    await awardPts(topPlayer.id, pts, label, note);
+    setSaving(true);
+    await load();
+    setSaving(false);
+    setMsg(`✓ +${pts}pts otorgados a ${top[0][0]} (${label})`);
+    setTimeout(()=>setMsg(""),6000);
+  }
+
   async function resolveAdmin(b,challWins){
     await supabase.from("pvp_battles").update({status:challWins?"confirmed":"confirmed_reversed"}).eq("id",b.id);
     await awardPts(challWins?b.challenger_id:b.opponent_id,5,"pvp_gano_video",`admin resolvió`);
@@ -330,13 +350,14 @@ export default function Versus(){
         {/* Rankings */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px",marginBottom:"16px"}}>
           {[
-            {title:"RANKING GENERAL",data:rankGeneral,bonus:""},
-            {title:"RANKING SEMANA",data:rankWeek,bonus:"Top 1: +5pts"},
-            {title:"RANKING MES",data:rankMonth,bonus:"Top 1: +10pts"},
-          ].map(({title,data,bonus})=>(
+            {title:"RANKING GENERAL",data:rankGeneral,bonus:"",type:null},
+            {title:"RANKING SEMANA",data:rankWeek,bonus:"Top 1: +5pts",type:"weekly"},
+            {title:"RANKING MES",data:rankMonth,bonus:"Top 1: +10pts",type:"monthly"},
+          ].map(({title,data,bonus,type})=>(
             <div key={title} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px"}}>
               <div style={{fontFamily:"monospace",fontSize:"6px",letterSpacing:"0.15em",color:"rgba(255,215,0,0.4)",marginBottom:"2px"}}>{title}</div>
-              {bonus&&<div style={{fontFamily:"monospace",fontSize:"6px",color:"rgba(255,255,255,0.2)",marginBottom:"6px"}}>{bonus}</div>}
+              {bonus&&<div style={{fontFamily:"monospace",fontSize:"6px",color:"rgba(255,255,255,0.2)",marginBottom:"4px"}}>{bonus}</div>}
+              {isAdmin&&type&&<button onClick={()=>awardPvpRankingBonus(type)} style={{width:"100%",padding:"3px",marginBottom:"4px",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"3px",color:"rgba(255,215,0,0.6)",fontSize:"7px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS</button>}
               {data.length===0?<div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",textAlign:"center"}}>—</div>
               :data.slice(0,5).map(([name,r],i)=>(
                 <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
