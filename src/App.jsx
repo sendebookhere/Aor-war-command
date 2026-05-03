@@ -1963,72 +1963,100 @@ function WarModeSwitch() {
   }
 
   async function awardAssamblyWinners() {
-    // Load current votes + players to determine winners
     try {
       const week = getWarWeek();
+
+      // ── Idempotency guard: never award twice for same week ──────────────
+      const {data:alreadyAwarded} = await supabase.from("pts_ledger")
+        .select("id").eq("week",week)
+        .in("source",["asamblea_ganador","asamblea_pichichi","asamblea_empate_votos","asamblea_mayor_puntaje","asamblea_empate_puntaje"])
+        .limit(1);
+      if (alreadyAwarded?.length > 0) {
+        console.log("Asamblea winners already awarded this week — skipping");
+        return;
+      }
+
       const [{data:votes},{data:allP}] = await Promise.all([
         supabase.from("assembly_votes").select("*").eq("week",week),
         supabase.from("players").select("*").eq("active",true),
       ]);
       if (!votes?.length || !allP?.length) return;
 
-      // Calculate vote totals (weighted)
+      // ── Vote totals (weighted by rank) ──────────────────────────────────
       const rankWeights = {"Líder 👑":5,"Co-Líder 👑":4,"Oficial ⚜":3,"Veterano ★★★":2,"Leyenda 🌟":2};
       const voteTotals = {};
       for (const v of votes) {
         const voter = allP.find(p=>String(p.id)===String(v.voter_id));
-        const total = (voter?.pts_acumulados||0)+calcWarPts(voter||{});
+        const total = (voter?.pts_acumulados||0) + calcWarPts(voter||{});
         const rank = getRank(total, voter?.name||"");
         const w = rankWeights[rank.label] || 1;
         voteTotals[v.voted_player_id] = (voteTotals[v.voted_player_id]||0) + w;
       }
 
-      // Find top voted player(s)
-      const maxVotes = Math.max(...Object.values(voteTotals));
-      const topVoted = Object.entries(voteTotals).filter(([,v])=>v===maxVotes).map(([id])=>id);
+      // ── Top voted player(s) ─────────────────────────────────────────────
+      const allVoteValues = Object.values(voteTotals);
+      if (!allVoteValues.length) return;
+      const maxVotes = Math.max(...allVoteValues);
+      const topVoted = Object.entries(voteTotals)
+        .filter(([,v])=>v===maxVotes)
+        .map(([id])=>id);
 
-      // Find highest score player(s) among eligible
+      // ── Highest score among eligible (must have ACTUAL points > 0) ──────
       const eligible = ["siempre","intermitente","solo_una"];
       const eligiblePlayers = allP.filter(p=>eligible.includes(p.availability));
-      const scores = eligiblePlayers.map(p=>({id:String(p.id),name:p.name,pts:(p.pts_acumulados||0)+calcWarPts(p)}));
-      const maxScore = Math.max(...scores.map(s=>s.pts));
-      const topScore = scores.filter(s=>s.pts===maxScore).map(s=>s.id);
+      const scores = eligiblePlayers.map(p=>({
+        id: String(p.id),
+        name: p.name,
+        pts: (p.pts_acumulados||0) + calcWarPts(p)
+      }));
+      const positiveScores = scores.filter(s=>s.pts > 0);
+
+      // Only award "mayor puntaje" if at least one player has pts > 0
+      const maxScore = positiveScores.length > 0 ? Math.max(...positiveScores.map(s=>s.pts)) : -1;
+      const topScore = maxScore > 0 ? positiveScores.filter(s=>s.pts===maxScore).map(s=>s.id) : [];
 
       const awardedIds = new Set();
 
+      async function giveAcc(pid, pts, source, note) {
+        const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(pid)).single();
+        await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+pts}).eq("id",parseInt(pid));
+        await supabase.from("pts_ledger").insert({
+          player_id:parseInt(pid), pts, source,
+          note:`${note} | semana ${week}`,
+          week, created_at:new Date().toISOString()
+        }).catch(()=>{});
+        console.log(`✓ Asamblea: ${source} +${pts}pts → player ${pid}`);
+      }
+
+      // ── Award más votado ────────────────────────────────────────────────
       if (topVoted.length > 1) {
-        // Empate en votos: +3 cada uno
         for (const id of topVoted) {
-          await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:3,source:"asamblea_empate_votos",note:`Empate más votado semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
-          const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
-          await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+3}).eq("id",parseInt(id));
+          await giveAcc(id, 3, "asamblea_empate_votos", "Empate más votado");
           awardedIds.add(id);
         }
       } else if (topVoted.length === 1) {
         const id = topVoted[0];
         awardedIds.add(id);
-        const bonus = topScore.includes(id) ? 20 : 10; // pichichi = 10+10
-        const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
-        await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+bonus}).eq("id",parseInt(id));
-        await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:bonus,source:bonus===20?"asamblea_pichichi":"asamblea_ganador",note:`Guerrero Implacable semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+        // Pichichi = also top score → 10+10+10 extra = handled below
+        await giveAcc(id, 10, "asamblea_ganador", "Guerrero Implacable");
       }
 
+      // ── Award mayor puntaje ─────────────────────────────────────────────
       if (topScore.length > 1) {
-        // Empate en puntaje: +3 cada uno
         for (const id of topScore) {
-          if (awardedIds.has(id)) continue;
-          const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
-          await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+3}).eq("id",parseInt(id));
-          await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:3,source:"asamblea_empate_puntaje",note:`Empate mayor puntaje semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+          if (awardedIds.has(id)) continue; // already got votes award
+          await giveAcc(id, 3, "asamblea_empate_puntaje", "Empate mayor puntaje");
         }
-      } else if (topScore.length === 1 && !awardedIds.has(topScore[0])) {
+      } else if (topScore.length === 1) {
         const id = topScore[0];
-        const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(id)).single();
-        await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+10}).eq("id",parseInt(id));
-        await supabase.from("pts_ledger").insert({player_id:parseInt(id),pts:10,source:"asamblea_mayor_puntaje",note:`Mayor puntaje semana ${week}`,week,created_at:new Date().toISOString()}).catch(()=>{});
+        if (awardedIds.has(id)) {
+          // Pichichi: same player won both → +10 extra on top of the +10 already given
+          await giveAcc(id, 10, "asamblea_pichichi", "Pichichi — votos + puntaje");
+        } else {
+          await giveAcc(id, 10, "asamblea_mayor_puntaje", "Mayor puntaje jornada");
+        }
       }
 
-      console.log("✓ Asamblea winners awarded");
     } catch(e) { console.error("awardAssamblyWinners:", e); }
   }
 
