@@ -2004,14 +2004,17 @@ function WarModeSwitch() {
       // ── Highest score among eligible (must have ACTUAL points > 0) ──────
       const eligible = ["siempre","intermitente","solo_una"];
       const eligiblePlayers = allP.filter(p=>eligible.includes(p.availability));
+
+      // "Mayor puntaje de la JORNADA" = ONLY war pts earned THIS week (pt_* columns)
+      // NOT pts_acumulados which is the historical total from all previous weeks
       const scores = eligiblePlayers.map(p=>({
         id: String(p.id),
         name: p.name,
-        pts: (p.pts_acumulados||0) + calcWarPts(p)
+        pts: calcWarPts(p)  // war columns only — reset each week, reflect THIS jornada
       }));
       const positiveScores = scores.filter(s=>s.pts > 0);
 
-      // Only award "mayor puntaje" if at least one player has pts > 0
+      // Only award "mayor puntaje" if at least one player has pts > 0 this week
       const maxScore = positiveScores.length > 0 ? Math.max(...positiveScores.map(s=>s.pts)) : -1;
       const topScore = maxScore > 0 ? positiveScores.filter(s=>s.pts===maxScore).map(s=>s.id) : [];
 
