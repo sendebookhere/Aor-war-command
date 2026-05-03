@@ -16,9 +16,11 @@ function nav(href) {
 }
 
 function logout() {
+  // Clear all session data
   ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth",
-   "aor_auth_enabled_cache"].forEach(k=>sessionStorage.removeItem(k));
-  nav("/");
+   "aor_auth_enabled_cache","aor_goto_profile"].forEach(k=>sessionStorage.removeItem(k));
+  // Force full page reload so LoginGate re-mounts and shows the login screen
+  window.location.replace("/");
 }
 
 function Btn({p, cur, current}) {
