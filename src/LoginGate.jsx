@@ -42,8 +42,8 @@ export default function LoginGate({onLogin, children}) {
   if (session) return children;         // Already logged in → pass through
 
   // Not logged in → show login screen
-  return <LoginScreen onLogin={(player)=>{
-    if (mode === "code") awardDailyCodePt(player); // +1pt first daily code login
+  return <LoginScreen onLogin={(player, loginMode)=>{
+    if (loginMode === "code") awardDailyCodePt(player); // +1pt first daily code login
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
@@ -188,7 +188,7 @@ function LoginScreen({onLogin}) {
       } catch(e) {}
     }
     setVerifying(false);
-    onLogin(selected);
+    onLogin(selected, mode);
   }
 
   if (error === "wrong" || error === "not_registered") {
