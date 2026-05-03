@@ -80,16 +80,30 @@ export default function Versus() {
     if(alreadyDisputedToday(discBattle)){setMsg("Solo puedes discrepar una vez por día contra el mismo jugador.");return;}
     setSaving(true);
     await supabase.from("pvp_battles").update({status:"disputed",disc_wins:discWins,disc_losses:5-discWins}).eq("id",discBattle.id);
+    // If disputant wins majority (3+ of 5): +3pts to disputant, revoke challenger pts
+    if(discWins>=3){
+      await awardPts(discBattle.opponent_id,3);
+      // Revoke challenger's original pts (deduct what they earned)
+      const challPts = discBattle.challenger_wins>=2?2:1;
+      try{
+        const{data:cp}=await supabase.from("players").select("pts_acumulados").eq("id",discBattle.challenger_id).single();
+        await supabase.from("players").update({pts_acumulados:Math.max(0,(cp?.pts_acumulados||0)-challPts)}).eq("id",discBattle.challenger_id);
+      }catch(e){}
+    }
     await load();
-    setMsg(`Discrepancia registrada: ${discWins}V de 5 según tu versión.`);
+    const outcomeMsg = discWins>=3 ? `+3pts para ti. Se anulan los puntos del desafiador.` : `El desafiador decide si acepta o escala a admins.`;
+    setMsg(`Discrepancia registrada: ${discWins}V de 5. ${outcomeMsg}`);
     setSaving(false);setDiscOpen(false);setDiscBattle(null);setDiscWins(null);
-    setTimeout(()=>setMsg(""),6000);
+    setTimeout(()=>setMsg(""),8000);
   }
 
   async function acceptDiscrepancy(b){
     await supabase.from("pvp_battles").update({status:"disc_accepted"}).eq("id",b.id);
-    await awardPts(b.opponent_id,3);
+    // Challenger accepts discrepancy: challenger gets +1pt
+    await awardPts(b.challenger_id,1);
     await load();
+    setMsg("Discrepancia aceptada. +1pt para ti.");
+    setTimeout(()=>setMsg(""),5000);
   }
 
   async function submitClaim(b){
@@ -198,8 +212,8 @@ export default function Versus() {
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",marginBottom:"8px"}}>Su versión: {b.disc_wins||"?"}V de 5 · Tu registro: {b.challenger_wins}V de 3</div>
             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",marginBottom:"8px",lineHeight:"1.5"}}>Acepta (él +3pts) o presenta claim (+5pts para ti, admins resuelven con videos).</div>
             <div style={{display:"flex",gap:"6px"}}>
-              <button onClick={()=>acceptDiscrepancy(b)} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.08)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"5px",color:"#A8FF78",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>ACEPTAR</button>
-              <button onClick={()=>submitClaim(b)} style={{flex:1,padding:"7px",background:"rgba(255,159,67,0.08)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"5px",color:"#FF9F43",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>CLAIM → ADMIN (+5pts)</button>
+              <button onClick={()=>acceptDiscrepancy(b)} style={{flex:1,padding:"7px",background:"rgba(168,255,120,0.08)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:"5px",color:"#A8FF78",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>ACEPTAR (+1pt)</button>
+              <button onClick={()=>submitClaim(b)} style={{flex:1,padding:"7px",background:"rgba(255,159,67,0.08)",border:"1px solid rgba(255,159,67,0.2)",borderRadius:"5px",color:"#FF9F43",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>ESCALAR A ADMIN (+5pts)</button>
             </div>
           </div>
         ))}
@@ -247,6 +261,30 @@ export default function Versus() {
             </div>
           )}
         </div>
+
+        {/* Discrepancies section */}
+        {battles.filter(b=>b.status==="disputed"||b.status==="disc_accepted").length>0&&(
+          <div style={{marginBottom:"16px"}}>
+            <div style={lbl}>DISCREPANCIAS Y SUS RESULTADOS</div>
+            {battles.filter(b=>b.status==="disputed"||b.status==="disc_accepted").map(b=>(
+              <div key={b.id} style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"7px",padding:"10px",marginBottom:"4px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",fontFamily:"monospace"}}>{b.challenger_name} vs {b.opponent_name}</div>
+                    <div style={{fontSize:"9px",color:"rgba(255,255,255,0.35)",fontFamily:"monospace"}}>
+                      Original: {b.challenger_wins}V-{b.opponent_wins}D de 3 →
+                      {b.disc_wins!=null?` Discrepancia: ${b.disc_wins}V-${b.disc_losses}D de 5`:""} ·
+                      {b.status==="disc_accepted"?" ✓ Aceptada":" ⚡ En disputa"}
+                    </div>
+                  </div>
+                  <div style={{fontSize:"8px",color:b.status==="disc_accepted"?"#A8FF78":"#FFD700",fontFamily:"monospace",textAlign:"right"}}>
+                    {b.status==="disc_accepted"?"ACEPTADA":"DISPUTADA"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {battles.length>0&&(
           <div style={{marginBottom:"16px"}}>
