@@ -145,9 +145,7 @@ export default function Versus() {
                   <button onClick={()=>resolveAdmin(b,false)} style={{flex:1,padding:"6px",background:"rgba(64,224,255,0.1)",border:"1px solid rgba(64,224,255,0.25)",borderRadius:"5px",color:"#40E0FF",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>{b.opponent_name} ✓</button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+          )}
 
         {pendingForMe.length>0&&(
           <div style={{marginBottom:"16px"}}>
@@ -161,9 +159,7 @@ export default function Versus() {
                   <button onClick={()=>refute(b)} style={{flex:1,padding:"7px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>✕ REFUTAR</button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+          )}
 
         {disputedForMe.map(b=>(
           <div key={b.id} style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"8px"}}>
@@ -210,8 +206,6 @@ export default function Versus() {
         </div>
 
         {ranked.length>0&&(
-          ))}
-          </div>
         )}
 
         {myBattles.length>0&&(
