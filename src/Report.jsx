@@ -676,27 +676,24 @@ export default function PublicReport() {
     });
   }, []);
 
-  // React to URL changes within the same SPA component
+  // React to SPA navigation - popstate fires on pushState
   useEffect(()=>{
     function handleNav() {
-      const ownParam = new URLSearchParams(window.location.search).get("own");
       const gotoProfile = sessionStorage.getItem("aor_goto_profile");
       const sid = sessionStorage.getItem("aor_player_id");
-      if (ownParam==="1" || gotoProfile==="1") {
+      if (gotoProfile==="1") {
         sessionStorage.removeItem("aor_goto_profile");
         if (sid && players.length>0) {
           const own = players.find(p=>String(p.id)===sid);
-          if (own) setSelected(own);
+          if (own) { setSelected(own); return; }
         }
-        window.history.replaceState({},"","/reporte");
-      } else if (!window.location.search) {
-        // /reporte with no query = ranking view
-        setSelected(null);
+        // Players not loaded yet - flag will be picked up in the players useEffect
+        sessionStorage.setItem("aor_goto_profile","1");
+      } else {
+        setSelected(null); // navigated to /reporte without profile flag = ranking
       }
     }
     window.addEventListener("popstate", handleNav);
-    // Also expose for __aorNavigate calls
-    window.__reportNav = handleNav;
     return ()=>window.removeEventListener("popstate", handleNav);
   },[players]);
 

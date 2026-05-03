@@ -3298,6 +3298,8 @@ export default function App() {
   window.__aorNavigate = (href) => {
     window.history.pushState({}, "", href);
     setPath(href);
+    // Dispatch popstate so components listening for nav events react
+    window.dispatchEvent(new PopStateEvent("popstate", {state: {}}));
   };
   // Clear auth when user navigates away from admin — forces PIN on return
   if (route !== "/") sessionStorage.removeItem("aor_auth");
