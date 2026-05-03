@@ -653,6 +653,14 @@ export default function PublicReport() {
           return (b.bp||0) - (a.bp||0);
         });
         setPlayers(data);
+        // Expose global to open own profile (used by NavBar "MI PERFIL")
+        window.__openOwnProfile = (players) => {
+          const sid = sessionStorage.getItem("aor_player_id");
+          if (sid) {
+            const own = (players||data).find(p=>String(p.id)===sid);
+            if (own) setSelected(own);
+          }
+        };
         // Auto-open own profile when ?own=1 is in URL
         const sid = sessionStorage.getItem("aor_player_id");
         const ownParam = new URLSearchParams(window.location.search).get("own");
@@ -667,6 +675,19 @@ export default function PublicReport() {
       setLoading(false);
     });
   }, []);
+
+  // Handle /reporte?own=1 navigation (from MI PERFIL button)
+  useEffect(()=>{
+    const ownParam = new URLSearchParams(window.location.search).get("own");
+    const gotoProfile = sessionStorage.getItem("aor_goto_profile");
+    const sid = sessionStorage.getItem("aor_player_id");
+    if ((ownParam==="1"||gotoProfile==="1") && sid && players.length>0) {
+      sessionStorage.removeItem("aor_goto_profile");
+      const own = players.find(p=>String(p.id)===sid);
+      if (own) setSelected(own);
+      window.history.replaceState({},""," /reporte");
+    }
+  },[players]);
 
   if (loading) return <LoadingScreen page="/reporte"/>;
 
