@@ -42,8 +42,8 @@ export default function LoginGate({onLogin, children}) {
   if (session) return children;         // Already logged in → pass through
 
   // Not logged in → show login screen
-  return <LoginScreen onLogin={(player, loginMode)=>{
-    if (loginMode === "code") awardDailyCodePt(player); // +1pt first daily code login
+  return <LoginScreen onLogin={(player)=>{
+    // Note: daily code pt is already awarded inside LoginScreen.verify()
     storeSession(player);
     setSession({id:player.id, name:player.name, clan_role:player.clan_role});
     onLogin && onLogin(player);
