@@ -3283,10 +3283,13 @@ export default function App() {
   const [saving,  setSaving]  = useState(false);
   const [warMode, setWarMode] = useState(localStorage.getItem("aor_war_mode_cache")||"classic");
   const [path, setPath]       = useState(window.location.pathname+(window.location.search||""));
+  // Route = pathname only (strip query string for matching)
+  const route = path.split("?")[0];
 
   // SPA navigation - intercept browser back/forward
   useEffect(()=>{
     function onPop() { setPath(window.location.pathname+(window.location.search||"")); }
+    // Also handle initial ?own=1 from login redirect
     window.addEventListener("popstate", onPop);
     return ()=>window.removeEventListener("popstate", onPop);
   },[]);
@@ -3297,7 +3300,7 @@ export default function App() {
     setPath(href);
   };
   // Clear auth when user navigates away from admin — forces PIN on return
-  if (path !== "/") sessionStorage.removeItem("aor_auth");
+  if (route !== "/") sessionStorage.removeItem("aor_auth");
   const [authed,  setAuthed]  = useState(!!sessionStorage.getItem("aor_auth"));
 
   useEffect(()=>{
@@ -3340,15 +3343,15 @@ export default function App() {
   if (loading) return <LoadingScreen page="/"/>;
 
   // All public pages gated by LoginGate (checks user_auth_enabled from DB)
-  if (path === "/registro")       return <LoginGate><RegistrationForm onRegistered={loadPlayers} warMode={warMode}/></LoginGate>;
-  if (path === "/reporte")        return <LoginGate><PublicReport /></LoginGate>;
-  if (path === "/puntos")         return <LoginGate><Puntos onBack={()=>window.history.back()}/></LoginGate>;
-  if (path === "/comunicaciones") return <LoginGate><Comunicaciones/></LoginGate>;
-  if (path === "/propaganda")     return <LoginGate><Comunicaciones/></LoginGate>;
-  if (path === "/inteligencia")   return <LoginGate><Inteligencia/></LoginGate>;
-  if (path === "/asamblea")       return <LoginGate><Asamblea/></LoginGate>;
-  if (path === "/noticias")       return <LoginGate><Noticias/></LoginGate>;
-  if (path === "/versus")         return <LoginGate><Versus/></LoginGate>;
+  if (route === "/registro")       return <LoginGate><RegistrationForm onRegistered={loadPlayers} warMode={warMode}/></LoginGate>;
+  if (route === "/reporte")        return <LoginGate><PublicReport /></LoginGate>;
+  if (route === "/puntos")         return <LoginGate><Puntos onBack={()=>window.history.back()}/></LoginGate>;
+  if (route === "/comunicaciones") return <LoginGate><Comunicaciones/></LoginGate>;
+  if (route === "/propaganda")     return <LoginGate><Comunicaciones/></LoginGate>;
+  if (route === "/inteligencia")   return <LoginGate><Inteligencia/></LoginGate>;
+  if (route === "/asamblea")       return <LoginGate><Asamblea/></LoginGate>;
+  if (route === "/noticias")       return <LoginGate><Noticias/></LoginGate>;
+  if (route === "/versus")         return <LoginGate><Versus/></LoginGate>;
   if (!authed) return <LoginGate><AdminAuth onAuth={()=>setAuthed(true)}/></LoginGate>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
