@@ -89,6 +89,24 @@ export default function Comunicaciones() {
     return logs.filter(l=>String(l.player_id)===String(pid) && (l.created_at||"").slice(0,10)===today);
   }
 
+  async function confirmSent(msg) {
+    if (!playerId) return;
+    const pendingKey = "aor_prop_pending_"+msg.id;
+    if (!localStorage.getItem(pendingKey)) return;
+    // Award +1pt
+    await awardPts(parseInt(playerId), 1, "propaganda", msg.title?.slice(0,40));
+    // Log the message
+    await supabase.from("message_logs").insert({
+      player_id: parseInt(playerId), player_name: playerName,
+      msg_id: msg.id, msg_title: msg.title, created_at: new Date().toISOString(),
+    }).catch(()=>{});
+    localStorage.removeItem(pendingKey);
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
+    setLogs(data||[]);
+    setFeedback(f=>({...f,[msg.id]:"✓ +1pt acreditado. ¡Gracias por difundir!"}));
+    setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 5000);
+  }
+
   async function handleCopy(msg) {
     if (!playerId) { alert("Identifícate primero con tu nombre del juego."); return; }
     if (blockUntil && blockUntil > Date.now()) {
@@ -109,35 +127,18 @@ export default function Comunicaciones() {
       return;
     }
     await navigator.clipboard.writeText(msg.content || "");
-    const confirmed = window.confirm(
-      "¿Ya pegaste este mensaje en el chat general del juego?\n\nSi confirmas: se registra como publicado. Publicación falsa = -50 pts."
-    );
-    if (!confirmed) return;
-    const {error} = await supabase.from("message_logs").insert({
-      player_id:   parseInt(playerId),
-      player_name: playerName,
-      msg_id:      msg.id,
-      msg_title:   msg.title,
-      created_at:  new Date().toISOString(),
-    });
-    if (error) { setFeedback(f=>({...f,[msg.id]:"Error: "+error.message})); return; }
-    // Award +1 pt acumulado for each confirmed propaganda message
-    if (playerId) {
-      try {
-        const {data:pl, error:pe} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-        if (!pe && pl) {
-          const {error:ue} = await supabase.from("players").update({pts_acumulados:(pl.pts_acumulados||0)+1}).eq("id",parseInt(playerId));
-          if (ue) console.error("Points update error:", ue.message);
-        }
-      } catch(e) { console.error("Points error:", e); }
-    }
+    // Mark as pending confirmation - user needs to go to the game and come back
+    const pendingKey = "aor_prop_pending_"+msg.id;
+    const pendingUntil = Date.now() + 6*60*60*1000; // 6h block on this message
+    localStorage.setItem(pendingKey, String(pendingUntil));
+    // 1h cooldown between copies
     const blockEnd = Date.now() + 60*60*1000;
     setBlockUntil(blockEnd);
     localStorage.setItem("aor_prop_block", String(blockEnd));
+    // Force re-render to show the confirm button
     const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
     setLogs(data||[]);
-    setFeedback(f=>({...f,[msg.id]:"✓ Registrado. Próximo envío disponible en 1h."}));
-    setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 5000);
+    setFeedback(f=>({...f,[msg.id]:"✓ Copiado. Ve al chat del juego, pega el mensaje y vuelve aquí para confirmar."}));
   }
 
   // Ranking: top propagandists
@@ -257,26 +258,47 @@ export default function Comunicaciones() {
               {/* Bottom separator */}
               <div style={{height:"1px",background:idx%2===0?"linear-gradient(90deg,transparent,rgba(64,224,255,0.15),transparent)":"linear-gradient(90deg,transparent,rgba(255,215,0,0.15),transparent)",marginBottom:"10px"}}/>
 
-              {/* Copy button */}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <button
-                  onClick={()=>handleCopy(msg)}
-                  disabled={!canUse}
-                  style={{
-                    padding:"7px 18px",
-                    background: canUse ? (idx%2===0?"rgba(64,224,255,0.1)":"rgba(255,215,0,0.1)") : "rgba(255,255,255,0.03)",
-                    border:"1px solid "+(canUse ? (idx%2===0?"rgba(64,224,255,0.3)":"rgba(255,215,0,0.3)") : "rgba(255,255,255,0.06)"),
-                    borderRadius:"6px",
-                    color: canUse ? (idx%2===0?"#40E0FF":"#FFD700") : "rgba(255,255,255,0.2)",
-                    fontSize:"11px",
-                    cursor: canUse ? "pointer" : "default",
-                    fontFamily:"monospace",
-                    letterSpacing:"0.1em",
-                  }}>
-                  {!playerId ? "IDENTIFICATE PRIMERO" : isBlocked ? "BLOQUEADO "+formatTime(blockUntil-Date.now()) : hasCooldown ? "COOLDOWN "+formatTime(cooldownRemaining(playerId)) : limitReached ? "LIMITE DIARIO ALCANZADO" : alreadyUsed ? "COPIAR DE NUEVO" : "COPIAR Y PUBLICAR"}
-                </button>
-                {alreadyUsed && <span style={{fontSize:"9px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace"}}>PUBLICADO HOY</span>}
-              </div>
+              {/* Copy + Confirm buttons */}
+              {(()=>{
+                const pendingKey = "aor_prop_pending_"+msg.id;
+                const isPending = !!localStorage.getItem(pendingKey) && !alreadyUsed;
+                const msgBlocked = localStorage.getItem(pendingKey) && parseInt(localStorage.getItem(pendingKey)) > Date.now() && alreadyUsed;
+                return(
+                  <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+                    {/* COPIAR button — disabled when pending confirm */}
+                    <button
+                      onClick={()=>handleCopy(msg)}
+                      disabled={!canUse || isPending}
+                      style={{
+                        width:"100%",padding:"8px",
+                        background: isPending ? "rgba(200,162,255,0.06)" : canUse ? "rgba(200,162,255,0.1)" : "rgba(255,255,255,0.03)",
+                        border:"1px solid "+(isPending ? "rgba(200,162,255,0.2)" : canUse ? "rgba(200,162,255,0.35)" : "rgba(255,255,255,0.06)"),
+                        borderRadius:"6px",
+                        color: isPending ? "rgba(200,162,255,0.4)" : canUse ? "#C8A2FF" : "rgba(255,255,255,0.2)",
+                        fontSize:"11px", cursor:canUse&&!isPending?"pointer":"default",
+                        fontFamily:"monospace", letterSpacing:"0.1em",
+                      }}>
+                      {!playerId ? "IDENTIFICATE PRIMERO" : isBlocked ? "⏳ ESPERA "+formatTime(blockUntil-Date.now()) : hasCooldown ? "⏳ "+formatTime(cooldownRemaining(playerId)) : limitReached ? "LÍMITE DIARIO" : isPending ? "PENDIENTE CONFIRMACIÓN" : alreadyUsed ? "✓ PUBLICADO HOY" : "COPIAR AL CHAT"}
+                    </button>
+                    {/* CONFIRM button — only shows when pending */}
+                    {isPending && (
+                      <button
+                        onClick={()=>confirmSent(msg)}
+                        style={{
+                          width:"100%",padding:"8px",
+                          background:"rgba(200,162,255,0.15)",
+                          border:"1px solid rgba(200,162,255,0.4)",
+                          borderRadius:"6px",color:"#C8A2FF",
+                          fontSize:"11px",cursor:"pointer",
+                          fontFamily:"monospace",letterSpacing:"0.1em",fontWeight:"bold",
+                        }}>
+                        ✓ CONFIRMÉ EL ENVÍO (+1pt)
+                      </button>
+                    )}
+                    {alreadyUsed&&<div style={{fontSize:"8px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace",textAlign:"center"}}>✓ publicado · siguiente disponible en 1h</div>}
+                  </div>
+                );
+              })()}
               {feedback[msg.id] && (
                 <div style={{fontSize:"10px",color:feedback[msg.id].startsWith("✓")?"#A8FF78":"#FF6B6B",marginTop:"6px",fontFamily:"monospace"}}>{feedback[msg.id]}</div>
               )}
