@@ -227,10 +227,14 @@ function RegistrationTimer({warMode="classic"}) {
   if (closed) return (
     <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"12px",textAlign:"center"}}>
       <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.6)",marginBottom:"6px"}}>REGISTRO CERRADO</div>
-      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.5"}}>
-        El siguiente registro se habilita el lunes a las{" "}
-        <strong style={{color:"#A8FF78"}}>9:00h España</strong>
-        <span style={{color:"rgba(255,255,255,0.25)"}}>{" · "}8:00h Ecuador · 7:00h México</span>
+      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.6"}}>
+        El registro abre con la siguiente guerra de clanes.
+        <br/>
+        <strong style={{color:"#A8FF78"}}>Viernes</strong>
+        {warMode==="new"
+          ? <span> · <strong style={{color:"#FF9F43"}}>22:00h España</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 16:00h Ecuador · 15:00h México</span></span>
+          : <span> · <strong style={{color:"#A8FF78"}}>14:00h España</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 8:00h Ecuador · 7:00h México</span></span>
+        }
       </div>
     </div>
   );
@@ -242,8 +246,8 @@ function RegistrationTimer({warMode="classic"}) {
       <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"2px"}}>REGISTRO CIERRA EN</div>
       <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginBottom:"6px"}}>
         {warMode==="new"
-          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>21:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 15:00h Ecuador · 14:00h México</span></span>
-          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>13:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 7:00h Ecuador · 6:00h México</span></span>
+          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>22:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 16:00h Ecuador · 15:00h México</span></span>
+          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>14:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 8:00h Ecuador · 7:00h México</span></span>
         }
       </div>
       <div style={{display:"flex",gap:"8px",alignItems:"baseline"}}>
@@ -353,6 +357,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
   const [existingAvail, setExistingAvail] = useState(null);
   const [newBp, setNewBp]           = useState("");
   const [newLevel, setNewLevel]     = useState("");
+  const [newNivel, setNewNivel]     = useState("");
   const [lastStats, setLastStats]   = useState(null);
   const isOpen = isRegistrationOpen(warMode);
   const currentWeek = getWarWeek();
@@ -404,7 +409,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
   async function saveStats() {
     if (!selectedPlayer) { setError("Selecciona tu nombre primero."); return; }
-    if (!newBp && !newLevel) return;
+    if (!newBp && !newLevel && !newNivel) return;
     const currentWeek2 = getWarWeek();
     if (selectedPlayer.stats_updated_week === currentWeek2) {
       setError("Ya actualizaste tus stats esta semana.");
@@ -412,10 +417,14 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
     }
     const hasBp    = newBp.trim() !== "";
     const hasLevel = newLevel.trim() !== "";
-    const pts = hasBp && hasLevel ? 5 : 2;
+    const hasNivel = newNivel.trim() !== "" && parseInt(newNivel) <= 340;
+    // BP=+1, Poder=+1, Nivel=+1, all 3 = +5pts
+    const count = (hasBp?1:0)+(hasLevel?1:0)+(hasNivel?1:0);
+    const pts = count === 3 ? 5 : count;
     const updates = { pt_stats: (selectedPlayer.pt_stats||0) + pts, stats_updated_week: currentWeek2 };
-    if (hasBp)    updates.bp    = parseInt(newBp);
-    if (hasLevel) updates.level = parseInt(newLevel);
+    if (hasBp)    updates.bp           = parseInt(newBp);
+    if (hasLevel) updates.level        = parseInt(newLevel);
+    if (hasNivel) updates.player_level = parseInt(newNivel);
     const {error: statsErr} = await supabase.from("players").update(updates).eq("id", selectedPlayer.id);
     if (statsErr) { setError("Error al guardar stats: " + (statsErr.message||"DB error")); return; }
     await supabase.from("player_stats").insert({
@@ -425,7 +434,8 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
       updated_by: "jugador",
     });
     setStatsSaved(true);
-    setNewBp(""); setNewLevel("");
+    setNewBp(""); setNewLevel(""); setNewNivel("");
+    setError(null);
     setTimeout(()=>setStatsSaved(false), 3000);
   }
 
@@ -515,8 +525,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             NOMBRE EN EL JUEGO
             {sessionStorage.getItem("aor_player_id") && <span style={{color:"#40E0FF",marginLeft:"6px",fontSize:"9px"}}>🔒 sesión: {sessionStorage.getItem("aor_player_name")}</span>}
           </label>
-          <input value={name} onChange={e=>{ if(sessionStorage.getItem("aor_player_id")) return; handleNameChange(e.target.value); }} readOnly={!!sessionStorage.getItem("aor_player_id")} placeholder="Escribe tu nombre..." style={{width:"100%",background:sessionStorage.getItem("aor_player_id")?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box",cursor:sessionStorage.getItem("aor_player_id")?"not-allowed":"text"}}/>
-          {selectedPlayer && <div style={{fontSize:"10px",color:"#A8FF78",marginTop:"3px"}}>✓ {selectedPlayer.name} — {((selectedPlayer.level||0)/1000).toFixed(1)}k</div>}
+          <input value={name} onChange={e=>{ if(sessionStorage.getItem("aor_player_id")) return; handleNameChange(e.target.value); }} readOnly={!!sessionStorage.getItem("aor_player_id")} placeholder="Escribe tu nombre..." style={{width:"100%",background:sessionStorage.getItem("aor_player_id")?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:selectedPlayer?"#A8FF78":"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box",cursor:sessionStorage.getItem("aor_player_id")?"not-allowed":"text",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/>
           {suggestions.length > 0 && (
             <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1a1f",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",zIndex:100,overflow:"hidden",marginTop:"2px"}}>
               {suggestions.map(p=>(
@@ -549,23 +558,32 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
                 Actuales: 💀 {selectedPlayer.bp?.toLocaleString()} BP · ⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k
               </div>
             )}
-            <div style={{display:"flex",gap:"8px"}}>
+            <div style={{display:"flex",gap:"6px"}}>
               <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (+2 pts)</div>
-                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={selectedPlayer.bp?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 BP <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span></div>
+                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={selectedPlayer.bp?.toString()||"actual"} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (+2 pts)</div>
-                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||""} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span></div>
+                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||"actual"} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"9px",color:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.5)":"rgba(255,255,255,0.4)",marginBottom:"3px"}}>
+                  🎯 Nivel <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span>{(selectedPlayer.player_level||0)>=340&&<span style={{color:"#FFD700"}}> MAX</span>}
+                </div>
+                <input value={newNivel} onChange={e=>setNewNivel(e.target.value)} placeholder={(selectedPlayer.player_level||"—")+" / 340"} type="number" min="1" max="340" disabled={(selectedPlayer.player_level||0)>=340} style={{width:"100%",background:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.04)":"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.3)":"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",cursor:(selectedPlayer.player_level||0)>=340?"not-allowed":"text"}}/>
               </div>
             </div>
-            <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
-              <button type="button" onClick={saveStats} disabled={!newBp&&!newLevel} style={{flex:1,padding:"8px",background:(newBp||newLevel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel)?"pointer":"default",fontWeight:"bold"}}>
-                💾 Guardar stats{(newBp||newLevel)?" (+"+(newBp&&newLevel?5:2)+" pts)":""}
+            <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",marginTop:"4px",textAlign:"center"}}>
+              Llenar los 3 juntos = <strong style={{color:"#A8FF78"}}>+5pts</strong> · uno solo = <strong style={{color:"#A8FF78"}}>+1pt</strong> · una vez por semana
+            </div>
+            <div style={{display:"flex",gap:"8px",marginTop:"6px"}}>
+              <button type="button" onClick={saveStats} disabled={!newBp&&!newLevel&&!newNivel} style={{flex:1,padding:"8px",background:(newBp||newLevel||newNivel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel||newNivel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel||newNivel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel||newNivel)?"pointer":"default",fontWeight:"bold"}}>
+                💾 Guardar stats{(()=>{const c=(newBp?1:0)+(newLevel?1:0)+(newNivel?1:0);return c>0?" (+"+(c===3?5:c)+" pts)":"";})()}
               </button>
-              {(newBp||newLevel) && <button type="button" onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
+              {(newBp||newLevel||newNivel)&&<button type="button" onClick={()=>{setNewBp("");setNewLevel("");setNewNivel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
             </div>
-            {statsSaved && <div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>✓ Stats guardados con éxito</div>}
+            {statsSaved&&<div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>✓ Stats guardados</div>}
           </div>
         )}
 
