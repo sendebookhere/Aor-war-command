@@ -134,9 +134,12 @@ export default function Versus() {
         <NavBar current="/versus"/>
         <PageHeader page="/versus"/>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"12px 14px",marginBottom:"16px"}}>
-          <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"6px"}}>VERSUS — PvP</div>
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.7"}}>
-            Registra el resultado de <strong style={{color:"#FF6B6B"}}>3 batallas</strong> vs un rival (+1pt, +2pts si ganaste 2 o más). Solo una batalla por rival por día, máx. 5 diarios. El rival <strong style={{color:"#A8FF78"}}>confirma</strong> (+1pt) o <strong style={{color:"#FFD700"}}>discrepa</strong> con 5 batallas. Si el desafiante no acepta, presenta un <strong style={{color:"#FF9F43"}}>claim</strong> (+5pts) — los admins resuelven con videos en WhatsApp.
+          <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,107,107,0.4)",marginBottom:"8px"}}>VERSUS — CÓMO FUNCIONA</div>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",lineHeight:"1.8"}}>
+            <div style={{marginBottom:"6px"}}>Registra el resultado de <strong style={{color:"#FF6B6B"}}>3 batallas</strong> contra un rival del clan. Por registrar ganas <strong style={{color:"#A8FF78"}}>+1 pt</strong>. Si ganaste 2 o más de las 3 batallas, recibes <strong style={{color:"#A8FF78"}}>+2 pts</strong>. Solo puedes registrar una batalla por rival al día, con un máximo de 5 batallas diarias.</div>
+            <div style={{marginBottom:"6px"}}>Al desafiado le aparece el resultado en su perfil y en esta hoja. Puede <strong style={{color:"#A8FF78"}}>ACEPTAR</strong> — y recibe <strong style={{color:"#A8FF78"}}>+1 pt</strong> — o <strong style={{color:"#FFD700"}}>DISCREPAR</strong>, registrando sus propios resultados de 5 batallas entre los dos jugadores.</div>
+            <div style={{marginBottom:"6px"}}>Si en las 5 batallas de la discrepancia gana la mayoría el desafiado, se lleva <strong style={{color:"#FFD700"}}>+3 pts</strong> y se anulan los puntos del desafiador. El resultado aparece en el perfil del desafiador y en la sección de Discrepancias de esta hoja.</div>
+            <div>El desafiador puede entonces <strong style={{color:"#A8FF78"}}>ACEPTAR la discrepancia</strong> (recibe +1 pt) o <strong style={{color:"#FF9F43"}}>llevar el caso a los administradores</strong> con videos de 5 batallas. El que tenga razón según los videos recibe <strong style={{color:"#FF9F43"}}>+5 pts</strong> y el otro cero.</div>
           </div>
         </div>
 
