@@ -69,7 +69,15 @@ export default function NavBar({current}) {
 
       {/* Mi Perfil */}
       {playerId && (
-        <button onClick={()=>nav("/reporte?own=1")} style={{
+        <button onClick={()=>{
+          if (window.__openOwnProfile) {
+            // Already on /reporte - just open profile without navigation
+            window.__openOwnProfile();
+            if(window.__aorNavigate) window.__aorNavigate("/reporte?own=1");
+          } else {
+            nav("/reporte?own=1");
+          }
+        }} style={{
           display:"flex",alignItems:"center",justifyContent:"space-between",
           padding:"7px 12px",marginBottom:"6px",width:"100%",cursor:"pointer",
           background: current==="profile" ? "rgba(64,224,255,0.08)" : "rgba(255,255,255,0.02)",
