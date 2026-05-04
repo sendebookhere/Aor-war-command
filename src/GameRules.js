@@ -88,6 +88,8 @@ export const PTS = {
     max_batallas_dia:5, max_por_rival_dia:1,
     max_dudo_por_rival_dia:1, dudo_victorias_necesarias:3,
     batallas_por_set:3, batallas_dudo:5,
+    dias_para_confirmar:3,  // rival tiene 3 días para confirmar o DUDAR
+    // Si no responde en 3 días: challenger conserva +1pt, rival no recibe nada
   },
   noticias: { leida:1, requerimiento:1 },
   whatsapp: { bono_incorporacion:25 },

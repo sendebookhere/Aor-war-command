@@ -35,7 +35,21 @@ export default function Versus(){
         supabase.from("players").select("id,name,pts_acumulados,clan_role").eq("active",true).order("name"),
         supabase.from("pvp_battles").select("*").order("created_at",{ascending:false}).limit(500),
       ]);
-      setPlayers(p.data||[]);setBattles(b.data||[]);
+      setPlayers(p.data||[]);
+      const battles = b.data||[];
+      // Auto-confirm pending battles older than 3 days
+      const now = new Date();
+      for(const battle of battles){
+        if(battle.status==="pending"){
+          const created = new Date(battle.created_at);
+          const daysDiff = (now - created) / (1000*60*60*24);
+          if(daysDiff >= 3){
+            // Auto-confirm: challenger keeps their +1pt, opponent gets nothing extra
+            await supabase.from("pvp_battles").update({status:"auto_confirmed"}).eq("id",battle.id);
+          }
+        }
+      }
+      setBattles(battles);
     }catch(e){}
     setLoading(false);
   }
@@ -82,15 +96,6 @@ export default function Versus(){
     }
     // If 0-1 wins: loser already has their +1pt from declaration, no extra
 
-    // Retroactive: ensure challenger got their +1pt for declaring
-    const {data:challLedger} = await supabase.from("pts_ledger")
-      .select("id").eq("player_id",parseInt(b.challenger_id))
-      .eq("source","pvp_registro")
-      .ilike("note",`%${b.opponent_name}%`)
-      .limit(1);
-    if(!challLedger?.length){
-      await awardPts(parseInt(b.challenger_id),1,"pvp_registro",`vs ${b.opponent_name}`);
-    }
     await load();
   }
 
@@ -147,6 +152,11 @@ export default function Versus(){
   }
 
   const pendingForMe=battles.filter(b=>String(b.opponent_id)===String(playerId)&&b.status==="pending");
+  // Days remaining to confirm/dudo (3 day limit)
+  function daysLeft(b){
+    const d = 3 - (new Date()-new Date(b.created_at))/(1000*60*60*24);
+    return Math.max(0, Math.ceil(d));
+  }
   const dudoForMe=battles.filter(b=>String(b.challenger_id)===String(playerId)&&b.status==="disputed");
   const claimedAdmin=battles.filter(b=>b.status==="claimed");
 
@@ -170,6 +180,11 @@ export default function Versus(){
   }
 
   const allRecord=buildRecord(battles);
+  // Pts ranking: each set gives pts (1pt declare + 1pt if won 2-3 + 1pt if confirmed)
+  // Build pts-based rankings from pts_ledger (source pvp_*)
+  // But also keep battle-win rankings for the individual battle counts
+
+  // Set-level rankings (by wins/losses in sets)
   const rankGeneral=Object.entries(allRecord).sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
   const weekBattles=battles.filter(b=>b.week===week);
   const weekRecord=buildRecord(weekBattles);
@@ -177,7 +192,23 @@ export default function Versus(){
   const monthBattles=battles.filter(b=>(b.created_at||"").slice(0,7)===month);
   const monthRecord=buildRecord(monthBattles);
   const rankMonth=Object.entries(monthRecord).sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
-  // Losers ranking
+
+  // Individual BATTLE rankings (each set = 3 battles → count each battle won/lost)
+  const battleRecord = {};
+  battles.filter(b=>b.status==="confirmed"||b.status==="auto_confirmed"||b.status==="confirmed_reversed"||b.status==="pending").forEach(b=>{
+    const cW = b.status==="confirmed_reversed" ? b.opponent_wins : b.challenger_wins;
+    const oW = b.status==="confirmed_reversed" ? b.challenger_wins : b.opponent_wins;
+    if(!battleRecord[b.challenger_name]) battleRecord[b.challenger_name]={w:0,l:0};
+    if(!battleRecord[b.opponent_name])   battleRecord[b.opponent_name]  ={w:0,l:0};
+    battleRecord[b.challenger_name].w += cW;
+    battleRecord[b.challenger_name].l += oW;
+    battleRecord[b.opponent_name].w   += oW;
+    battleRecord[b.opponent_name].l   += cW;
+  });
+  const rankBattleWins   = Object.entries(battleRecord).filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10);
+  const rankBattleLosses = Object.entries(battleRecord).filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l).slice(0,10);
+
+  // Losers ranking (by sets lost)
   const rankLosers=Object.entries(allRecord).filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l);
 
   const dudoPending=battles.filter(b=>b.status==="disputed"||b.status==="claimed");
@@ -217,7 +248,10 @@ export default function Versus(){
             {pendingForMe.map(b=>(
               <div key={b.id} style={{background:C.redA+"0.05)",border:`1px solid ${C.redA}0.2)`,borderRadius:"8px",padding:"12px",marginBottom:"6px"}}>
                 <div style={{fontSize:"12px",color:C.red,marginBottom:"3px",fontFamily:"serif"}}>{b.challenger_name}</div>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",marginBottom:"8px",fontFamily:"monospace"}}>ganó {b.challenger_wins} · perdió {b.opponent_wins} de 3 vs ti</div>
+                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.45)",marginBottom:"4px",fontFamily:"monospace"}}>ganó {b.challenger_wins} · perdió {b.opponent_wins} de 3 vs ti</div>
+                <div style={{fontSize:"9px",color:daysLeft(b)<=1?"#FF6B6B":"rgba(255,255,255,0.3)",fontFamily:"monospace",marginBottom:"8px"}}>
+                  {daysLeft(b)>0?`⏳ ${daysLeft(b)} día${daysLeft(b)>1?"s":""} para confirmar o DUDAR`:"⏰ Plazo vencido — se auto-confirma"}
+                </div>
                 <div style={{display:"flex",gap:"6px"}}>
                   <button onClick={()=>confirm(b)} style={{flex:1,padding:"7px",background:C.greenA+"0.1)",border:`1px solid ${C.greenA}0.25)`,borderRadius:"5px",color:C.green,fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>✓ CONFIRMAR (+1pt)</button>
                   <button onClick={()=>{if(alreadyDudoToday(b)){setMsg("Ya DUDASTE hoy vs este jugador.");return;}setDudoBattle(b);setDudoOpen(true);setDudoWins(null);}} style={{flex:1,padding:"7px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"5px",color:"#FF6B6B",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>🎲 DUDAR</button>
@@ -304,7 +338,7 @@ export default function Versus(){
             <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",color:C.red,opacity:0.7,marginBottom:"10px"}}>🎲 VERSUS — REGLAS (inspirado en el juego Dudo)</div>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",lineHeight:"1.8"}}>
               <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Registrar:</strong> Declara el resultado de 3 batallas vs un rival → <strong style={{color:C.red}}>+1pt siempre</strong> por declarar. Máx 1 desafío por rival/día, 5/día.</div>
-              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Confirmar:</strong> El rival acepta → <strong style={{color:C.red}}>+1pt al confirmador</strong>. Además, quien ganó 2 o 3 de 3 batallas recibe <strong style={{color:C.red}}>+1pt extra</strong> (challenger o opponent). El que ganó 0-1 ya tiene su +1pt de declaración.</div>
+              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Confirmar o DUDAR:</strong> El rival tiene <strong style={{color:C.red}}>3 días</strong> para aceptar o DUDAR. Si confirma → <strong style={{color:C.red}}>+1pt al confirmador</strong> + <strong style={{color:C.red}}>+1pt extra al ganador de 2-3</strong>. Si no responde en 3 días → el challenger conserva su +1pt pero el rival no recibe nada.</div>
               <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>🎲 DUDO:</strong> El rival desafía con 5 batallas propias. Si gana 3+ de 5: <strong style={{color:C.red}}>+3pts</strong> y se anulan los puntos del desafiador. Solo 1 DUDO por rival/día.</div>
               <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Escalar:</strong> El desafiador puede escalar a admins con videos (<strong style={{color:C.red}}>+5pts</strong>). El que gane en video se lleva <strong style={{color:C.red}}>+5pts</strong>.</div>
               <div><strong style={{color:C.red}}>Rankings:</strong> Top 1 semanal <strong style={{color:C.red}}>+5pts</strong> · Top 1 mensual <strong style={{color:C.red}}>+10pts</strong></div>
@@ -404,10 +438,10 @@ export default function Versus(){
           </div>
         </div>
 
-        {/* MÁS DERROTAS */}
+        {/* MÁS DERROTAS (sets) */}
         {rankLosers.length>0&&(
           <div style={{marginBottom:"16px"}}>
-            <div style={C.lbl}>MÁS DERROTAS</div>
+            <div style={C.lbl}>MÁS DERROTAS (SETS)</div>
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px"}}>
               {rankLosers.slice(0,5).map(([name,r],i)=>(
                 <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 6px",marginBottom:"2px",background:"rgba(255,255,255,0.01)",borderRadius:"4px"}}>
@@ -419,6 +453,41 @@ export default function Versus(){
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* RANKING BATALLAS INDIVIDUALES — top 10 victorias y derrotas */}
+        {(rankBattleWins.length>0||rankBattleLosses.length>0)&&(
+          <div style={{marginBottom:"16px"}}>
+            <div style={C.lbl}>RANKING BATALLAS INDIVIDUALES (sets × 3 batallas)</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
+              {/* Victorias */}
+              <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.12)",borderRadius:"8px",padding:"10px"}}>
+                <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(168,255,120,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>🏆 MÁS VICTORIAS</div>
+                {rankBattleWins.map(([name,r],i)=>(
+                  <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"3px 4px",marginBottom:"2px"}}>
+                    <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(168,255,120,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"80px"}}>
+                      {i+1}. {name}
+                    </span>
+                    <span style={{fontFamily:"monospace",fontSize:"11px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
+                  </div>
+                ))}
+                {rankBattleWins.length===0&&<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin datos</div>}
+              </div>
+              {/* Derrotas */}
+              <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"8px",padding:"10px"}}>
+                <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(255,107,107,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>💀 MÁS DERROTAS</div>
+                {rankBattleLosses.map(([name,r],i)=>(
+                  <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"3px 4px",marginBottom:"2px"}}>
+                    <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(255,107,107,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"80px"}}>
+                      {i+1}. {name}
+                    </span>
+                    <span style={{fontFamily:"monospace",fontSize:"11px",color:C.red,fontWeight:"bold"}}>{r.l}</span>
+                  </div>
+                ))}
+                {rankBattleLosses.length===0&&<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin datos</div>}
+              </div>
             </div>
           </div>
         )}

@@ -183,7 +183,8 @@ export default function Puntos(){
         {/* VERSUS */}
         <Card title="VERSUS — PvP (estilo Dudo)" color="#FF6B6B">
           <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>
-            Solo {P.VERSUS_LIMITS.max_por_rival_dia} desafío por rival/día · Máx {P.VERSUS_LIMITS.max_batallas_dia}/día · Solo {P.VERSUS_LIMITS.max_dudo_por_rival_dia} DUDO por rival/día
+            Solo {P.VERSUS_LIMITS.max_por_rival_dia} desafío/rival/día · Máx {P.VERSUS_LIMITS.max_batallas_dia}/día · Solo {P.VERSUS_LIMITS.max_dudo_por_rival_dia} DUDO/rival/día
+            <span style={{display:"block",marginTop:"2px",color:"rgba(255,107,107,0.6)"}}>El rival tiene <strong>{P.VERSUS_LIMITS.dias_para_confirmar} días</strong> para confirmar o DUDAR · Si no responde: challenger conserva +1pt, rival no recibe nada</span>
           </div>
           <div style={{marginBottom:"6px",padding:"6px 8px",background:"rgba(255,107,107,0.06)",borderRadius:"5px",border:"1px solid rgba(255,107,107,0.15)"}}>
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,107,107,0.5)",marginBottom:"4px",letterSpacing:"0.1em"}}>AL DECLARAR EL SET ({P.VERSUS_LIMITS.batallas_por_set} batallas)</div>
