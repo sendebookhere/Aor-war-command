@@ -3530,16 +3530,16 @@ export default function App() {
         // Spain time = UTC+2 (summer CEST) / UTC+1 (winter CET)
         // Simple approach: use UTC+2 offset
         const now = new Date();
-        const spainOffset = 2; // CEST
-        const spainNow = new Date(now.getTime() + spainOffset*3600000);
-        const day = spainNow.getUTCDay(); // 1 = Monday
-        const hour = spainNow.getUTCHours();
+        // Use Ecuador time (UTC-5) for reset trigger — Monday 8am Ecuador
+        const ecNow = new Date(now.getTime() - 5*3600000);
+        const day  = ecNow.getUTCDay();   // 1 = Monday
+        const hour = ecNow.getUTCHours();
         const isResetWindow = day === 1 && hour >= 8; // Monday 8am+ Ecuador
         if (!isResetWindow) return;
         // Check if already reset this Monday
-        const thisMonday = new Date(spainNow);
-        thisMonday.setUTCDate(spainNow.getUTCDate() - (spainNow.getUTCDay() - 1));
-        thisMonday.setUTCHours(9,0,0,0);
+        const thisMonday = new Date(ecNow);
+        thisMonday.setUTCDate(ecNow.getUTCDate() - (ecNow.getUTCDay() - 1));
+        thisMonday.setUTCHours(8,0,0,0);
         if (lastReset && lastReset >= thisMonday) return; // already done
         console.log("Auto weekly reset triggered: Monday 9am Spain");
         await weeklyReset(true);
