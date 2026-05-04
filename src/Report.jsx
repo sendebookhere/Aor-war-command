@@ -831,18 +831,24 @@ export default function PublicReport() {
           const sid = sessionStorage.getItem("aor_player_id");
           if (sid) {
             const own = (players||data).find(p=>String(p.id)===sid);
-            if (own) setSelected(own);
+            if (own) { setSelected(own); sessionStorage.setItem("aor_last_viewed_player", String(own.id)); }
           }
         };
         // Auto-open own profile when ?own=1 is in URL
         const sid = sessionStorage.getItem("aor_player_id");
         const ownParam = new URLSearchParams(window.location.search).get("own");
         const gotoProfile = sessionStorage.getItem("aor_goto_profile");
+        // Also restore last viewed profile on refresh
+        const lastViewed = sessionStorage.getItem("aor_last_viewed_player");
         if ((ownParam === "1" || gotoProfile === "1") && sid) {
           sessionStorage.removeItem("aor_goto_profile");
           const own = data.find(p=>String(p.id)===sid);
-          if (own) setSelected(own);
+          if (own) { setSelected(own); sessionStorage.setItem("aor_last_viewed_player", String(own.id)); }
           if (ownParam) window.history.replaceState({}, "", "/reporte");
+        } else if (lastViewed) {
+          // Restore last viewed profile (handles refresh)
+          const last = data.find(p=>String(p.id)===lastViewed);
+          if (last) setSelected(last);
         }
       }
       setLoading(false);
@@ -945,7 +951,7 @@ export default function PublicReport() {
           const rank    = getRank(acc, hon, p.name, p.clan_role);
           const avail   = AVAILABILITY[p.availability] || AVAILABILITY.pendiente;
           return (
-            <div key={p.id} onClick={() => setSelected(p)} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
+            <div key={p.id} onClick={() => { setSelected(p); sessionStorage.setItem("aor_last_viewed_player", String(p.id)); }} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
               <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                 <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>
                   {i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}
