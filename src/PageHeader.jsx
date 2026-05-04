@@ -18,10 +18,10 @@ export const PAGE_NAMES = {
   "/puntos":       "Sistema de Puntos",
   "/propaganda":   "Propaganda de Guerra",
   "/inteligencia": "Inteligencia Militar",
-  "/asamblea":     "Asamblea",
+  "/asamblea":     "Asamblea de Centurias",
   "/noticias":     "Noticias Clan",
-  "/inteligencia": "Inteligencia Militar",
-  "/asamblea":     "Asamblea",
+  "/versus":       "Versus",
+  "/acerca":       "Acerca de la App",
 };
 
 export const PAGE_SUBTITLES = {
@@ -32,6 +32,9 @@ export const PAGE_SUBTITLES = {
   "/propaganda":   "Mensajes preaprobados para difundir en el chat general",
   "/inteligencia": "Registro de guerras, rivales y análisis táctico",
   "/asamblea":     "Elige al Guerrero Implacable de la semana",
+  "/noticias":     "Noticias y solicitudes del clan",
+  "/versus":       "Sistema PvP · Registra batallas y duela resultados",
+  "/acerca":       "Versiones y créditos de la app",
 };
 
 // Exact format matching the screenshot
