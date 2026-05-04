@@ -255,13 +255,35 @@ function PlayerProfile({ player, onBack }) {
     { label:"Bandido post-guerra",                val: player.pt_bandido_post||0,              show: (player.pt_bandido_post||0)>0 },
   ].filter(i=>i.show);
 
+  // Read ALL direct pts from pts_ledger — single source of truth
+  const ledgerBySource = (sources) =>
+    ptsLedger.filter(e => sources.includes(e.source)).reduce((s,e)=>s+(e.pts||0), 0);
+
+  const propTotal   = ledgerBySource(["propaganda"]);
+  const asmTotal    = ledgerBySource(["asamblea_voto","asamblea_ganador","asamblea_pichichi",
+    "asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje",
+    "asamblea_racha_2","asamblea_racha_extra"]);
+  const intelTotal  = ledgerBySource(["intel_voto"]);
+  const pvpTotal    = ledgerBySource(["pvp_registro","pvp_confirmo","pvp_ganador",
+    "pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video",
+    "ranking_semanal","ranking_mensual"]);
+  const codigoTotal = ledgerBySource(["codigo_unico"]);
+  const noticTotal  = ledgerBySource(["noticia_leida","solicitud_cumplida"]);
+  const waTotal     = ledgerBySource(["whatsapp"]);
+  const archTotal   = ledgerBySource(["weekly_archive"]);
+  const penalTotal  = ledgerBySource(["penalizacion"]);
+
   const directItems = [
-    { label:"📡 Propaganda publicada",            val: null, note:"×1pt c/mensaje" },
-    { label:"🗳 Votos Asamblea / Intel.",         val: null, note:"×3pts c/voto" },
-    { label:"⚔ Batallas PvP registradas",        val: null, note:"×1pt c/set" },
-    { label:"🔑 Código único (1pt/día)",          val: null, note:"×1pt/día" },
-    { label:waLabel,                              val: player.pt_whatsapp||0, note:null, show:(player.pt_whatsapp||0)>0 },
-    { label:"📊 Actualización BP/Poder/Nivel",   val: player.pt_stats||0, note:null, show:(player.pt_stats||0)>0 },
+    { label:"📡 Propaganda publicada",    val: propTotal,            show: true },
+    { label:"🗳 Asamblea",               val: asmTotal,             show: true },
+    { label:"🔍 Inteligencia",            val: intelTotal,           show: true },
+    { label:"⚔ Versus PvP",             val: pvpTotal,             show: true },
+    { label:"📰 Noticias",               val: noticTotal,           show: true },
+    { label:"🔑 Código único",           val: codigoTotal,          show: true },
+    { label:waLabel,                      val: waTotal,              show: true },
+    { label:"📦 Cierres de semana",      val: archTotal,            show: archTotal > 0 },
+    { label:"📊 Stats BP/Poder/Nivel",   val: player.pt_stats||0,   show: true },
+    { label:"⚠ Penalizaciones directas", val: penalTotal,           show: penalTotal !== 0 },
   ];
 
   const penalties = [
@@ -390,13 +412,15 @@ function PlayerProfile({ player, onBack }) {
             </>)}
             <div style={{marginTop:"6px"}}>
               <div style={{fontSize:"8px",color:"rgba(200,162,255,0.5)",fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:"3px"}}>📡 ACUMULADO DIRECTO</div>
-              {directItems.filter(i=>i.val===null||i.show).map(i=><div key={i.label} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
-                <span style={{color:"rgba(255,255,255,0.45)"}}>{i.label}</span>
-                {i.val!==null?<span style={{color:"#C8A2FF",fontFamily:"monospace"}}>+{i.val}</span>:<span style={{color:"rgba(255,255,255,0.2)",fontFamily:"monospace",fontSize:"9px"}}>{i.note}</span>}
+              {directItems.filter(i=>i.show).map(i=><div key={i.label} style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
+                <span style={{color:i.val>0?"rgba(255,255,255,0.6)":i.val<0?"rgba(255,107,107,0.5)":"rgba(255,255,255,0.25)"}}>{i.label}</span>
+                <span style={{color:i.val>0?"#C8A2FF":i.val<0?"#FF6B6B":"rgba(255,255,255,0.2)",fontFamily:"monospace",fontWeight:i.val!==0?"bold":"normal"}}>
+                  {i.val>0?"+":""}{i.val!==0?i.val:"—"}
+                </span>
               </div>)}
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0",borderTop:"1px solid rgba(255,255,255,0.06)",marginTop:"2px"}}>
-                <span style={{color:"rgba(200,162,255,0.6)",fontFamily:"monospace",fontSize:"9px"}}>Total acumulado</span>
-                <span style={{color:"#C8A2FF",fontFamily:"monospace",fontWeight:"bold"}}>+{acc}</span>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"4px 6px",borderTop:"1px solid rgba(255,215,0,0.15)",marginTop:"4px",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
+                <span style={{color:"rgba(255,215,0,0.6)",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</span>
+                <span style={{color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",fontSize:"13px"}}>{grandTotal}</span>
               </div>
             </div>
             {penalties.length>0&&(<div style={{marginTop:"6px"}}>
@@ -492,9 +516,11 @@ function PlayerProfile({ player, onBack }) {
             {[
               {l:"📊 BP / Poder / Nivel actualizado", v:player.pt_stats||0, show:(player.pt_stats||0)>0},
               // pt_whatsapp is already included in pts_acumulados (no double display)
-              {l:"📡 Propaganda publicada", v:null, note:"+1pt c/mensaje"},
-              {l:"🗳 Asamblea / Inteligencia votadas", v:null, note:"+3pts c/voto"},
-              {l:"⚔ Batallas PvP registradas", v:null, note:"+1pt c/set"},
+              {l:"📡 Propaganda publicada",         v: propTotal,   note:null},
+              {l:"🗳 Asamblea",                        v: asmTotal,    note:null},
+              {l:"🔍 Inteligencia",                    v: intelTotal,  note:null},
+              {l:"⚔ Versus PvP",                      v: pvpTotal,    note:null},
+              {l:"📰 Noticias",                        v: noticTotal,  note:null},
               {l:"🔑 Código único (1pt/día)", v:null, note:"+1pt/día"},
               {l:"📰 Noticias leídas", v:null, note:"+1pt c/noticia"},
             ].filter(x=>x.show!==false).map((x,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(200,162,255,0.03)",borderRadius:"4px"}}>
