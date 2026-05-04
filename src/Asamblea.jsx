@@ -124,7 +124,7 @@ export default function Asamblea() {
       const [p,v,h] = await Promise.all([
         supabase.from("players").select("*").eq("active",true).order("name"),
         supabase.from("assembly_votes").select("*").eq("week",week),
-        supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(100),
+        supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}),
       ]);
       const allP = p.data||[];
       setPlayers(allP);

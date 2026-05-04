@@ -35,7 +35,7 @@ export default function Comunicaciones() {
     Promise.all([
       supabase.from("players").select("id,name,active").eq("active",true).order("name"),
       supabase.from("comunicaciones_msgs").select("*").order("slot"),
-      supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(2000),
+      supabase.from("message_logs").select("*").order("created_at", {ascending:false}),
       supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single(),
       supabase.from("app_settings").select("value").eq("key","weekly_msg_limit").single(),
     ]).then(([p, m, l, s, sw]) => {
@@ -103,7 +103,7 @@ export default function Comunicaciones() {
       player_id: parseInt(playerId), player_name: playerName,
       msg_id: msg.id, msg_title: msg.title, created_at: new Date().toISOString(),
     }).catch(()=>{});
-    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(2000);
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false});
     setLogs(data||[]);
     // key already removed at start of function
     setFeedback(f=>({...f,[msg.id]:"✓ +1pt acreditado. ¡Gracias por difundir!"}));
@@ -139,7 +139,7 @@ export default function Comunicaciones() {
     setBlockUntil(blockEnd);
     localStorage.setItem("aor_prop_block", String(blockEnd));
     // Force re-render to show the confirm button
-    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(2000);
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false});
     setLogs(data||[]);
     setFeedback(f=>({...f,[msg.id]:"✓ Copiado. Ve al chat del juego, pega el mensaje y vuelve aquí para confirmar."}));
   }

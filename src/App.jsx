@@ -1167,9 +1167,9 @@ function UserActivityTable({logs}) {
 
   useEffect(()=>{
     Promise.all([
-      supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500),
+      supabase.from("message_logs").select("*").order("created_at",{ascending:false}),
       supabase.from("players").select("id,name,registered_week,pt_stats,pts_acumulados,bp,level").eq("active",true),
-      supabase.from("difficulty_votes").select("*").order("created_at",{ascending:false}).limit(200),
+      supabase.from("difficulty_votes").select("*").order("created_at",{ascending:false}),
       supabase.from("assembly_votes").select("*").order("created_at",{ascending:false}).limit(200),
     ]).then(([m,p,d,av])=>{
       setMsgLogs(m.data||[]);

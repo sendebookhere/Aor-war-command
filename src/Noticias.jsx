@@ -21,7 +21,7 @@ export default function Noticias() {
 
   async function load() {
     const { data } = await supabase.from("clan_news")
-      .select("*").order("created_at", { ascending: false }).limit(100);
+      .select("*").order("created_at", { ascending: false });
     setNews(data || []);
     setLoading(false);
   }

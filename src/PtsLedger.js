@@ -90,7 +90,7 @@ export async function getPlayerPtsBreakdown(playerId) {
       .select("*")
       .eq("player_id", parseInt(playerId))
       .order("created_at", { ascending: false })
-      .limit(100);
+      ;
     return data || [];
   } catch (e) {
     return [];
