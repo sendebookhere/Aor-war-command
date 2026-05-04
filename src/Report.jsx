@@ -256,6 +256,14 @@ function PlayerProfile({ player, onBack }) {
   ].filter(i=>i.show);
 
   // Read ALL direct pts from pts_ledger — single source of truth
+  // ── Current war week ─────────────────────────────────────────────────────
+  const currentWeek = (() => {
+    const now = new Date(), ec = new Date(now.getTime() - 5*3600000);
+    const fri = new Date(ec); fri.setDate(ec.getDate() - ((ec.getDay()+2)%7));
+    const y = fri.getFullYear(), w = Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
+    return `${y}-W${w}`;
+  })();
+
   // ── Helper: sum ledger by source ──────────────────────────────────────────
   // acc = ALL time | week = this week only
   const ledgerBySource = (sources, weekOnly=false) => {
@@ -326,13 +334,7 @@ function PlayerProfile({ player, onBack }) {
   const accBase = Math.max(player.pts_acumulados||0, ledgerSum);
   const grandTotal = accBase + warPtsForTotal;
 
-  // Current war week
-  const currentWeek = (() => {
-    const now = new Date(), ec = new Date(now.getTime() - 5*3600000);
-    const fri = new Date(ec); fri.setDate(ec.getDate() - ((ec.getDay()+2)%7));
-    const y = fri.getFullYear(), w = Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
-    return `${y}-W${w}`;
-  })();
+  // currentWeek defined above
   // weeklyTotal = pts earned this week:
   //   - calcWarPts: war columns (pt_registro, pt_batallas, etc.) active now
   //   - ledger entries this week: direct awards (propaganda, votos, pvp, código, WA)
