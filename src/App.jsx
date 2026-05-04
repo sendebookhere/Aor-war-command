@@ -2241,7 +2241,12 @@ function WarModeSwitch() {
 
   async function awardAssamblyWinners() {
     try {
-      const week = getWarWeek();
+      // Find the most recent week that has votes (may differ from current week
+      // if admin closes voting after the Monday reset boundary)
+      const {data:latestVote} = await supabase.from("assembly_votes")
+        .select("week").order("created_at",{ascending:false}).limit(1);
+      if (!latestVote?.length) return;
+      const week = latestVote[0].week;
 
       // ── Idempotency guard: never award twice for same week ──────────────
       const {data:alreadyAwarded} = await supabase.from("pts_ledger")
@@ -2249,7 +2254,7 @@ function WarModeSwitch() {
         .in("source",["asamblea_ganador","asamblea_pichichi","asamblea_empate_votos","asamblea_mayor_puntaje","asamblea_empate_puntaje"])
         .limit(1);
       if (alreadyAwarded?.length > 0) {
-        console.log("Asamblea winners already awarded this week — skipping");
+        console.log("Asamblea winners already awarded for week",week,"— skipping");
         return;
       }
 
@@ -2952,6 +2957,9 @@ function AdminPanel({players, update, loading, saving, reload}) {
         }).catch(()=>{});
       }
     }
+
+    // Award assembly winners before resetting (in case admin forgot to close voting)
+    try { await awardAssamblyWinners(); } catch(e) { console.log("Assembly award skipped:", e.message); }
 
     // Reset all weekly pt columns
     await supabase.from("players").update({
