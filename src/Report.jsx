@@ -426,6 +426,13 @@ function PlayerProfile({ player, onBack }) {
                   {i.val>0?"+":""}{i.val!==0?i.val:"—"}
                 </span>
               </div>)}
+              {/* Show unclassified pts if pts_acumulados > ledgerSum */}
+              {(player.pts_acumulados||0) > ledgerSum && (
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"2px 0"}}>
+                  <span style={{color:"rgba(255,255,255,0.25)",fontStyle:"italic"}}>Sin clasificar (prev. al ledger)</span>
+                  <span style={{color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>+{(player.pts_acumulados||0)-ledgerSum}</span>
+                </div>
+              )}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"4px 6px",borderTop:"1px solid rgba(255,215,0,0.15)",marginTop:"4px",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
                 <span style={{color:"rgba(255,215,0,0.6)",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</span>
                 <span style={{color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",fontSize:"13px"}}>{grandTotal}</span>

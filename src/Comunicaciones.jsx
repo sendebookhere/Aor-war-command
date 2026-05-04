@@ -291,10 +291,14 @@ export default function Comunicaciones() {
                     {/* CONFIRM button — only shows when pending */}
                     {isPending && (
                       <button
-                        onClick={()=>{
-                          // Remove key immediately to prevent double-click
+                        onClick={(e)=>{
                           const pk = "aor_prop_pending_"+msg.id;
                           if(!localStorage.getItem(pk)) return;
+                          // Dim immediately on click — visual feedback before async
+                          e.currentTarget.disabled = true;
+                          e.currentTarget.style.opacity = "0.3";
+                          e.currentTarget.style.cursor = "default";
+                          e.currentTarget.textContent = "✓ Enviado — bloqueado 6h";
                           confirmSent(msg);
                         }}
                         style={{
@@ -304,6 +308,7 @@ export default function Comunicaciones() {
                           borderRadius:"6px",color:"#C8A2FF",
                           fontSize:"11px",cursor:"pointer",
                           fontFamily:"monospace",letterSpacing:"0.1em",fontWeight:"bold",
+                          transition:"opacity 0.2s",
                         }}>
                         ✓ CONFIRMÉ EL ENVÍO (+1pt)
                       </button>
