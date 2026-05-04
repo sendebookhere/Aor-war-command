@@ -277,19 +277,27 @@ function PlayerProfile({ player, onBack }) {
   // Grand total from GameRules.calcGrandTotal
   const grandTotal = calcGrandTotal(player);
 
-  // Weekly pts = sum of ALL pts_ledger entries this week (war + direct)
-  // This is the true "earned this week" figure across all mechanics
+  // Current war week
   const currentWeek = (() => {
     const now = new Date(), ec = new Date(now.getTime() - 5*3600000);
     const fri = new Date(ec); fri.setDate(ec.getDate() - ((ec.getDay()+2)%7));
     const y = fri.getFullYear(), w = Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
     return `${y}-W${w}`;
   })();
-  const weeklyLedgerPts = ptsLedger
-    .filter(e => e.week === currentWeek)
+  // weeklyTotal = pts earned this week:
+  //   - calcWarPts: war columns (pt_registro, pt_batallas, etc.) active now
+  //   - ledger entries this week: direct awards (propaganda, votos, pvp, código, WA)
+  // Note: WA bonus and other direct pts go to pts_acumulados via awardPts
+  //       but MAY also appear in ledger. We use pts_acumulados as the base truth.
+  const warPtsNow = calcWarPts(player);
+  const ledgerThisWeek = ptsLedger
+    .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
     .reduce((sum, e) => sum + (e.pts || 0), 0);
-  // Also include war pts from pt_* columns (not yet archived)
-  const weeklyTotal = weeklyLedgerPts + calcWarPts(player);
+  // grandTotal = pts_acumulados (all direct+archived) + warPtsNow (active war cols)
+  // week 1: pts_acumulados holds all direct awards (WA, votos, etc.)
+  //         warPtsNow holds active war cols (registro, batallas, etc.)
+  //         Together = everything earned
+  const weeklyTotal = warPtsNow + ledgerThisWeek;
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
@@ -306,18 +314,12 @@ function PlayerProfile({ player, onBack }) {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
             <div>
               <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",fontWeight:"bold"}}>{player.name}</div>
-              <div style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"2px"}}>
-                <span style={{color:rank.color,fontWeight:"bold",fontSize:"13px"}}>{grandTotal}</span>
-                {" pts totales · "}
-                <span style={{color:rank.color}}>{rank.label}</span>
+              <div style={{fontFamily:"monospace",fontSize:"11px",color:rank.color,fontWeight:"bold",marginTop:"2px"}}>
+                {rank.label}
+                <span style={{color:"rgba(255,255,255,0.3)",fontWeight:"normal",fontSize:"10px"}}> · {player.clan_role}</span>
               </div>
             </div>
             <span style={{fontSize:"18px"}}>{player.whatsapp ? "📱" : ""}</span>
-          </div>
-          {/* Rank + Role in clan */}
-          <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
-            <Pill color={rank.color}>{rank.label}</Pill>
-            <Pill color="rgba(255,255,255,0.35)">{player.clan_role}</Pill>
           </div>
           {/* War role — updates from registration */}
           <div style={{marginBottom:"10px"}}>
@@ -339,17 +341,17 @@ function PlayerProfile({ player, onBack }) {
               <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{player.player_level}</div>
             </div>}
           </div>
-          {/* Points summary */}
+          {/* Points summary — two boxes */}
           <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
             <div style={{flex:1,background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
               <div style={{fontSize:"8px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>ESTA SEMANA</div>
-              <div style={{fontSize:"20px",color:weeklyTotal>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold",fontFamily:"monospace"}}>{weeklyTotal>0?"+":""}{weeklyTotal}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts activos esta semana</div>
+              <div style={{fontSize:"22px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace"}}>{warPtsNow>0?"+":""}{warPtsNow}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts de guerra activos</div>
             </div>
-            <div style={{flex:1,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
-              <div style={{fontSize:"20px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>total acumulado histórico</div>
+            <div style={{flex:1,background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
+              <div style={{fontSize:"8px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
+              <div style={{fontSize:"22px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts_acumulados + guerra</div>
             </div>
           </div>
 
@@ -554,22 +556,60 @@ function PlayerProfile({ player, onBack }) {
           <UniqueCodeManager playerId={player.id} playerName={player.name} uniqueCode={player.unique_code}/>
         )}
 
-        {/* Registration count */}
+        {/* ACTIVIDAD ACUMULADA — contador por fuente */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-          <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"8px"}}>ACTIVIDAD ACUMULADA</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px"}}>
-            {[
-              {label:"Registros de guerra",val: player.registered_week ? 1 : 0, note: player.registered_week||"—", color:"#40E0FF"},
-              {label:"Propaganda publicada",val: msgLogs.length, color:"#C8A2FF"},
-              {label:"Pts acumulados",val: (player.pts_acumulados||0).toLocaleString(), color:"#FFD700"},
-            ].map(x=>(
-              <div key={x.label} style={{textAlign:"center",padding:"8px 4px",background:x.color+"08",borderRadius:"6px",border:"1px solid "+x.color+"15"}}>
-                <div style={{fontSize:"14px",color:x.color,fontWeight:"bold",fontFamily:"monospace"}}>{x.val}</div>
-                <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",marginTop:"2px",fontFamily:"monospace",lineHeight:"1.3"}}>{x.label}</div>
-                {x.note&&<div style={{fontSize:"8px",color:x.color,opacity:0.5,fontFamily:"monospace"}}>{x.note}</div>}
+          <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"10px"}}>ACTIVIDAD ACUMULADA — CONTADORES</div>
+          {(()=>{
+            // Count from ptsLedger — each source shows count + total pts
+            const sourceGroups = {
+              "📱 WhatsApp":         {sources:["whatsapp"],          color:"#A8FF78", oneTime:true},
+              "⚔ Guerra":           {sources:["weekly_archive"],    color:"#40E0FF"},
+              "📡 Propaganda":       {sources:["propaganda"],         color:"#C8A2FF"},
+              "🗳 Asamblea":         {sources:["asamblea_voto","asamblea_ganador","asamblea_pichichi","asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje","asamblea_racha_2","asamblea_racha_extra"], color:"#FFD700"},
+              "🔍 Inteligencia":     {sources:["intel_voto"],         color:"#FF6B6B"},
+              "⚔ Versus PvP":       {sources:["pvp_registro","pvp_confirmo","pvp_ganador","pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video","ranking_semanal","ranking_mensual"], color:"#FF6B6B"},
+              "📰 Noticias":         {sources:["noticia_leida","solicitud_cumplida"], color:"#FF9F43"},
+              "🔑 Código único":     {sources:["codigo_unico"],       color:"#FFD700"},
+              "⚠ Penalizaciones":   {sources:["penalizacion"],       color:"rgba(255,107,107,0.7)"},
+            };
+            return(
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px"}}>
+                {Object.entries(sourceGroups).map(([label,{sources,color,oneTime}])=>{
+                  const entries = ptsLedger.filter(e=>sources.includes(e.source));
+                  const totalPts = entries.reduce((s,e)=>s+(e.pts||0),0);
+                  const count = entries.length;
+                  if(count===0) return null;
+                  return(
+                    <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",background:color+"08",borderRadius:"5px",border:"1px solid "+color+"15"}}>
+                      <div>
+                        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)",fontFamily:"Georgia,serif"}}>{label}</div>
+                        <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>
+                          {oneTime?"una vez":count+" vez"+(count>1?"es":"")}
+                        </div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:"14px",color,fontWeight:"bold",fontFamily:"monospace"}}>{totalPts>0?"+":""}{totalPts}</div>
+                        <div style={{fontSize:"7px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* War cols not yet archived */}
+                {warPtsNow!==0&&(
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",background:"rgba(64,224,255,0.06)",borderRadius:"5px",border:"1px solid rgba(64,224,255,0.12)"}}>
+                    <div>
+                      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)",fontFamily:"Georgia,serif"}}>⚔ Guerra actual</div>
+                      <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>en curso</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:"14px",color:"#40E0FF",fontWeight:"bold",fontFamily:"monospace"}}>{warPtsNow>0?"+":""}{warPtsNow}</div>
+                      <div style={{fontSize:"7px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
 
         {/* Guerrero Implacable history */}
