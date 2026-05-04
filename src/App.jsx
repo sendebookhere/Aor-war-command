@@ -360,7 +360,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
     const sid = sessionStorage.getItem("aor_player_id");
     if (sid && allPlayers.length>0 && !selectedPlayer) {
       const found = allPlayers.find(p=>String(p.id)===sid);
-      if (found) setSelectedPlayer(found);
+      if (found) { setSelectedPlayer(found); setName(found.name); }
     }
   },[allPlayers]);
   const [existingAvail, setExistingAvail] = useState(null);
@@ -379,7 +379,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
         const lockedId = sessionStorage.getItem("aor_player_id");
         if (lockedId) {
           const locked = data.find(p=>String(p.id)===lockedId);
-          if (locked) setSelectedPlayer(locked);
+          if (locked) { setSelectedPlayer(locked); setName(locked.name); }
         }
       }
     });
@@ -450,7 +450,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
   }
 
   async function handleSubmit() {
-    if (!name.trim() || !avail) { setError("Completa nombre y disponibilidad."); return; }
+    if ((!name.trim() && !selectedPlayer) || !avail) { setError("Completa nombre y disponibilidad."); return; }
     setSubmitting(true);
     let player = selectedPlayer;
     if (!player) {
