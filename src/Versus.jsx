@@ -418,23 +418,27 @@ export default function Versus(){
               {title:"GENERAL",data:rankGeneral,type:null},
               {title:"SEMANA",data:rankWeek,type:"weekly",bonus:"+5pts top 1"},
               {title:"MES",data:rankMonth,type:"monthly",bonus:"+10pts top 1"},
-            ].map(({title,data,type,bonus})=>(
+            ].map(({title,data,type,bonus})=>{
+              // Only players with wins, sorted desc by wins, top 10
+              const withWins = [...data].filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w);
+              return(
               <div key={title} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px"}}>
                 <div style={{fontFamily:"monospace",fontSize:"6px",letterSpacing:"0.15em",color:C.redA+"0.5)",marginBottom:"2px"}}>{title}</div>
                 {bonus&&<div style={{fontFamily:"monospace",fontSize:"6px",color:C.gray,marginBottom:"4px"}}>{bonus}</div>}
                 {isAdmin&&type&&<button onClick={()=>awardPvpRankingBonus(type)} style={{width:"100%",padding:"3px",marginBottom:"4px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"3px",color:C.red,fontSize:"7px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS ADMIN</button>}
-                {data.length===0?<div style={{fontSize:"9px",color:C.gray,textAlign:"center",fontFamily:"monospace"}}>sin batallas</div>
-                :data.slice(0,5).map(([name,r],i)=>(
+                {withWins.length===0
+                  ?<div style={{fontSize:"9px",color:C.gray,textAlign:"center",fontFamily:"monospace"}}>sin victorias</div>
+                  :withWins.slice(0,10).map(([name,r],i)=>(
                   <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
                     <span style={{fontSize:"9px",color:i===0?C.red:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"65px"}}>{i+1}. {name}</span>
                     <div style={{fontFamily:"monospace",fontSize:"9px",flexShrink:0,marginLeft:"2px"}}>
-                      <span style={{color:r.w>0?C.green:C.gray}}>{r.w}V</span>
-                      {r.p>0&&<span style={{color:"rgba(255,215,0,0.4)",fontSize:"8px"}}>+{r.p}⏳</span>}
+                      <span style={{color:C.green,fontWeight:"bold"}}>{r.w}V</span>
                     </div>
                   </div>
                 ))}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

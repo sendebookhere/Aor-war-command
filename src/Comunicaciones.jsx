@@ -38,11 +38,14 @@ export default function Comunicaciones() {
       supabase.from("message_logs").select("*").order("created_at", {ascending:false}),
       supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single(),
       supabase.from("app_settings").select("value").eq("key","weekly_msg_limit").single(),
-    ]).then(([p, m, l, s, sw]) => {
+      supabase.from("pts_ledger").select("player_id,pts,source").eq("source","propaganda"),
+    ]).then(([p, m, l, s, sw, pl]) => {
       setPlayers(p.data || []);
       setMsgs(m.data || []);
       setLogs(l.data || []);
       if (s.data?.value) setDailyLimit(parseInt(s.data.value)||2);
+      // Store propaganda ledger for accurate ranking
+      setPropLedger(pl.data || []);
       if (sw.data?.value) setWeeklyLimit(parseInt(sw.data.value)||14);
       setLoading(false);
     });
@@ -144,17 +147,25 @@ export default function Comunicaciones() {
     setFeedback(f=>({...f,[msg.id]:"✓ Copiado. Ve al chat del juego, pega el mensaje y vuelve aquí para confirmar."}));
   }
 
-  // Ranking: top propagandists — grouped by player_id (not name, to avoid inconsistencies)
+  // Ranking: use pts_ledger source="propaganda" as truth (same as profile shows)
+  // Cross-reference with players list for names
   const rankMapById = {};
-  const idToName = {};
+  propLedger.forEach(e=>{
+    if(!e.player_id) return;
+    rankMapById[e.player_id] = (rankMapById[e.player_id]||0)+1;
+  });
+  // Also count message_logs for players not yet in ledger (fallback)
   logs.forEach(l=>{
     if(!l.player_id) return;
-    rankMapById[l.player_id] = (rankMapById[l.player_id]||0)+1;
-    if(l.player_name) idToName[l.player_id] = l.player_name;
+    // Only add from logs if not already counted in ledger
+    if(!rankMapById[l.player_id]) {
+      rankMapById[l.player_id] = (rankMapById[l.player_id]||0)+1;
+    }
   });
-  // Also count from players list for players who may have name mismatches
+  const playerNameMap = {};
+  players.forEach(p => { playerNameMap[p.id] = p.name; });
   const ranking = Object.entries(rankMapById)
-    .map(([id, count]) => [idToName[id]||id, count])
+    .map(([id, count]) => [playerNameMap[id]||id, count])
     .sort((a,b)=>b[1]-a[1])
     .slice(0,10);
 
