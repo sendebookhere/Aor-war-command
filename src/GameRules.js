@@ -37,149 +37,138 @@ export const MIN_MONTHLY_PTS = 20;
 export const EXPULSION_THRESHOLD = -100;
 
 // ── HORARIOS DE GUERRA ────────────────────────────────────────────────────────
-export const WAR_SCHEDULES = {
+// TODOS LOS HORARIOS EN BASE ECUADOR (UTC-5)
+// Conversión automática:
+//   España VERANO (fin mar→fin oct): UTC+2 → Ecuador+7h
+//   España INVIERNO (fin oct→fin mar): UTC+1 → Ecuador+6h
+//   México: UTC-6 fijo (sin horario de verano) → Ecuador-1h
+
+export function spainOffset() {
+  // Retorna cuántas horas va España adelante de Ecuador según la fecha actual
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  // Último domingo de marzo: inicio verano España
+  const lastSunMar = new Date(Date.UTC(y, 2, 31));
+  lastSunMar.setUTCDate(31 - lastSunMar.getUTCDay());
+  // Último domingo de octubre: fin verano España
+  const lastSunOct = new Date(Date.UTC(y, 9, 31));
+  lastSunOct.setUTCDate(31 - lastSunOct.getUTCDay());
+  const isSummer = now >= lastSunMar && now < lastSunOct;
+  return isSummer ? 7 : 6;  // CEST=+7h, CET=+6h desde Ecuador
+}
+
+export function mexicoOffset() {
+  return -1; // México UTC-6, Ecuador UTC-5 → México va 1h atrás (fijo)
+}
+
+// Convierte hora Ecuador a España y México
+// h_ec: hora en Ecuador (0-23), day_ec: 'lun','mar',...
+// Retorna { ec, es, mx } cada uno con { day, h, m, label }
+export function convertTime(day_ec, h_ec, m_ec = 0) {
+  const DAYS = ['dom','lun','mar','mié','jue','vie','sáb'];
+  const dayIdx = {dom:0,lun:1,mar:2,'mié':3,jue:4,vie:5,'sáb':6};
+
+  function addHours(day, h, delta) {
+    let newH = h + delta;
+    let d = dayIdx[day];
+    while (newH >= 24) { newH -= 24; d = (d+1)%7; }
+    while (newH < 0)   { newH += 24; d = (d+6)%7; }
+    return { day: DAYS[d], h: newH };
+  }
+
+  function fmt12(h, m) {
+    const p = h < 12 ? 'am' : 'pm';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2,'0')}${p}`;
+  }
+  function fmt24(h, m) { return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}h`; }
+
+  const es = addHours(day_ec, h_ec, spainOffset());
+  const mx = addHours(day_ec, h_ec, mexicoOffset());
+
+  return {
+    ec: { day: day_ec, h: h_ec, m: m_ec, label: `${day_ec} ${fmt12(h_ec, m_ec)}` },
+    es: { day: es.day, h: es.h, m: m_ec,
+          label: `${es.day} ${fmt24(es.h, m_ec)}`,
+          labelWinter: `${addHours(day_ec,h_ec,6).day} ${fmt24(addHours(day_ec,h_ec,6).h, m_ec)}` },
+    mx: { day: mx.day, h: mx.h, m: m_ec, label: `${mx.day} ${fmt12(mx.h, m_ec)}` },
+  };
+}
+
+// Muestra horario completo: "vie 15:00h España · 8:00am Ecuador · 7:00am México"
+export function showTime(day_ec, h_ec, m_ec = 0) {
+  const t = convertTime(day_ec, h_ec, m_ec);
+  return `${t.es.label} España · ${t.ec.label} Ecuador · ${t.mx.label} México`;
+}
+
+// ── TABLA MAESTRA DE HORARIOS (base Ecuador) ───────────────────────────────
+// Verificada y confirmada. No editar sin actualizar la tabla completa.
+//
+// EVENTO                        Ecuador        España V    España I    México
+// Registro abre                 lun 9:00am     lun 16:00h  lun 15:00h  lun 8:00am
+// Bonus anticipado cierra       jue 7:00am     jue 14:00h  jue 13:00h  jue 6:00am
+// Reset semanal                 lun 8:00am     lun 15:00h  lun 14:00h  lun 7:00am
+// Votaciones abren S1           dom 8:00am     dom 15:00h  dom 14:00h  dom 7:00am
+// Votaciones abren S2           sáb 12:00pm    sáb 19:00h  sáb 18:00h  sáb 11:00am
+// S1 Guerra inicia              vie 8:00am     vie 15:00h  vie 14:00h  vie 7:00am
+// S1 Registro cierra            vie 7:00am     vie 14:00h  vie 13:00h  vie 6:00am
+// S1 Guerra termina             dom 8:00am     dom 15:00h  dom 14:00h  dom 7:00am
+// S1 Votaciones cierran         vie 7:00am     vie 14:00h  vie 13:00h  vie 6:00am
+// S2 Guerra inicia              vie 12:00pm    vie 19:00h  vie 18:00h  vie 11:00am
+// S2 Registro cierra            vie 11:00am    vie 18:00h  vie 17:00h  vie 10:00am
+// S2 Guerra termina             sáb 12:00pm    sáb 19:00h  sáb 18:00h  sáb 11:00am
+// S2 Votaciones cierran         vie 11:00am    vie 18:00h  vie 17:00h  vie 10:00am
+
+export const SCHEDULE = {
+  // Ambos sistemas
+  regOpen:        { day:'lun', h:9,  m:0 },  // lunes 9:00am Ecuador
+  earlyBonusEnd:  { day:'jue', h:7,  m:0 },  // jueves 7:00am Ecuador
+  weeklyReset:    { day:'lun', h:8,  m:0 },  // lunes 8:00am Ecuador
+
   classic: {
-    label: "Modo clásico",
-    registrationCloseDay: 5,    // viernes
-    registrationCloseHour: 14,  // 14:00h España (UTC+2 verano / UTC+1 invierno)
-    warStart: "viernes 14:00h España",
-    warEnd:   "domingo 14:00h España",
-    votingOpen: "domingo 14:00h España",
+    label: "Sistema clásico — Conquista de Castillos",
+    note: "24h totales: primera fase castillos → segunda fase ciudades enemigas",
+    warStart:     { day:'vie', h:8,  m:0 },  // viernes 8:00am Ecuador
+    warEnd:       { day:'dom', h:8,  m:0 },  // domingo 8:00am Ecuador
+    regClose:     { day:'vie', h:7,  m:0 },  // viernes 7:00am (1h antes)
+    votingOpen:   { day:'dom', h:8,  m:0 },  // domingo 8:00am Ecuador
+    votingClose:  { day:'vie', h:7,  m:0 },  // viernes 7:00am (1h antes)
   },
   new: {
-    label: "Modo nuevo",
-    registrationCloseDay: 5,    // viernes
-    registrationCloseHour: 22,  // 22:00h España
-    warStart: "viernes 22:00h España",
-    warEnd:   "sábado 22:00h España",
-    votingOpen: "sábado 22:00h España",
+    label: "Sistema nuevo — 24h (18h castillos + 6h ciudades)",
+    note: "Periodo total 24h: 18h conquista castillos + 6h conquista ciudades principales",
+    warStart:     { day:'vie', h:12, m:0 },  // viernes 12:00pm Ecuador
+    warEnd:       { day:'sáb', h:12, m:0 },  // sábado 12:00pm Ecuador (24h después)
+    regClose:     { day:'vie', h:11, m:0 },  // viernes 11:00am (1h antes)
+    votingOpen:   { day:'sáb', h:12, m:0 },  // sábado 12:00pm Ecuador (al terminar guerra)
+    votingClose:  { day:'vie', h:11, m:0 },  // viernes 11:00am (1h antes)
   },
 };
 
-// Bonus anticipado: antes del miércoles 23:59h España (día 3)
-export const EARLY_BONUS_DAY = 3;
-export const EARLY_BONUS_HOUR = 23;
+// ── MECÁNICA DE GUERRA — SISTEMA CLÁSICO ────────────────────────────────────
+// Fase 1 (primeras 24h): Conquista de Castillos
+//   Cada clan empieza con un castillo con 3 slots de defensa.
+//   Ocupar un slot de defensa cuesta 1 bandera.
+//   Atacar un castillo cuesta 3 banderas.
+//   El defensor resiste o es expulsado sin vida (regresa a ciudad a curarse).
+//   Al retirar los 3 defensores sin que otros ocupen los slots:
+//     → Cooldown de minutos → se habilita el ataque a la ciudad.
+// Fase 2 (después de 24h): Conquista de Ciudades
+//   La ciudad tiene tropas donadas por miembros del clan (equipamiento + atributos villager).
+//   La dificultad depende del nivel de lo donado.
+//   Se puede capturar entre varios jugadores o uno solo con nivel suficiente.
+//   Ciudad capturada = clan eliminado de la guerra.
 
-// ── PUNTOS POR CATEGORÍA ──────────────────────────────────────────────────────
-export const PTS = {
-
-  // CÓDIGO ÚNICO
-  codigo_unico_dia: 1,          // +1 primera vez del día
-
-  // REGISTRO DE DISPONIBILIDAD
-  registro: {
-    conquistador:   10,
-    refuerzos:       5,
-    reserva:         2,
-    no_disponible:   1,
-  },
-  registro_bonus_anticipado: {  // antes miércoles 23:59h España
-    conquistador:    5,
-    refuerzos:       2,
-    reserva:         2,
-  },
-
-  // DURANTE LA GUERRA
-  guerra: {
-    aparecio:          3,        // una vez por guerra
-    siguio_ordenes:    2,        // una vez por guerra
-    batalla_ganada:    2,        // c/u
-    batalla_perdida:   1,        // c/u
-    defensa:           1,        // c/u
-    bonus_6_batallas: 10,        // automático al superar 6 victorias
-    bandido_post:      1,        // c/u después de ganar
-    bonus_completo:    5,        // cumplió todo
-    sin_registro_participo: 1,   // participó sin registrarse
-    primer_movilizador: 3,       // solo el primero
-    bp_solo:           1,        // actualización de stats — solo BP
-    poder_solo:        1,        // solo Poder
-    nivel_solo:        1,        // solo Nivel
-    stats_completo:    5,        // BP + Poder + Nivel juntos (una vez/semana)
-  },
-
-  // PENALIZACIONES
-  penalizaciones: {
-    conquistador_no_aparecio: -15,
-    refuerzos_no_aparecio:    -10,
-    reserva_no_aparecio:       -5,
-    sin_registro_sin_participar: -20,
-    ignoro_orden:              -2,   // c/vez
-    abandono_defensa:          -2,   // c/vez
-    fuera_castillo:            -2,   // c/vez
-    inactivo_12h:              -3,   // c/vez
-    bandido_pre:               -1,   // c/vez (atacó antes de ganar)
-  },
-
-  // PROPAGANDA
-  propaganda: {
-    mensaje_confirmado:    1,    // por cada mensaje publicado y confirmado
-    publicacion_falsa:   -50,    // confirmar sin haber enviado
-  },
-  PROPAGANDA_COOLDOWN_MIN: 120,  // 2 horas entre envíos
-
-  // INTELIGENCIA MILITAR
-  intel: {
-    voto_dificultad: 1,          // +1pt por voto (corrección sesión mayo 2026)
-  },
-  INTEL_VOTE_WEIGHTS: {
-    siempre:       3,            // Conquistador
-    intermitente:  2,            // Refuerzos
-    solo_una:      1,            // Reserva
-  },
-
-  // ASAMBLEA — GUERRERO IMPLACABLE
-  asamblea: {
-    votar:            3,
-    mas_votado:      10,         // único ganador
-    mayor_puntaje:   10,         // único ganador
-    pichichi_extra:  10,         // ambos a la vez = 30 total
-    empate:           3,         // c/u en caso de empate
-    racha_2sem:      20,
-    racha_extra_por_sem: 10,     // +10 por cada semana adicional a partir de la 3ra
-  },
-  ASAMBLEA_VOTE_WEIGHTS: {       // peso del voto por rango
-    "Líder 👑":    5,
-    "Co-Líder 👑": 4,
-    "Oficial ⚜":  3,
-    "Veterano ★★★":2,
-    "Leyenda 🌟":  2,
-    default:        1,           // Guerrero, Soldado, Recluta
-  },
-  ASAMBLEA_ELIGIBLE: ["siempre","intermitente","solo_una"], // disponibilidades que pueden votar/ser elegidos
-
-  // VERSUS — PvP (estilo Dudo)
-  versus: {
-    registrar_0_1_victorias: 1,  // ganaste 0 o 1 de 3
-    registrar_2_3_victorias: 2,  // ganaste 2 o 3 de 3 (mayoría)
-    confirmar:               1,  // al rival que confirma
-    dudo_exitoso:            3,  // al disputante que gana 3+ de 5
-    aceptar_dudo:            1,  // al desafiador que acepta
-    escalar_admin:           5,  // al desafiador que escala con videos
-    ganar_en_video:          5,  // al que tiene razón según admin
-    ranking_semanal:         5,  // top 1 semanal (cierre domingo)
-    ranking_mensual:         10, // top 1 mensual (último día del mes)
-  },
-  VERSUS_LIMITS: {
-    max_batallas_dia:  5,        // máx desafíos por día
-    max_por_rival_dia: 1,        // solo 1 batalla por rival por día
-    max_dudo_por_rival_dia: 1,   // solo 1 DUDO por rival por día
-    dudo_victorias_necesarias: 3, // necesita ganar 3+ de 5 para DUDO exitoso
-    batallas_por_set: 3,         // tamaño del set normal
-    batallas_dudo: 5,            // tamaño del set en DUDO
-  },
-
-  // NOTICIAS
-  noticias: {
-    leida:          1,           // por cada noticia marcada como leída
-    requerimiento:  1,           // al cumplir un requerimiento
-  },
-
-  // WHATSAPP — BONO DE INCORPORACIÓN
-  whatsapp: {
-    bono_incorporacion: 25,      // una sola vez, permanente, entra a pts_acumulados
-  },
-
-};
+// ── MECÁNICA DE GUERRA — SISTEMA NUEVO ──────────────────────────────────────
+// Periodo total: 24 horas
+//   Primeras 18h: Conquista de castillos (igual que sistema clásico)
+//   Últimas 6h: Conquista de ciudades principales de clanes rivales
+// Cambios según patch notes (may 2026):
+//   Hora de inicio ajustada de 14:05 a 18:00 (hora juego = 12:00pm Ecuador)
+//   Duración reducida de 2 días a 1 día (en prueba, puede revertirse)
+//   Protección inicial reducida de 24h a 18h
+//   Protección de outpost tras captura: 20min → 15min
+//   Pace bajado de 90 a 120 (33% más lento, stat inverso)
 
 // ── TOTALIZADORES — FÓRMULA MAESTRA ──────────────────────────────────────────
 // grandTotal = pts_acumulados + warPts_actual

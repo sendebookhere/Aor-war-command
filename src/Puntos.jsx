@@ -47,14 +47,14 @@ export default function Puntos(){
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"5px"}}>CIERRE DEL REGISTRO</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px"}}>
               <div style={{background:"rgba(255,255,255,0.02)",padding:"6px 8px",borderRadius:"5px"}}>
-                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",marginBottom:"2px"}}>Modo clasico</div>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)"}}>Viernes 14:00h Espana</div>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>8am Ecuador · 7am Mexico</div>
+                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",marginBottom:"2px"}}>Sistema 1 — Castillos</div>
+                <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>14:00h España (invierno 13:00h)</div>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace"}}>8:00am Ecuador · 7:00am México</div>
               </div>
               <div style={{background:"rgba(255,255,255,0.02)",padding:"6px 8px",borderRadius:"5px"}}>
-                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",marginBottom:"2px"}}>Modo nuevo</div>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)"}}>Viernes 22:00h Espana</div>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>16pm Ecuador · 15pm Mexico</div>
+                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",marginBottom:"2px"}}>Sistema 2 — Ciudades</div>
+                <div style={{fontSize:"11px",color:"rgba(255,255,255,0.7)",fontWeight:"bold"}}>19:00h España (invierno 18:00h)</div>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace"}}>12:00pm Ecuador · 11:00am México</div>
               </div>
             </div>
           </div>

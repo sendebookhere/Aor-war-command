@@ -58,29 +58,28 @@ export default function Asamblea() {
     ]).then(([ve, wm])=>{
       const mode = wm.data?.value || "classic";
       setWarModeLocal(mode);
-      // Voting window: Sunday 9:00am Spain → Friday 1h before war
-      // Classic war starts Friday 14:00h → votings close Friday 13:00h Spain
-      // New war starts Friday 22:00h → votings close Friday 21:00h Spain
+      // Voting window — all times Ecuador (UTC-5):
+      // S1 Classic: opens Sunday 8:00am → closes Friday 7:00am (1h before 8am war)
+      // S2 New:     opens Saturday 12:00pm → closes Friday 11:00am (1h before 12pm war)
       const now = new Date();
-      const spain = new Date(now.getTime() + 2*60*60*1000); // CEST UTC+2
-      const day  = spain.getDay();  // 0=Sun, 1=Mon...5=Fri, 6=Sat
-      const hour = spain.getHours();
-      const min  = spain.getMinutes();
-      const timeH = hour + min/60; // decimal hours
+      const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
+      const day  = ec.getDay();   // 0=Sun, 1=Mon...5=Fri, 6=Sat
+      const hour = ec.getHours();
+      const min  = ec.getMinutes();
+      const timeH = hour + min/60;
 
-      // Voting OPENS: Sunday >= 9:00am Spain
-      const votingOpens = (day === 0 && timeH >= 9) ||  // Sunday after 9am
-                          (day >= 1 && day <= 4) ||      // Mon-Thu all day
-                          (day === 5 && (                  // Friday before close
-                            mode === "classic" ? timeH < 13 : timeH < 21
-                          ));
-
-      // Voting CLOSES: Friday >= 13:00 (classic) or >= 21:00 (new), Sat
-      const votingCloses = day === 6 ||  // Saturday
-                           (day === 5 && (mode === "classic" ? timeH >= 13 : timeH >= 21)) ||
-                           (day === 0 && timeH < 9); // Sunday before 9am
-
-      const shouldBeOpen = votingOpens && !votingCloses;
+      let shouldBeOpen;
+      if (mode === "new") {
+        // S2: opens Sat 12pm Ecuador → Mon-Fri open → closes Fri 11am Ecuador
+        const opens  = (day===6&&timeH>=12)||(day>=0&&day<=4)||(day===5&&timeH<11);
+        const closes = (day===6&&timeH<12)||(day===5&&timeH>=11);
+        shouldBeOpen = opens && !closes;
+      } else {
+        // S1: opens Sun 8am Ecuador → Mon-Fri open → closes Fri 7am Ecuador
+        const opens  = (day===0&&timeH>=8)||(day>=1&&day<=4)||(day===5&&timeH<7);
+        const closes = day===6||(day===5&&timeH>=7)||(day===0&&timeH<8);
+        shouldBeOpen = opens && !closes;
+      }
 
       if (shouldBeOpen && ve.data?.value === "false") {
         // Auto-open in DB
@@ -337,7 +336,11 @@ export default function Asamblea() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",padding:"6px 10px",background:votingEnabled?"rgba(168,255,120,0.05)":"rgba(255,107,107,0.05)",borderRadius:"6px",border:"1px solid "+(votingEnabled?"rgba(168,255,120,0.2)":"rgba(255,107,107,0.2)")}}>
               <div>
                 <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em",color:votingEnabled?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{votingEnabled?"VOTACIONES ABIERTAS":"VOTACIONES CERRADAS"}</div>
-                <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",marginTop:"1px",fontFamily:"monospace"}}>{warModeLocal==="new"?"Auto-abren sáb 18:00h España":"Auto-abren dom 8:00h España"}</div>
+                <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",marginTop:"1px",fontFamily:"monospace"}}>
+                  {warModeLocal==="new"
+                    ?"Abren sáb · 19:00h España (inv.18:00h) · 12:00pm Ecuador"
+                    :"Abren dom · 15:00h España (inv.14:00h) · 8:00am Ecuador"}
+                </div>
               </div>
               <div style={{width:"8px",height:"8px",borderRadius:"50%",background:votingEnabled?"#A8FF78":"#FF6B6B"}}/>
             </div>

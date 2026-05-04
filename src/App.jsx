@@ -246,8 +246,8 @@ function RegistrationTimer({warMode="classic"}) {
       <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"2px"}}>REGISTRO CIERRA EN</div>
       <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginBottom:"6px"}}>
         {warMode==="new"
-          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>22:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 16:00h Ecuador · 15:00h México</span></span>
-          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>14:00h España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 8:00h Ecuador · 7:00h México</span></span>
+          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>{spainOffset()===6?"17:00h":"18:00h"} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 11:00am Ecuador · 10:00am México</span></span>
+          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>{spainOffset()===6?"13:00h":"14:00h"} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 7:00am Ecuador · 6:00am México</span></span>
         }
       </div>
       <div style={{display:"flex",gap:"8px",alignItems:"baseline"}}>
@@ -279,15 +279,15 @@ function getWarWeek() {
 
 
 function getEarlyRegistrationBonus(availability) {
-  // Bonus for registering early: before Wednesday 23:59 Spain time (CEST = UTC+2)
-  const now   = new Date();
-  const spain = new Date(now.getTime() + 2*60*60*1000); // Spain CEST = UTC+2
-  const day   = spain.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  const hour  = spain.getHours();
-  const min   = spain.getMinutes();
-  // Early window: Mon(1), Tue(2), or Wed(3) before 23:59 Spain
-  const isEarly = (day === 1 || day === 2 || (day === 3 && (hour < 23 || (hour === 23 && min <= 59))));
-  if (!isEarly) return 0;
+  // Early bonus: registers from Mon 9am → Thu 7am Ecuador
+  // Conquistador +5 · Refuerzos +2 · Reserva +2
+  const now = new Date();
+  const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
+  const day  = ec.getDay();   // 0=Sun,1=Mon,...
+  const hour = ec.getHours();
+  // Window: Mon from 9am, Tue all day, Wed all day, Thu before 7am
+  const inEarlyWindow = (day===1&&hour>=9) || day===2 || day===3 || (day===4&&hour<7);
+  if (!inEarlyWindow) return 0;
   if (availability === "siempre")      return 5;
   if (availability === "intermitente") return 2;
   if (availability === "solo_una")     return 2;
@@ -295,18 +295,20 @@ function getEarlyRegistrationBonus(availability) {
 }
 
 function earlyBonusTimeLeft() {
-  // Returns human-readable time left in early window
-  const now   = new Date();
-  const spain = new Date(now.getTime() + 2*60*60*1000);
-  const day   = spain.getDay();
-  const hour  = spain.getHours();
-  // Wednesday 23:59 Spain = day 3, 23:59
-  if (day > 3 || (day === 3 && hour >= 24)) return null;
-  if (day === 0 || day > 5) return null; // Sun/Sat
-  const wedEnd = new Date(spain);
-  wedEnd.setDate(spain.getDate() + (3 - day));
-  wedEnd.setHours(23, 59, 0, 0);
-  const diff = wedEnd - spain;
+  // Countdown to early bonus end: Thursday 7:00am Ecuador
+  const now = new Date();
+  const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
+  const day  = ec.getDay();
+  const hour = ec.getHours();
+  // Window: Mon 9am → Thu 7am Ecuador
+  const inWindow = (day===1&&hour>=9)||day===2||day===3||(day===4&&hour<7);
+  if (!inWindow) return null;
+  // Time until Thursday 7am Ecuador
+  const target = new Date(ec);
+  const daysToThu = (4 - day + 7) % 7 || (day===4&&hour<7?0:7);
+  target.setDate(ec.getDate() + daysToThu);
+  target.setHours(7, 0, 0, 0);
+  const diff = target - ec;
   if (diff <= 0) return null;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
@@ -625,7 +627,9 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           {earlyBonusTimeLeft() && (
             <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"8px",padding:"8px 12px",marginBottom:"8px",fontSize:"10px"}}>
               ⭐ <strong style={{color:"#FFD700"}}>¡Bonus por registro anticipado!</strong>
-              <span style={{color:"rgba(255,255,255,0.5)"}}> Quedan <strong style={{color:"#FFD700"}}>{earlyBonusTimeLeft()}</strong> para el cierre anticipado (mié 23:59 España)</span>
+              <span style={{color:"rgba(255,255,255,0.5)"}}> Quedan <strong style={{color:"#FFD700"}}>{earlyBonusTimeLeft()}</strong> para el bono anticipado
+              <span style={{color:"rgba(255,255,255,0.35)",fontSize:"9px"}}>{" · "}jue 7:00am Ecuador{" · "}{spainOffset()===6?"13:00h":"14:00h"} España{" · "}jue 6:00am México</span>
+            </span>
               <div style={{marginTop:"4px",color:"rgba(255,255,255,0.5)"}}>Conquistador <strong style={{color:"#A8FF78"}}>+5 pts</strong> · Refuerzos <strong style={{color:"#FFD700"}}>+2 pts</strong> · Reserva <strong style={{color:"#FFD700"}}>+2 pts</strong></div>
             </div>
           )}
@@ -3530,7 +3534,7 @@ export default function App() {
         const spainNow = new Date(now.getTime() + spainOffset*3600000);
         const day = spainNow.getUTCDay(); // 1 = Monday
         const hour = spainNow.getUTCHours();
-        const isResetWindow = day === 1 && hour >= 9; // Monday 9am+
+        const isResetWindow = day === 1 && hour >= 8; // Monday 8am+ Ecuador
         if (!isResetWindow) return;
         // Check if already reset this Monday
         const thisMonday = new Date(spainNow);
