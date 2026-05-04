@@ -358,6 +358,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
   const [newBp, setNewBp]           = useState("");
   const [newLevel, setNewLevel]     = useState("");
   const [newNivel, setNewNivel]     = useState("");
+  const [region, setRegion]         = useState(()=>localStorage.getItem("aor_region")||"");
   const [lastStats, setLastStats]   = useState(null);
   const isOpen = isRegistrationOpen(warMode);
   const currentWeek = getWarWeek();
@@ -540,6 +541,18 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
         {/* Stats update - right after name */}
         {selectedPlayer && !alreadyRegistered && (
+          <div style={{marginBottom:"12px",background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.1)",borderRadius:"8px",padding:"10px"}}>
+            <div style={{fontSize:"9px",color:"rgba(64,224,255,0.4)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"6px"}}>TU REGIÓN</div>
+            <div style={{display:"flex",gap:"6px"}}>
+              {[{id:"sur",label:"América del Sur",sub:"hora Ecuador"},{id:"norte",label:"América del Norte",sub:"hora México"}].map(reg=>(
+                <button key={reg.id} type="button" onClick={()=>{ setRegion(reg.id); localStorage.setItem("aor_region",reg.id); }} style={{flex:1,padding:"8px 6px",background:region===reg.id?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(region===reg.id?"rgba(64,224,255,0.3)":"rgba(255,255,255,0.07)"),borderRadius:"6px",color:region===reg.id?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>
+                  {reg.label}<br/><span style={{fontSize:"8px",opacity:0.6}}>{reg.sub}</span>
+                </button>
+              ))}
+            </div>
+            {region&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.3)",fontFamily:"monospace",marginTop:"4px"}}>✓ guardado</div>}
+          </div>
+
           <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
             <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"4px"}}>
               📊 ACTUALIZA TUS STATS

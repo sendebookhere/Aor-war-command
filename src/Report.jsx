@@ -286,21 +286,52 @@ function PlayerProfile({ player, onBack }) {
 
         <NavBar current="profile"/>
         {/* Header */}
-        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
-            <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700"}}>{player.name}</div>
-            <span style={{fontSize:"20px"}}>{player.whatsapp ? "📱" : "📵"}</span>
+        {/* ── Profile Header ─────────────────────────────────────────────── */}
+        <div style={{background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
+          {/* Name in yellow */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
+            <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",fontWeight:"bold"}}>{player.name}</div>
+            <span style={{fontSize:"18px"}}>{player.whatsapp ? "📱" : ""}</span>
           </div>
+          {/* Rank + Role in clan */}
           <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
             <Pill color={rank.color}>{rank.label}</Pill>
-            <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>
-            <Pill color="rgba(255,255,255,0.4)">{player.clan_role}</Pill>
+            <Pill color="rgba(255,255,255,0.35)">{player.clan_role}</Pill>
           </div>
-          <div style={{display:"flex",gap:"16px",fontSize:"12px",flexWrap:"wrap"}}>
-            <span style={{color:"rgba(255,255,255,0.5)"}}>⚔ {((player.level||0)/1000).toFixed(1)}k</span>
-            <span style={{color:"rgba(255,255,255,0.5)"}}>💀 {(player.bp||0).toLocaleString()}</span>
-            <span style={{color: pts>=0 ? "#A8FF78" : "#FF6B6B", fontWeight:"bold"}}>{pts>0?"+":""}{pts} esta guerra</span>
-            <span style={{color:rank.color, fontWeight:"bold"}}>{acc} pts acumulados</span>
+          {/* War role — updates from registration */}
+          <div style={{marginBottom:"10px"}}>
+            <span style={{fontSize:"9px",fontFamily:"monospace",color:"rgba(64,224,255,0.4)",letterSpacing:"0.15em"}}>ROL GUERRA ACTUAL · </span>
+            <span style={{fontSize:"11px",color:avail.color}}>{avail.icon} {player.availability==="pendiente"||!player.availability?"No definido — regístrate en la guerra actual":avail.label}</span>
+          </div>
+          {/* Stats */}
+          <div style={{display:"flex",gap:"12px",flexWrap:"wrap",marginBottom:"10px",padding:"8px 0",borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>PODER</div>
+              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{((player.level||0)/1000).toFixed(1)}k</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>BP</div>
+              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{(player.bp||0).toLocaleString()}</div>
+            </div>
+            {(player.player_level||0)>0&&<div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>NIVEL</div>
+              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{player.player_level}</div>
+            </div>}
+          </div>
+          {/* Points summary */}
+          <div style={{display:"flex",gap:"12px",flexWrap:"wrap"}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>ESTA SEMANA</div>
+              <div style={{fontSize:"18px",color:pts>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{pts>0?"+":""}{pts}</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>ACUMULADO TOTAL</div>
+              <div style={{fontSize:"18px",color:rank.color,fontWeight:"bold"}}>{grandTotal}</div>
+            </div>
+            {(player.pt_whatsapp||0)>0&&<div style={{textAlign:"center"}}>
+              <div style={{fontSize:"9px",color:"rgba(168,255,120,0.4)",fontFamily:"monospace"}}>WHATSAPP</div>
+              <div style={{fontSize:"14px",color:"#A8FF78"}}>+{player.pt_whatsapp}</div>
+            </div>}
           </div>
 
           {/* Points breakdown by category */}
