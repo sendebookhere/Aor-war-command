@@ -77,14 +77,17 @@ export default function Noticias() {
   const histS     = news.filter(p => isExpired(p) && p.type === "requerimiento");
 
   // Rankings
-  const readMap = {}, cumMap = {};
+  const readMap = {}, solReadMap = {}, cumMap = {};
   news.forEach(p => {
+    const isReq = p.type === "requerimiento";
     (p.completions || []).forEach(c => {
       readMap[c.name] = (readMap[c.name] || 0) + 1;
+      if (isReq) solReadMap[c.name] = (solReadMap[c.name] || 0) + 1;
       if (c.cumplido) cumMap[c.name] = (cumMap[c.name] || 0) + 1;
     });
   });
-  const topReaders  = Object.entries(readMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topReaders     = Object.entries(readMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topSolReaders  = Object.entries(solReadMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const topCumplidores = Object.entries(cumMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const lbl = { fontFamily: "monospace", fontSize: "7px", letterSpacing: "0.25em", color: "rgba(255,255,255,0.25)", marginBottom: "6px" };
@@ -208,32 +211,44 @@ export default function Noticias() {
           </>
         )}
 
-        {/* Rankings */}
-        <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "12px" }}>
-            <div style={lbl}>MÁS NOTICIAS LEÍDAS</div>
-            {topReaders.map(([name, n], i) => (
-              <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", padding: "2px 0" }}>
-                <span style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia,serif" }}>{i + 1}. {name}</span>
-                <span style={{ color: "#FF9F43", fontFamily: "monospace" }}>{n}</span>
-              </div>
-            ))}
-            {topReaders.length === 0 && <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>—</div>}
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "12px" }}>
-            <div style={lbl}>MÁS SOLICITUDES CUMPLIDAS</div>
-            {topCumplidores.map(([name, n], i) => (
-              <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", padding: "2px 0" }}>
-                <span style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia,serif" }}>{i + 1}. {name}</span>
-                <span style={{ color: "#A8FF78", fontFamily: "monospace" }}>{n}</span>
-              </div>
-            ))}
-            {topCumplidores.length === 0 && <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>—</div>}
+        {/* Rankings — 3 columns */}
+        <div style={{ marginTop: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "10px" }}>
+              <div style={lbl}>MÁS NOTICIAS LEÍDAS</div>
+              {topReaders.map(([name, n], i) => (
+                <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", padding: "2px 0" }}>
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia,serif", overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"70px" }}>{i + 1}. {name}</span>
+                  <span style={{ color: "#FF9F43", fontFamily: "monospace" }}>{n}</span>
+                </div>
+              ))}
+              {topReaders.length === 0 && <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>—</div>}
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "10px" }}>
+              <div style={lbl}>MÁS SOL. LEÍDAS</div>
+              {topSolReaders.map(([name, n], i) => (
+                <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", padding: "2px 0" }}>
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia,serif", overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"70px" }}>{i + 1}. {name}</span>
+                  <span style={{ color: "#FF9F43", fontFamily: "monospace" }}>{n}</span>
+                </div>
+              ))}
+              {topSolReaders.length === 0 && <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>—</div>}
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "10px" }}>
+              <div style={lbl}>MÁS SOL. CUMPLIDAS</div>
+              {topCumplidores.map(([name, n], i) => (
+                <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", padding: "2px 0" }}>
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia,serif", overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"70px" }}>{i + 1}. {name}</span>
+                  <span style={{ color: "#A8FF78", fontFamily: "monospace" }}>{n}</span>
+                </div>
+              ))}
+              {topCumplidores.length === 0 && <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>—</div>}
+            </div>
           </div>
         </div>
 
         <div style={{ marginTop: "8px", padding: "8px 10px", background: "rgba(255,107,107,0.04)", border: "1px solid rgba(255,107,107,0.1)", borderRadius: "6px", fontFamily: "monospace", fontSize: "8px", color: "rgba(255,107,107,0.4)" }}>
-          ⚠ Declarar cumplimiento falso de una solicitud = -20pts
+          ⚠ Declarar cumplimiento falso = -20pts · El admin puede aplicar la penalización desde el panel de control
         </div>
       </div>
       <NalguitasFooter />

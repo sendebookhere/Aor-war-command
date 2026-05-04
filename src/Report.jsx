@@ -238,7 +238,7 @@ function PlayerProfile({ player, onBack }) {
   const hon   = player.pts_honorificos || 0;
   const rank  = getRank(acc, hon, player.name, player.clan_role);
   const avail = AVAILABILITY[player.availability] || AVAILABILITY.pendiente;
-  const waLabel = (player.pt_whatsapp||0) === 50 ? "📱 WhatsApp Fundador (+50)" : "📱 WhatsApp Grupo (+25)";
+  const waLabel = (player.pt_whatsapp||0) >= 50 ? "📱 WhatsApp Fundador (+50 · antes del lanzamiento)" : "📱 WhatsApp Miembro (+25 · tras el lanzamiento)";
 
   // Breakdown by category - NO honorificos
   const warItems = [
@@ -319,19 +319,17 @@ function PlayerProfile({ player, onBack }) {
             </div>}
           </div>
           {/* Points summary */}
-          <div style={{display:"flex",gap:"12px",flexWrap:"wrap"}}>
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>ESTA SEMANA</div>
-              <div style={{fontSize:"18px",color:pts>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold"}}>{pts>0?"+":""}{pts}</div>
+          <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
+            <div style={{flex:1,background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
+              <div style={{fontSize:"8px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>ESTA SEMANA</div>
+              <div style={{fontSize:"20px",color:pts>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold",fontFamily:"monospace"}}>{pts>0?"+":""}{pts}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts activos</div>
             </div>
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>ACUMULADO TOTAL</div>
-              <div style={{fontSize:"18px",color:rank.color,fontWeight:"bold"}}>{grandTotal}</div>
+            <div style={{flex:1,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
+              <div style={{fontSize:"20px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>desde el inicio</div>
             </div>
-            {(player.pt_whatsapp||0)>0&&<div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(168,255,120,0.4)",fontFamily:"monospace"}}>WHATSAPP</div>
-              <div style={{fontSize:"14px",color:"#A8FF78"}}>+{player.pt_whatsapp}</div>
-            </div>}
           </div>
 
           {/* Points breakdown by category */}

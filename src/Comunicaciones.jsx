@@ -261,8 +261,12 @@ export default function Comunicaciones() {
               {/* Copy + Confirm buttons */}
               {(()=>{
                 const pendingKey = "aor_prop_pending_"+msg.id;
+                const pendingTs = localStorage.getItem(pendingKey) ? parseInt(localStorage.getItem(pendingKey)) : 0;
                 const isPending = !!localStorage.getItem(pendingKey) && !alreadyUsed;
-                const msgBlocked = localStorage.getItem(pendingKey) && parseInt(localStorage.getItem(pendingKey)) > Date.now() && alreadyUsed;
+                // 6h block on this specific message after confirming
+                const msg6hBlocked = alreadyUsed && pendingTs > Date.now();
+                const msg6hLeft = msg6hBlocked ? Math.ceil((pendingTs - Date.now())/60000) : 0;
+                const msgBlocked = msg6hBlocked;
                 return(
                   <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
                     {/* COPIAR button — disabled when pending confirm */}
@@ -295,7 +299,8 @@ export default function Comunicaciones() {
                         ✓ CONFIRMÉ EL ENVÍO (+1pt)
                       </button>
                     )}
-                    {alreadyUsed&&<div style={{fontSize:"8px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace",textAlign:"center"}}>✓ publicado · siguiente disponible en 1h</div>}
+                    {alreadyUsed&&!msg6hBlocked&&<div style={{fontSize:"8px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace",textAlign:"center"}}>✓ publicado</div>}
+                    {msg6hBlocked&&<div style={{fontSize:"8px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace",textAlign:"center"}}>⏳ disponible en {msg6hLeft}m</div>}
                   </div>
                 );
               })()}

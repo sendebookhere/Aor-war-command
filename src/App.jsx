@@ -550,13 +550,32 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
                 </button>
               ))}
             </div>
-            {region&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.3)",fontFamily:"monospace",marginTop:"4px"}}>✓ guardado</div>}
+            {region&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.3)",fontFamily:"monospace",marginTop:"4px"}}>✓ guardado · cambia cuando quieras</div>}
+            {sessionStorage.getItem("aor_player_id")&&<button type="button" onClick={()=>{setRegion(""); localStorage.removeItem("aor_region");}} style={{marginTop:"4px",padding:"2px 8px",background:"transparent",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"3px",color:"rgba(255,255,255,0.2)",fontSize:"8px",cursor:"pointer",fontFamily:"monospace"}}>cambiar región</button>}
           </div>
 
           <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
             <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"4px"}}>
               📊 ACTUALIZA TUS STATS
             </label>
+            {selectedPlayer?.stats_updated_week === getWarWeek() && (()=>{
+              // Show countdown to next Monday 9am Spain (reset time)
+              const now = new Date();
+              const spain = new Date(now.getTime() + 2*3600000);
+              const daysUntilMon = (8 - spain.getUTCDay()) % 7 || 7;
+              const nextMon = new Date(spain);
+              nextMon.setUTCDate(spain.getUTCDate() + daysUntilMon);
+              nextMon.setUTCHours(9,0,0,0);
+              const msLeft = nextMon - spain;
+              const hLeft = Math.floor(msLeft/3600000);
+              const mLeft = Math.floor((msLeft%3600000)/60000);
+              const dLeft = Math.floor(hLeft/24);
+              return (
+                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.4)",marginBottom:"6px",textAlign:"center",padding:"4px",background:"rgba(255,215,0,0.04)",borderRadius:"4px"}}>
+                  ✓ Stats actualizados · Disponible en {dLeft>0?`${dLeft}d ${hLeft%24}h`:`${hLeft}h ${mLeft}m`}
+                </div>
+              );
+            })()}
             <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"8px 10px",marginBottom:"8px",fontSize:"10px"}}>
               <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
               <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
@@ -2064,6 +2083,33 @@ function WarModeSwitch() {
         console.log(`✓ Asamblea: ${source} +${pts}pts → player ${pid}`);
       }
 
+      async function checkStreak(pid, playerName) {
+        // Count consecutive weeks this player won Guerrero Implacable
+        const {data:history} = await supabase.from("pts_ledger")
+          .select("week").eq("player_id",parseInt(pid))
+          .in("source",["asamblea_ganador","asamblea_pichichi"])
+          .order("created_at",{ascending:false}).limit(10);
+        if (!history?.length) return;
+        // Build set of weeks they won
+        const wonWeeks = new Set(history.map(h=>h.week));
+        // Count streak going back from current week
+        let streak = 0;
+        let checkWeek = week;
+        while(wonWeeks.has(checkWeek)) {
+          streak++;
+          // Go back one week
+          const [yr,wn] = checkWeek.split("-W").map(Number);
+          const prevW = wn === 1 ? `${yr-1}-W52` : `${yr}-W${wn-1}`;
+          checkWeek = prevW;
+        }
+        console.log(`Streak for ${playerName}: ${streak} weeks`);
+        if (streak === 2) {
+          await giveAcc(pid, 20, "asamblea_racha_2", `Racha 2 semanas consecutivas`);
+        } else if (streak >= 3) {
+          await giveAcc(pid, 10, "asamblea_racha_extra", `Racha ${streak} semanas consecutivas (+10 extra)`);
+        }
+      }
+
       // ── Award más votado ────────────────────────────────────────────────
       if (topVoted.length > 1) {
         for (const id of topVoted) {
@@ -2075,6 +2121,9 @@ function WarModeSwitch() {
         awardedIds.add(id);
         // Pichichi = also top score → 10+10+10 extra = handled below
         await giveAcc(id, 10, "asamblea_ganador", "Guerrero Implacable");
+        // Check consecutive win streak AFTER awarding this week
+        const winner = allP.find(p=>String(p.id)===id);
+        await checkStreak(id, winner?.name||id);
       }
 
       // ── Award mayor puntaje ─────────────────────────────────────────────
@@ -3115,6 +3164,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
                           <button key={v} onClick={()=>update(p.id,{pt_disponibilidad: v ? 3 : 0})} style={{width:"36px",height:"22px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",background:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"rgba(168,255,120,0.44)":"rgba(255,255,255,0.04)",border:"1px solid "+((v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"#A8FF78":"rgba(255,255,255,0.08)"),color:(v===0&&(p.pt_disponibilidad||0)===0)||(v===1&&(p.pt_disponibilidad||0)>0)?"#A8FF78":"rgba(255,255,255,0.3)"}}>{v===0?"No":"Sí"}</button>
                         ))}
                       </div>
+                    </div>
+                    {/* Cumplimiento falso noticias: -20pts directo a pts_acumulados */}
+                    <div style={{display:"flex",flexDirection:"column",gap:"2px",alignItems:"center"}}>
+                      <span style={{fontSize:"8px",color:"rgba(255,107,107,0.7)"}}>📰 Falso cumplimiento</span>
+                      <button onClick={async()=>{
+                        if(!window.confirm(`Aplicar -20pts a ${p.name} por cumplimiento falso?`)) return;
+                        const {data:pl} = await supabase.from("players").select("pts_acumulados").eq("id",p.id).single();
+                        await supabase.from("players").update({pts_acumulados:(pl?.pts_acumulados||0)-20}).eq("id",p.id);
+                        await supabase.from("pts_ledger").insert({player_id:p.id,pts:-20,source:"penalizacion",note:"Cumplimiento falso en noticias",week:getWarWeek(),created_at:new Date().toISOString()}).catch(()=>{});
+                        reload();
+                      }} style={{padding:"3px 8px",borderRadius:"4px",fontSize:"9px",cursor:"pointer",background:"rgba(255,107,107,0.12)",border:"1px solid rgba(255,107,107,0.3)",color:"#FF6B6B",fontFamily:"monospace"}}>-20pts</button>
                     </div>
                     {[
                       {label:"Ignoró -2",key:"pt_ignoro_orden",color:"#FF9F43"},
