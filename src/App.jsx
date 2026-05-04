@@ -104,7 +104,7 @@ function totalPts(p) {
 function acumulado(p) { return p.pts_acumulados||0; }
 
 // Ranks and points imported from central rules file
-import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS } from "./GameRules";
+import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS, SCHEDULE } from "./GameRules";
 // Spain offset: +7h in summer (Apr-Oct), +6h in winter (Nov-Mar)
 function getSpainH(ecH, ecDay=null) {
   const m = new Date().getMonth()+1; // 1-12
