@@ -3,6 +3,7 @@ import AcercaDe from "./AcercaDe";
 import UserAuthGate from "./UserAuth";
 import LoginGate from "./LoginGate";
 import { LoadingScreen } from "./LoadingScreen";
+import StatsWidget from "./StatsWidget";
 import { getCountry } from "./SessionManager";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
@@ -562,76 +563,18 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           )}
         </div>
 
-        {/* Stats update - right after name */}
+        
+
+        {/* Stats update - shown after name is selected */}
         {selectedPlayer && !alreadyRegistered && (
-          <>
-          <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
-            <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"4px"}}>
-              📊 ACTUALIZA TUS STATS
-            </label>
-            {selectedPlayer?.stats_updated_week === getWarWeek() && (()=>{
-              // Show countdown to next Monday 9am Spain (reset time)
-              const now = new Date();
-              const spain = new Date(now.getTime() + 2*3600000);
-              const daysUntilMon = (8 - spain.getUTCDay()) % 7 || 7;
-              const nextMon = new Date(spain);
-              nextMon.setUTCDate(spain.getUTCDate() + daysUntilMon);
-              nextMon.setUTCHours(9,0,0,0);
-              const msLeft = nextMon - spain;
-              const hLeft = Math.floor(msLeft/3600000);
-              const mLeft = Math.floor((msLeft%3600000)/60000);
-              const dLeft = Math.floor(hLeft/24);
-              return (
-                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.4)",marginBottom:"6px",textAlign:"center",padding:"4px",background:"rgba(255,215,0,0.04)",borderRadius:"4px"}}>
-                  ✓ Stats actualizados · Disponible en {dLeft>0?`${dLeft}d ${hLeft%24}h`:`${hLeft}h ${mLeft}m`}
-                </div>
-              );
-            })()}
-            <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"8px 10px",marginBottom:"8px",fontSize:"10px"}}>
-              <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
-              <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
-              <div style={{color:"#FFD700"}}>💀 BP + ⚔ Poder juntos → <strong>+5 pts</strong> (bonus extra)</div>
-            </div>
-            {lastStats ? (
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
-                Últimos: 💀 {lastStats.bp?.toLocaleString()} BP · ⚔ {((lastStats.level||0)/1000).toFixed(1)}k · {new Date(lastStats.created_at).toLocaleDateString()}
-              </div>
-            ) : (
-              <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginBottom:"8px"}}>
-                Actuales: 💀 {selectedPlayer.bp?.toLocaleString()} BP · ⚔ {((selectedPlayer.level||0)/1000).toFixed(1)}k
-              </div>
-            )}
-            <div style={{display:"flex",gap:"6px"}}>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 BP <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span></div>
-                <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={selectedPlayer.bp?.toString()||"actual"} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span></div>
-                <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={selectedPlayer.level?.toString()||"actual"} type="number" style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:"9px",color:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.5)":"rgba(255,255,255,0.4)",marginBottom:"3px"}}>
-                  🎯 Nivel <span style={{color:"rgba(255,255,255,0.25)"}}>+1pt</span>{(selectedPlayer.player_level||0)>=340&&<span style={{color:"#FFD700"}}> MAX</span>}
-                </div>
-                <input value={newNivel} onChange={e=>setNewNivel(e.target.value)} placeholder={(selectedPlayer.player_level||"—")+" / 340"} type="number" min="1" max="340" disabled={(selectedPlayer.player_level||0)>=340} style={{width:"100%",background:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.04)":"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:(selectedPlayer.player_level||0)>=340?"rgba(255,215,0,0.3)":"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box",cursor:(selectedPlayer.player_level||0)>=340?"not-allowed":"text"}}/>
-              </div>
-            </div>
-            <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",marginTop:"4px",textAlign:"center"}}>
-              Llenar los 3 juntos = <strong style={{color:"#A8FF78"}}>+5pts</strong> · uno solo = <strong style={{color:"#A8FF78"}}>+1pt</strong> · una vez por semana
-            </div>
-            <div style={{display:"flex",gap:"8px",marginTop:"6px"}}>
-              <button type="button" onClick={saveStats} disabled={!newBp&&!newLevel&&!newNivel} style={{flex:1,padding:"8px",background:(newBp||newLevel||newNivel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel||newNivel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel||newNivel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel||newNivel)?"pointer":"default",fontWeight:"bold"}}>
-                💾 Guardar stats{(()=>{const c=(newBp?1:0)+(newLevel?1:0)+(newNivel?1:0);return c>0?" (+"+(c===3?5:c)+" pts)":"";})()}
-              </button>
-              {(newBp||newLevel||newNivel)&&<button type="button" onClick={()=>{setNewBp("");setNewLevel("");setNewNivel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
-            </div>
-            {statsSaved&&<div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>✓ Stats guardados</div>}
-          </div>
-          </>
+          <StatsWidget player={selectedPlayer} onSaved={(pts, upd) => {
+            supabase.from("players").select("*").eq("id", selectedPlayer.id).single().then(({data}) => {
+              if (data) { setAllPlayers(prev => prev.map(p => p.id===data.id ? data : p)); }
+            });
+          }}/>
         )}
 
-        {/* Availability with inline tasks */}
+{/* Availability with inline tasks */}
         <div style={{marginBottom:"16px"}}>
           {earlyBonusTimeLeft() && (
             <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"8px",padding:"8px 12px",marginBottom:"8px",fontSize:"10px"}}>

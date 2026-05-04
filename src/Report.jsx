@@ -1,4 +1,5 @@
 import { LoadingScreen } from "./LoadingScreen";
+import StatsWidget from "./StatsWidget";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { calcWarPts, calcGrandTotal, RANKS } from "./GameRules";
@@ -127,9 +128,6 @@ function PlayerProfile({ player, onBack }) {
   const [pvpBattles,   setPvpBattles]   = useState([]);
   const [ptsLedger,    setPtsLedger]    = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [newBp, setNewBp]       = useState("");
-  const [newLevel, setNewLevel] = useState("");
-  const [newNivel, setNewNivel] = useState("");
   const [statsMsg, setStatsMsg] = useState("");
 
   useEffect(() => {
@@ -503,34 +501,12 @@ function PlayerProfile({ player, onBack }) {
           return null;
         })()}
         {(!sessionStorage.getItem("aor_player_id") || String(player.id) === sessionStorage.getItem("aor_player_id")) ? (
-        <div style={{background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
-          <div style={{fontSize:"11px",color:"#FFD700",marginBottom:"6px",fontWeight:"bold"}}>📊 Actualizar mis stats</div>
-          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:"6px",padding:"7px 10px",marginBottom:"8px",fontSize:"10px"}}>
-            <div style={{color:"#A8FF78",marginBottom:"2px"}}>💀 Solo BP → <strong>+2 pts</strong></div>
-            <div style={{color:"#A8FF78",marginBottom:"2px"}}>⚔ Solo Poder → <strong>+2 pts</strong></div>
-            <div style={{color:"#FFD700",marginBottom:"2px"}}>💀 BP + ⚔ Poder juntos → <strong>+5 pts</strong> (bonus extra)</div>
-            <div style={{color:"rgba(255,107,107,0.7)",fontSize:"9px"}}>⚠ Máx ±30% de variación respecto al valor actual</div>
-          </div>
-          <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
-            <div style={{flex:1}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>💀 Battle Points (actual: {(player.bp||0).toLocaleString()})</div>
-              <input value={newBp} onChange={e=>setNewBp(e.target.value)} placeholder={(player.bp||0).toString()} type="number"
-                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-            </div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)",marginBottom:"3px"}}>⚔ Poder (actual: {((player.level||0)/1000).toFixed(1)}k)</div>
-              <input value={newLevel} onChange={e=>setNewLevel(e.target.value)} placeholder={(player.level||0).toString()} type="number"
-                style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",color:"#fff",padding:"8px 10px",fontSize:"12px",outline:"none",boxSizing:"border-box"}}/>
-            </div>
-          </div>
-          <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
-            <button onClick={saveStats} disabled={!newBp && !newLevel} style={{flex:1,padding:"8px",background:(newBp||newLevel)?"rgba(168,255,120,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+((newBp||newLevel)?"rgba(168,255,120,0.3)":"rgba(255,255,255,0.08)"),borderRadius:"6px",color:(newBp||newLevel)?"#A8FF78":"rgba(255,255,255,0.3)",fontSize:"11px",cursor:(newBp||newLevel)?"pointer":"default",fontWeight:"bold"}}>
-              💾 Guardar{(newBp||newLevel)?" (+"+(newBp&&newLevel?5:2)+" pts)":""}
-            </button>
-            {(newBp||newLevel) && <button onClick={()=>{setNewBp("");setNewLevel("");}} style={{padding:"8px 12px",background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"6px",color:"#FF6B6B",fontSize:"11px",cursor:"pointer"}}>✕</button>}
-          </div>
-          {statsMsg && <div style={{fontSize:"11px",color:statsMsg.includes("⚠")||statsMsg.includes("Error")?"#FF6B6B":"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>{statsMsg}</div>}
-        </div>
+        <StatsWidget player={player} onSaved={(pts, updates) => {
+          // Reload profile data after saving
+          supabase.from("players").select("*").eq("id", player.id).single().then(({data}) => {
+            if (data && typeof window.__aorRefreshProfile === "function") window.__aorRefreshProfile(data);
+          });
+        }}/>
         ) : (
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px"}}>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>

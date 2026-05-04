@@ -46,6 +46,7 @@ export const PTS = {
     defensa:1, bonus_6_batallas:10, bandido_post:1, bonus_completo:5,
     sin_registro_participo:1, primer_movilizador:3,
     bp_solo:1, poder_solo:1, nivel_solo:1, stats_completo:5,
+    // When nivel=340 (locked): bp_solo_locked:2, poder_solo_locked:2, both_locked:5
   },
   penalizaciones: {
     conquistador_no_aparecio:-15, refuerzos_no_aparecio:-10,
