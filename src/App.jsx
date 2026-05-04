@@ -89,7 +89,7 @@ function totalPts(p) {
        + (p.pt_bonus||0)
        + (p.pt_bandido_post||0)
        + (p.pt_stats||0)
-       + (p.pt_whatsapp||0)
+       // pt_whatsapp NOT here — it's in pts_acumulados via awardPts
        - (p.pt_penalizacion||0)
        - (p.pt_no_aparecio||0)
        - (p.pt_ignoro_orden||0)*2
@@ -158,7 +158,7 @@ function WaReportButtons() {
     return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
           +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
           +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
-          +(p.pt_whatsapp||0)+sb
+          +sb
           -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
           -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
           -(p.pt_bandido_pre||0);
@@ -1015,7 +1015,7 @@ function MensajesTab({players}) {
     return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
           +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
           +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
-          +(p.pt_whatsapp||0)+sb
+          +sb
           -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
           -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
           -(p.pt_fuera_castillo||0)*2-(p.pt_bandido_pre||0);
@@ -2312,7 +2312,7 @@ function WaReportButtonsAdmin({players}) {
     return (p.pt_registro||0)+(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
           +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
           +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
-          +(p.pt_whatsapp||0)+sb
+          +sb
           -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
           -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2-(p.pt_inactivo_4h||0)*3
           -(p.pt_bandido_pre||0);
@@ -3008,8 +3008,17 @@ function AdminPanel({players, update, loading, saving, reload}) {
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
                             <button onClick={()=>{
                               const newVal = !p.whatsapp;
-                              const pts = newVal ? (confirm('Fundador del grupo? OK=50pts / Cancelar=25pts') ? 50 : 25) : 0;
-                              update(p.id,{whatsapp:newVal, pt_whatsapp: pts});
+                              if (newVal) {
+                                const isFundador = confirm('¿Es Fundador del grupo? OK=+50pts / Cancelar=+25pts');
+                                const pts = isFundador ? 50 : 25;
+                                // Update whatsapp flag + pt_whatsapp column
+                                await update(p.id, {whatsapp: true, pt_whatsapp: pts});
+                                // Add to pts_acumulados + ledger (the proper way)
+                                const {awardPts: ap} = await import('./PtsLedger');
+                                await ap(p.id, pts, 'whatsapp', isFundador ? 'WhatsApp Fundador' : 'WhatsApp Nuevo miembro');
+                              } else {
+                                update(p.id, {whatsapp: false, pt_whatsapp: 0});
+                              }
                             }} style={{padding:"3px 10px",borderRadius:"4px",fontSize:"10px",background:p.whatsapp?"rgba(37,211,102,0.15)":"rgba(255,107,107,0.15)",border:"1px solid "+(p.whatsapp?"rgba(37,211,102,0.3)":"rgba(255,107,107,0.3)"),color:p.whatsapp?"#25D366":"#FF6B6B",cursor:"pointer"}}>
                               {p.whatsapp?"✓ En grupo":"✕ Sin grupo"}
                             </button>
