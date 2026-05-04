@@ -213,20 +213,21 @@ function RegistrationTimer({warMode="classic"}) {
       // Classic: starts 14:00 Spain = 8:00 Ecuador → closes 13:00 Spain = 7:00 Ecuador
       const closeHourEc = warMode==="new" ? 15 : 7; // Ecuador UTC-5
       let daysUntilFri = (5-day+7)%7;
-      if (day===5 && hour>=closeHourEc) { setClosed(true); setTimeLeft(null); return; }
+      if (day===5 && hour>=closeHourEc) { setClosed(true); setTimeLeft(null); window.__aorRegistroOpen=false; return; }
       if (day===5 && hour<closeHourEc) daysUntilFri=0;
-      if (day===6||day===0) { setClosed(true); setTimeLeft(null); return; }
+      if (day===6||day===0) { setClosed(true); setTimeLeft(null); window.__aorRegistroOpen=false; return; }
       const target = new Date(ec);
       target.setDate(ec.getDate()+daysUntilFri);
       target.setHours(closeHourEc,0,0,0);
       const diff = target-ec;
-      if(diff<=0){setClosed(true);setTimeLeft(null);return;}
+      if(diff<=0){setClosed(true);setTimeLeft(null);window.__aorRegistroOpen=false;return;}
       const d=Math.floor(diff/86400000);
       const h=Math.floor((diff%86400000)/3600000);
       const m=Math.floor((diff%3600000)/60000);
       const s=Math.floor((diff%60000)/1000);
       setClosed(false);
       setTimeLeft({d,h,m,s,totalMs:diff});
+      window.__aorRegistroOpen = true;
     }
     calc();
     const iv=setInterval(calc,1000);
@@ -407,7 +408,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
     setSelectedPlayer(player);
     setSuggestions([]);
     if (player.registered_week === currentWeek) {
-      setAlreadyRegistered(true);
+      setAlreadyRegistered(true); window.__aorUserRegistered=true;
       setExistingAvail(player.availability);
     }
     loadLastStats(player.id);

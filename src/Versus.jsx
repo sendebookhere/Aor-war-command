@@ -57,7 +57,16 @@ export default function Versus(){
 
   const myTodayBattles=battles.filter(b=>String(b.challenger_id)===String(playerId)&&(b.created_at||"").slice(0,10)===today());
   const canChallenge=playerId&&myTodayBattles.length<5;
-  function alreadyFoughtToday(opId){return battles.some(b=>String(b.challenger_id)===String(playerId)&&String(b.opponent_id)===String(opId)&&(b.created_at||"").slice(0,10)===today());}
+  // 36h cooldown: after fighting a rival they disappear for 36h to encourage variety
+  function cooldownRemaining36h(opId){
+    const last = battles
+      .filter(b=>String(b.challenger_id)===String(playerId)&&String(b.opponent_id)===String(opId))
+      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+    if(!last) return 0;
+    const elapsed = (Date.now()-new Date(last.created_at).getTime())/3600000;
+    return Math.max(0, 36-elapsed);
+  }
+  function alreadyFoughtToday(opId){ return cooldownRemaining36h(opId) > 0; }
   function alreadyDudoToday(battle){return battles.some(b=>b.id!==battle.id&&String(b.opponent_id)===String(playerId)&&String(b.challenger_id)===String(battle.challenger_id)&&b.status==="disputed"&&(b.created_at||"").slice(0,10)===today());}
 
   async function submitBattle(){
@@ -314,9 +323,12 @@ export default function Versus(){
               <div style={C.lbl}>SELECCIONA TU RIVAL</div>
               <div style={{maxHeight:"150px",overflow:"auto",marginBottom:"10px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px"}}>
                 {players.filter(p=>String(p.id)!==String(playerId)).map(p=>(
-                  <button key={p.id} onClick={()=>!alreadyFoughtToday(p.id)&&setOpponent(p)} style={{padding:"6px 8px",borderRadius:"5px",cursor:alreadyFoughtToday(p.id)?"not-allowed":"pointer",textAlign:"left",background:opponent?.id===p.id?C.redA+"0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(opponent?.id===p.id?C.redA+"0.3)":"rgba(255,255,255,0.06)"),color:opponent?.id===p.id?C.red:alreadyFoughtToday(p.id)?C.gray:"rgba(255,255,255,0.5)",fontSize:"11px",fontFamily:"Georgia,serif"}}>
-                    {p.name}{alreadyFoughtToday(p.id)&&<span style={{fontSize:"8px",color:C.gray}}> ✓hoy</span>}
+                  {(()=>{ const rem=cooldownRemaining36h(p.id); const blocked=rem>0; return(
+                  <button key={p.id} onClick={()=>!blocked&&setOpponent(p)} style={{padding:"6px 8px",borderRadius:"5px",cursor:blocked?"not-allowed":"pointer",textAlign:"left",background:opponent?.id===p.id?C.redA+"0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(opponent?.id===p.id?C.redA+"0.3)":"rgba(255,255,255,0.06)"),color:opponent?.id===p.id?C.red:blocked?C.gray:"rgba(255,255,255,0.5)",fontSize:"11px",fontFamily:"Georgia,serif"}}>
+                    {!blocked && p.name}
+                    {blocked && <span style={{color:C.gray,fontSize:"9px",fontFamily:"monospace"}}>{p.name} <span style={{fontSize:"8px"}}>⏳{Math.ceil(rem)}h</span></span>}
                   </button>
+                  ); })()}
                 ))}
               </div>
               {opponent&&(<>
@@ -358,7 +370,7 @@ export default function Versus(){
         {battles.length>0&&(
           <div style={{marginBottom:"16px"}}>
             <div style={C.lbl}>TODAS LAS BATALLAS — MÁS RECIENTES PRIMERO</div>
-            <div style={{maxHeight:battles.length>10?"360px":"auto",overflowY:battles.length>10?"auto":"visible",paddingRight:battles.length>10?"2px":"0"}}>
+            <div style={{maxHeight:"370px",overflowY:"auto",paddingRight:"2px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,107,107,0.3) rgba(255,255,255,0.03)"}}>
               {battles.map(b=>{
                 const isMine=String(b.challenger_id)===String(playerId)||String(b.opponent_id)===String(playerId);
                 const isC=String(b.challenger_id)===String(playerId);

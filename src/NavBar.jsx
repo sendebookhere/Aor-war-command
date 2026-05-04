@@ -1,3 +1,6 @@
+// Registration open state — set by App.jsx RegistroTimer
+// window.__aorRegistroOpen = true/false
+
 export const PAGES = [
   { href:"/",             label:"HOME",         color:"#FFD700" },
   { href:"/puntos",       label:"Puntos",       color:"#FF9F43", accent:"rgba(255,159,67,0.1)",  border:"rgba(255,159,67,0.3)"  },
@@ -25,7 +28,11 @@ function logout() {
 
 function Btn({p, cur, current}) {
   const isRanking = p.href==="/reporte";
+  const isRegistro = p.href==="/registro";
   const active = cur===p.href && !(isRanking && current==="profile");
+  // Pulse registro button when registration is open AND user hasn't registered yet
+  const registroOpen = isRegistro && window.__aorRegistroOpen && !window.__aorUserRegistered;
+  const pulse = registroOpen && !active;
   return (
     <button onClick={()=>{
       if(isRanking) sessionStorage.removeItem("aor_goto_profile");
@@ -33,16 +40,22 @@ function Btn({p, cur, current}) {
     }} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
       padding:"8px 2px",cursor:active?"default":"pointer",
-      background: active ? p.accent : "rgba(255,255,255,0.02)",
-      border:"1px solid "+(active ? p.border : "rgba(255,255,255,0.06)"),
+      background: active ? p.accent : pulse ? "rgba(168,255,120,0.1)" : "rgba(255,255,255,0.02)",
+      border:"1px solid "+(active ? p.border : pulse ? "rgba(168,255,120,0.5)" : "rgba(255,255,255,0.06)"),
       borderRadius:"7px",textAlign:"center",width:"100%",
+      animation: pulse ? "registroPulse 1.8s ease-in-out infinite" : "none",
     }}>
-      <div style={{fontSize:"9px",color:active?p.color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.03em",fontWeight:active?"bold":"normal",lineHeight:"1.3"}}>
-        {p.label}
+      <div style={{fontSize:"9px",color:active?p.color:pulse?"#A8FF78":"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.03em",fontWeight:active||pulse?"bold":"normal",lineHeight:"1.3"}}>
+        {p.label}{pulse?" 🔔":""}
       </div>
     </button>
   );
 }
+
+const pulseStyle = `@keyframes registroPulse {
+  0%,100%{box-shadow:0 0 0 0 rgba(168,255,120,0)}
+  50%{box-shadow:0 0 8px 2px rgba(168,255,120,0.4)}
+}`;
 
 export default function NavBar({current}) {
   const cur = (current||"").split("?")[0];
@@ -50,6 +63,7 @@ export default function NavBar({current}) {
   const playerId = sessionStorage.getItem("aor_player_id");
   const playerName = sessionStorage.getItem("aor_player_name");
 
+  if(typeof document!=="undefined"&&!document.getElementById("aor-pulse-style")){const s=document.createElement("style");s.id="aor-pulse-style";s.textContent=pulseStyle;document.head.appendChild(s);}
   return (
     <div style={{marginBottom:"20px"}}>
       {/* HOME */}
@@ -105,9 +119,11 @@ export default function NavBar({current}) {
         </button>
         <Btn p={PAGES[8]} cur={cur} current={current}/>
       </div>
-      <button onClick={()=>nav("/acerca")} style={{width:"100%",marginTop:"6px",padding:"5px",background:"rgba(255,255,255,0.01)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"6px",color:"rgba(255,255,255,0.15)",fontSize:"8px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+      {(()=>{ const isAcerca = cur==="/acerca"; return(
+      <button onClick={()=>nav("/acerca")} style={{width:"100%",marginTop:"6px",padding:"5px",background:isAcerca?"rgba(64,224,255,0.07)":"rgba(255,255,255,0.01)",border:"1px solid "+(isAcerca?"rgba(64,224,255,0.25)":"rgba(255,255,255,0.05)"),borderRadius:"6px",color:isAcerca?"#40E0FF":"rgba(255,255,255,0.15)",fontSize:"8px",cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em",fontWeight:isAcerca?"bold":"normal"}}>
         ACERCA DE LA APP
       </button>
+      ); })()}
     </div>
   );
 }
