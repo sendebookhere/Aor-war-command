@@ -953,7 +953,7 @@ export default function PublicReport() {
           const ptsTotal = acc + pts; // protagonist — no hon
           const rank    = getRank(acc, hon, p.name, p.clan_role);
           const avail   = AVAILABILITY[p.availability] || AVAILABILITY.pendiente;
-          const tz = {sur:"🌎",norte:"🇲🇽",espana:"🇪🇸",otro:"🌍"}[p.timezone]||"";
+          const tz = {sur:"🇪🇨",norte:"🇲🇽",espana:"🇪🇸",otro:"🌍"}[p.timezone]||"";
           return (
             <div key={p.id} onClick={() => { setSelected(p); sessionStorage.setItem("aor_last_viewed_player", String(p.id)); }}
               style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",
