@@ -4,6 +4,7 @@ import UserAuthGate from "./UserAuth";
 import LoginGate from "./LoginGate";
 import { LoadingScreen } from "./LoadingScreen";
 import StatsWidget from "./StatsWidget";
+import DailyChecklist from "./DailyChecklist";
 import { getCountry } from "./SessionManager";
 import PageHeader from "./PageHeader";
 import NalguitasFooter from "./NalguitasFooter";
@@ -3656,31 +3657,37 @@ function AdminAuth({onAuth}) {
         <NavBar current="/"/>
       </div>
 
-      {/* Original page list — minimal redesign */}
+      {/* Daily Checklist — between nav and page list */}
+      <DailyChecklist
+        playerId={parseInt(sessionStorage.getItem("aor_player_id")||"0")||null}
+        playerName={sessionStorage.getItem("aor_player_name")||"Guerrero"}
+      />
+
+      {/* Page list — toned-down colors for sobriety */}
       <div style={{width:"100%",maxWidth:"480px",marginBottom:"24px",animation:"fadeIn 0.7s ease"}}>
         {[
-          {href:"/registro",     color:"#A8FF78", label:"Registro de Guerra",    desc:"Confirma tu disponibilidad y suma puntos"},
-          {href:"/reporte",      color:"#40E0FF", label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
-          {href:"/puntos",       color:"#FF9F43", label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
-          {href:"/propaganda",   color:"#C8A2FF", label:"Propaganda de Guerra",   desc:"Mensajes aprobados para difundir en el clan"},
-          {href:"/inteligencia", color:"#FF6B6B", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
-          {href:"/asamblea",     color:"#F4D03F", label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
-          {href:"/noticias",     color:"#FF9F43", label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
-          {href:"/versus",      color:"#FF6B6B", label:"Versus — PvP",            desc:"Registra batallas 1v1 y sigue el ranking de combate"},
+          {href:"/registro",     color:"rgba(168,255,120,0.5)", label:"Registro de Guerra",    desc:"Confirma tu disponibilidad y suma puntos"},
+          {href:"/reporte",      color:"rgba(64,224,255,0.5)",  label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
+          {href:"/puntos",       color:"rgba(255,159,67,0.5)",  label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
+          {href:"/propaganda",   color:"rgba(200,162,255,0.5)", label:"Propaganda de Guerra",   desc:"Mensajes aprobados para difundir en el clan"},
+          {href:"/inteligencia", color:"rgba(255,107,107,0.5)", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
+          {href:"/asamblea",     color:"rgba(244,208,63,0.5)",  label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
+          {href:"/noticias",     color:"rgba(255,159,67,0.5)",  label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
+          {href:"/versus",       color:"rgba(255,107,107,0.5)", label:"Versus — PvP",           desc:"Registra batallas 1v1 y sigue el ranking de combate"},
         ].map(l=>(
-          <a key={l.href} href={l.href} style={{
+          <a key={l.href} onClick={e=>{e.preventDefault();window.__aorNavigate&&window.__aorNavigate(l.href);}} href={l.href} style={{
             display:"flex",alignItems:"center",gap:"10px",
-            padding:"10px 14px",marginBottom:"5px",
-            background:"rgba(255,255,255,0.02)",
-            border:"1px solid rgba(255,255,255,0.06)",
-            borderLeft:"3px solid "+l.color+"50",
-            borderRadius:"7px",textDecoration:"none",
+            padding:"9px 14px",marginBottom:"4px",
+            background:"rgba(255,255,255,0.015)",
+            border:"1px solid rgba(255,255,255,0.05)",
+            borderLeft:"3px solid "+l.color,
+            borderRadius:"7px",textDecoration:"none",cursor:"pointer",
           }}>
             <div style={{flex:1}}>
-              <div style={{fontSize:"12px",color:l.color,fontFamily:"monospace",letterSpacing:"0.05em",marginBottom:"1px"}}>{l.label}</div>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"Georgia,serif"}}>{l.desc}</div>
+              <div style={{fontSize:"11px",color:l.color,fontFamily:"monospace",letterSpacing:"0.05em",marginBottom:"1px"}}>{l.label}</div>
+              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"Georgia,serif"}}>{l.desc}</div>
             </div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.15)",fontFamily:"monospace"}}>›</div>
+            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.1)",fontFamily:"monospace"}}>›</div>
           </a>
         ))}
       </div>
