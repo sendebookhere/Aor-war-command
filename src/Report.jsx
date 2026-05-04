@@ -534,7 +534,7 @@ function PlayerProfile({ player, onBack }) {
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(200,162,255,0.4)",marginBottom:"4px"}}>📡 ACUMULADO DIRECTO</div>
             {[
               {l:"📱 WhatsApp",                        v: waTotal,                              color:"#A8FF78"},
-              {l:"📊 Stats BP/Poder/Nivel",            v: player.pt_stats||0,                   color:"#40E0FF"},
+              // pt_stats shown in GUERRA section above — not repeated here
               {l:"📡 Propaganda publicada",            v: propTotal,                            color:"#C8A2FF"},
               {l:"🗳 Asamblea",                        v: asmTotal,                             color:"#FFD700"},
               {l:"🔍 Inteligencia",                    v: intelTotal,                           color:"#FF6B6B"},
@@ -554,10 +554,16 @@ function PlayerProfile({ player, onBack }) {
                 </div>
               );
             })}
-            <div style={{display:"flex",justifyContent:"space-between",padding:"5px 6px",marginTop:"4px",borderTop:"1px solid rgba(255,215,0,0.2)",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
-              <span style={{fontSize:"10px",color:"rgba(255,215,0,0.6)",fontFamily:"monospace",letterSpacing:"0.05em"}}>TOTAL ACUMULADO</span>
-              <span style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</span>
-            </div>
+            {(()=>{
+              const displayTotal = warPtsForTotal + waTotal + propTotal + asmTotal + intelTotal
+                + pvpTotal + noticTotal + codigoTotal + archTotal + penalTotal;
+              return(
+                <div style={{display:"flex",justifyContent:"space-between",padding:"5px 6px",marginTop:"4px",borderTop:"1px solid rgba(255,215,0,0.2)",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
+                  <span style={{fontSize:"10px",color:"rgba(255,215,0,0.6)",fontFamily:"monospace",letterSpacing:"0.05em"}}>TOTAL ACUMULADO</span>
+                  <span style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",fontFamily:"monospace"}}>{displayTotal}</span>
+                </div>
+              );
+            })()}
           </div>
 
           {penalties.length>0&&<div>
