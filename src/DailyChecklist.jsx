@@ -1,54 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 
-// ── Pool of possible daily tasks ─────────────────────────────────────────────
-// Each task: id, label, icon, desc, how to check completion, action button
-const TASK_POOL = [
-  { id:"pvp_registro",   icon:"⚔",  label:"Registra una partida Versus", desc:"Desafía a un rival en la hoja Versus", href:"/versus" },
-  { id:"pvp_pending",    icon:"⏳", label:"Resuelve resultados pendientes", desc:"Confirma o duda los sets que esperan tu respuesta", href:"/versus" },
-  { id:"propaganda",     icon:"📡", label:"Publica un mensaje de propaganda", desc:"Difunde un mensaje en el chat del juego", href:"/propaganda" },
-  { id:"asamblea",       icon:"🗳", label:"Vota en la Asamblea", desc:"Elige al Guerrero Implacable de la semana", href:"/asamblea" },
-  { id:"intel",          icon:"🔍", label:"Vota en Inteligencia Militar", desc:"Califica la dificultad de un clan rival", href:"/inteligencia" },
-  { id:"stats",          icon:"📊", label:"Actualiza tus stats", desc:"Registra tu BP, Poder y Nivel de esta semana", href:"/registro" },
-  { id:"codigo",         icon:"🔑", label:"Crea tu código único", desc:"Configura tu código de acceso de 6 dígitos", href:"/reporte" },
-  { id:"pvp_win2",       icon:"🏆", label:"Gana 2 sets en Versus", desc:"Gana 2 sets de 3 batallas (2-3 o 3-3)", href:"/versus" },
-  { id:"pvp_9battles",   icon:"💀", label:"Acumula 9 victorias unitarias", desc:"Gana 9 batallas individuales en Versus", href:"/versus" },
-  { id:"discord",        icon:"🎮", label:"Visita el Discord del clan", desc:"Entra y saluda a los guerreros de [AOR]", href:null, discord:true },
-];
-
-// Seeded random — same 3 tasks per player per jornada
+// ── Jornada boundary: 8am Ecuador = 13:00 UTC ────────────────────────────────
 function jornadaKey() {
   const now = new Date();
-  const utcH = now.getUTCHours();
   const d = new Date(now);
-  if (utcH < 13) d.setUTCDate(d.getUTCDate() - 1); // before 8am Ecuador
+  if (now.getUTCHours() < 13) d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
-}
-
-function seededRandom(seed) {
-  let x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-function pickTasks(playerId, jkey) {
-  // Deterministic 3 tasks from pool based on player+jornada
-  const seed = parseInt(jkey.replace(/-/g,"")) + (playerId || 0);
-  const pool = [...TASK_POOL];
-  const picks = [];
-  let s = seed;
-  while (picks.length < 3 && pool.length > 0) {
-    s = Math.floor(seededRandom(s + picks.length * 7) * pool.length);
-    picks.push(pool.splice(s % pool.length, 1)[0]);
-  }
-  return picks;
 }
 
 function getWarWeek() {
   const now = new Date();
   const ec = new Date(now.getTime() - 5 * 3600000);
-  const day = ec.getUTCDay();
-  const hour = ec.getUTCHours();
-  // Before 8am Monday Ecuador = still previous week
+  const day = ec.getUTCDay(), hour = ec.getUTCHours();
   const ref = new Date(ec);
   if (day === 1 && hour < 8) ref.setUTCDate(ec.getUTCDate() - 7);
   const mon = new Date(ref);
@@ -58,303 +22,466 @@ function getWarWeek() {
   return `${y}-W${String(w).padStart(2, "0")}`;
 }
 
-const DISCORD_URL = "https://discord.gg/sb2eHSSmff";
-const DISCORD_MSG = playerName => `Saludos nobles guerreros, aquí ${playerName} los saluda y pone la espada a su servicio!`;
+// ── Task definitions ─────────────────────────────────────────────────────────
+// priority: "urgent" = always shown (above random 3), "normal" = in random pool
+// condition: function to check if task is currently applicable
+const ALL_TASKS = [
+  { id:"noticias",      icon:"📢", label:"Lee las noticias del clan",          desc:"Hay novedades — leerlas y marcar como leídas", href:"/noticias",     priority:"urgent",  alwaysCheck:true  },
+  { id:"asamblea",      icon:"🗳", label:"Vota en la Asamblea",                desc:"La votación está abierta — elige al Guerrero Implacable", href:"/asamblea",     priority:"urgent",  alwaysCheck:true  },
+  { id:"intel",         icon:"🔍", label:"Vota en Inteligencia Militar",       desc:"Votación activa — califica la dificultad de un rival", href:"/inteligencia", priority:"urgent",  alwaysCheck:true  },
+  { id:"stats",         icon:"📊", label:"Actualiza tus stats",                desc:"No has registrado BP/Poder/Nivel esta semana", href:"/registro",     priority:"urgent",  alwaysCheck:true  },
+  { id:"pvp_registro",  icon:"⚔",  label:"Registra una partida Versus",        desc:"Desafía a un rival y registra el resultado", href:"/versus",       priority:"normal"  },
+  { id:"pvp_pending",   icon:"⏳", label:"Resuelve resultados pendientes",      desc:"Tienes sets esperando tu confirmación o DUDO", href:"/versus",       priority:"normal"  },
+  { id:"propaganda",    icon:"📡", label:"Publica un mensaje de propaganda",    desc:"Difunde un mensaje aprobado en el chat del juego", href:"/propaganda",   priority:"normal"  },
+  { id:"codigo",        icon:"🔑", label:"Crea tu código único",               desc:"Configura tu código de acceso de 6 dígitos", href:"/reporte",      priority:"normal"  },
+  { id:"pvp_win2",      icon:"🏆", label:"Gana 2 sets en Versus",              desc:"Gana 2 sets (2-3 o 3-3) en esta jornada", href:"/versus",       priority:"normal"  },
+  { id:"pvp_9battles",  icon:"💀", label:"Acumula 9 victorias unitarias",      desc:"Gana 9 batallas individuales en Versus hoy", href:"/versus",       priority:"normal"  },
+  { id:"discord",       icon:"🎮", label:"Visita el Discord del clan",         desc:"Entra y saluda a los guerreros de [AOR]", href:null,            priority:"normal",  discord:true },
+];
 
+const DISCORD_URL = "https://discord.gg/sb2eHSSmff";
+const DISCORD_MSG = name => `Saludos nobles guerreros, aquí ${name} los saluda y pone la espada a su servicio!`;
+
+// ── Weight-based random selection ────────────────────────────────────────────
+// Lower weight = more likely to be picked (avoid repetition)
+function pickRandomTasks(weights, jkey, playerId) {
+  const normalPool = ALL_TASKS.filter(t => t.priority === "normal");
+  // Build weighted pool: tasks with lower weight get more tickets
+  const maxW = Math.max(...normalPool.map(t => weights[t.id] || 0), 1);
+  const tickets = [];
+  normalPool.forEach(t => {
+    const w = weights[t.id] || 0;
+    // Inverse weight: more tickets = lower weight
+    const ticketCount = Math.max(1, maxW - w + 1);
+    for (let i = 0; i < ticketCount; i++) tickets.push(t.id);
+  });
+  // Seeded shuffle for determinism within same jornada+player
+  const seed = parseInt(jkey.replace(/-/g, "")) + (playerId || 0);
+  let s = seed;
+  const shuffled = [...tickets];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    s = Math.floor(Math.abs(Math.sin(s + i) * 10000)) % (i + 1);
+    [shuffled[i], shuffled[s]] = [shuffled[s], shuffled[i]];
+  }
+  // Pick 3 unique tasks
+  const picked = [];
+  const seen = new Set();
+  for (const id of shuffled) {
+    if (!seen.has(id)) { seen.add(id); picked.push(id); }
+    if (picked.length === 3) break;
+  }
+  return picked.map(id => ALL_TASKS.find(t => t.id === id));
+}
+
+// ── DB check functions ────────────────────────────────────────────────────────
+async function checkTask(taskId, playerId, jkey, week) {
+  const jStart = jkey + "T13:00:00Z"; // 8am Ecuador = 13:00 UTC
+
+  switch(taskId) {
+    case "noticias": {
+      // Check if there are unread active news/requests
+      const { data: news } = await supabase.from("clan_news")
+        .select("id, completions, type, created_at").eq("active", true);
+      if (!news?.length) return { applicable: false, done: false };
+      const hasUnread = news.some(n => {
+        const completions = n.completions || [];
+        return !completions.some(c => String(c.player_id) === String(playerId));
+      });
+      return { applicable: news.length > 0, done: !hasUnread };
+    }
+    case "asamblea": {
+      const { data: settings } = await supabase.from("app_settings")
+        .select("value").eq("key","voting_enabled").single();
+      const open = settings?.value === "true" || settings?.value === true;
+      if (!open) return { applicable: false, done: false };
+      const { data: vote } = await supabase.from("assembly_votes")
+        .select("id").eq("voter_id", playerId).eq("week", week).limit(1);
+      return { applicable: true, done: vote?.length > 0 };
+    }
+    case "intel": {
+      const { data: vote } = await supabase.from("difficulty_votes")
+        .select("id").eq("player_id", playerId).eq("week", week).limit(1);
+      const { data: clans } = await supabase.from("war_intel")
+        .select("id").limit(1);
+      const hasClans = clans?.length > 0;
+      return { applicable: hasClans, done: vote?.length > 0 };
+    }
+    case "stats": {
+      const { data: p } = await supabase.from("players")
+        .select("stats_updated_week").eq("id", playerId).single();
+      return { applicable: true, done: p?.stats_updated_week === week };
+    }
+    case "codigo": {
+      const { data: p } = await supabase.from("players")
+        .select("unique_code").eq("id", playerId).single();
+      return { applicable: true, done: p?.unique_code?.length === 6 };
+    }
+    case "pvp_registro": {
+      const { data } = await supabase.from("pvp_battles")
+        .select("id").eq("challenger_id", playerId)
+        .gte("created_at", jStart).limit(1);
+      return { applicable: true, done: data?.length > 0 };
+    }
+    case "pvp_pending": {
+      const { data } = await supabase.from("pvp_battles")
+        .select("id").eq("opponent_id", playerId).eq("status","pending");
+      return { applicable: data?.length > 0, done: data?.length === 0 };
+    }
+    case "propaganda": {
+      const { data } = await supabase.from("message_logs")
+        .select("id").eq("player_id", playerId)
+        .gte("created_at", jStart).limit(1);
+      return { applicable: true, done: data?.length > 0 };
+    }
+    case "pvp_win2": {
+      const { data } = await supabase.from("pvp_battles")
+        .select("challenger_wins,opponent_wins,challenger_id,status")
+        .or(`challenger_id.eq.${playerId},opponent_id.eq.${playerId}`)
+        .in("status",["confirmed","auto_confirmed"])
+        .gte("created_at", jStart);
+      const wins = (data||[]).filter(b => {
+        const isCh = String(b.challenger_id) === String(playerId);
+        return (isCh ? b.challenger_wins : b.opponent_wins) >= 2;
+      }).length;
+      return { applicable: true, done: wins >= 2 };
+    }
+    case "pvp_9battles": {
+      const { data } = await supabase.from("pvp_battles")
+        .select("challenger_wins,opponent_wins,challenger_id,status")
+        .or(`challenger_id.eq.${playerId},opponent_id.eq.${playerId}`)
+        .in("status",["confirmed","auto_confirmed"])
+        .gte("created_at", jStart);
+      const total = (data||[]).reduce((s,b) => {
+        const isCh = String(b.challenger_id) === String(playerId);
+        return s + (isCh ? b.challenger_wins : b.opponent_wins);
+      }, 0);
+      return { applicable: true, done: total >= 9 };
+    }
+    case "discord":
+      return { applicable: true, done: false }; // manual only
+    default:
+      return { applicable: true, done: false };
+  }
+}
+
+// ── Weight management ────────────────────────────────────────────────────────
+async function loadWeights(playerId) {
+  const { data } = await supabase.from("daily_checklist_weights")
+    .select("task_id, weight").eq("player_id", playerId);
+  const w = {};
+  (data||[]).forEach(r => { w[r.task_id] = r.weight; });
+  return w;
+}
+
+async function updateWeight(playerId, taskId, delta) {
+  const { data: existing } = await supabase.from("daily_checklist_weights")
+    .select("weight").eq("player_id", playerId).eq("task_id", taskId).single();
+  const newWeight = Math.max(0, (existing?.weight || 0) + delta);
+  await supabase.from("daily_checklist_weights").upsert({
+    player_id: parseInt(playerId), task_id: taskId,
+    weight: newWeight, updated_at: new Date().toISOString()
+  }, { onConflict: "player_id,task_id" });
+}
+
+async function balanceWeights(playerId, weights) {
+  // Rule: no task can have more than 6 points difference from the highest
+  const vals = Object.values(weights);
+  if (!vals.length) return;
+  const maxW = Math.max(...vals);
+  const updates = [];
+  Object.entries(weights).forEach(([id, w]) => {
+    if (maxW - w > 6) {
+      updates.push(supabase.from("daily_checklist_weights").upsert({
+        player_id: parseInt(playerId), task_id: id,
+        weight: maxW - 6, updated_at: new Date().toISOString()
+      }, { onConflict: "player_id,task_id" }));
+    }
+  });
+  await Promise.all(updates);
+}
+
+async function awardPt(playerId, pts, source, note) {
+  const week = getWarWeek();
+  const month = new Date().toISOString().slice(0, 7);
+  try {
+    const { data: p } = await supabase.from("players")
+      .select("pts_acumulados").eq("id", parseInt(playerId)).single();
+    await supabase.from("players")
+      .update({ pts_acumulados: (p?.pts_acumulados || 0) + pts })
+      .eq("id", parseInt(playerId));
+    await supabase.from("pts_ledger").insert({
+      player_id: parseInt(playerId), pts, source, note,
+      week, month, created_at: new Date().toISOString()
+    });
+  } catch(e) {}
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function DailyChecklist({ playerId, playerName }) {
-  const [tasks, setTasks]         = useState([]);
-  const [completed, setCompleted] = useState({});
-  const [loading, setLoading]     = useState(true);
-  const [awarding, setAwarding]   = useState(false);
-  const [msg, setMsg]             = useState("");
-  const [copied, setCopied]       = useState(false);
+  const [urgentTasks, setUrgentTasks]   = useState([]); // priority tasks that apply
+  const [randomTasks, setRandomTasks]   = useState([]); // today's 3 random tasks
+  const [taskStatus, setTaskStatus]     = useState({}); // {taskId: {applicable, done}}
+  const [loading, setLoading]           = useState(true);
+  const [awarding, setAwarding]         = useState(new Set());
+  const [awardedToday, setAwardedToday] = useState({});
+  const [msg, setMsg]                   = useState("");
+  const [copied, setCopied]             = useState(false);
 
   const jkey = jornadaKey();
-  const storageKey = `aor_checklist_${playerId}_${jkey}`;
+  const week = getWarWeek();
+  const awardKey = `aor_checklist_awarded_${playerId}_${jkey}`;
 
-  useEffect(() => {
+  const loadAll = useCallback(async () => {
     if (!playerId) { setLoading(false); return; }
-    const todayTasks = pickTasks(playerId, jkey);
-    setTasks(todayTasks);
 
-    function doCheck() {
-      const saved = localStorage.getItem(storageKey);
-      const savedCompleted = saved ? JSON.parse(saved) : {};
-      autoCheckTasks(todayTasks, savedCompleted).then(checked => {
-        // Award pts for newly completed tasks
-        const prev = JSON.parse(localStorage.getItem(storageKey)||"{}");
-        const newlyDone = todayTasks.filter(t => checked[t.id] && !prev[t.id]);
-        if (newlyDone.length > 0) {
-          localStorage.setItem(storageKey, JSON.stringify(checked));
-          // Award pts for each newly completed task
-          newlyDone.forEach(t => awardPt(1, "checklist_tarea", `Checklist: ${t.id} — jornada ${jkey}`));
-          // Check if all done after new completions
-          const allNowDone = todayTasks.every(t => checked[t.id]);
-          const wasAllDone = todayTasks.every(t => prev[t.id]);
-          if (allNowDone && !wasAllDone) {
-            awardPt(3, "checklist_bonus", `Checklist completo — jornada ${jkey}`);
-            setMsg("🏆 ¡Checklist completo! +6pts totales");
-            setTimeout(() => setMsg(""), 4000);
-          }
-        }
-        setCompleted(checked);
-        setLoading(false);
+    // Load what was already awarded today
+    const savedAwarded = JSON.parse(localStorage.getItem(awardKey) || "{}");
+    setAwardedToday(savedAwarded);
+
+    // Load weights for random selection
+    const weights = await loadWeights(playerId);
+
+    // Pick today's 3 random tasks (deterministic per player+jornada)
+    const randomPool = ALL_TASKS.filter(t => t.priority === "normal");
+    const picks = pickRandomTasks(weights, jkey, playerId);
+    setRandomTasks(picks);
+
+    // Check ALL tasks statuses
+    const urgentList = ALL_TASKS.filter(t => t.priority === "urgent");
+    const allToCheck = [...urgentList, ...picks];
+    const statuses = {};
+    await Promise.all(allToCheck.map(async t => {
+      statuses[t.id] = await checkTask(t.id, playerId, jkey, week);
+    }));
+    setTaskStatus(statuses);
+
+    // Filter urgent tasks to only applicable ones
+    setUrgentTasks(urgentList.filter(t => statuses[t.id]?.applicable));
+
+    // Update weights: +1 for each task that was shown but not done
+    // (only once per jornada, tracked in localStorage)
+    const shownKey = `aor_checklist_shown_${playerId}_${jkey}`;
+    if (!localStorage.getItem(shownKey)) {
+      localStorage.setItem(shownKey, "1");
+      allToCheck.forEach(t => {
+        if (!statuses[t.id]?.done) updateWeight(playerId, t.id, 1);
       });
     }
-    doCheck();
-    // Re-check when tab gets focus (user returns from another page)
-    window.addEventListener("focus", doCheck);
-    return () => window.removeEventListener("focus", doCheck);
-  }, [playerId, jkey]);
 
-  async function autoCheckTasks(todayTasks, saved) {
-    const checked = { ...saved };
-    const week = getWarWeek();
-    const today = jkey;
+    await balanceWeights(playerId, weights);
+    setLoading(false);
+  }, [playerId, jkey, week]);
 
-    for (const task of todayTasks) {
-      if (checked[task.id]) continue; // already marked
+  useEffect(() => {
+    loadAll();
+    window.addEventListener("focus", loadAll);
+    return () => window.removeEventListener("focus", loadAll);
+  }, [loadAll]);
 
-      if (task.id === "pvp_registro") {
-        const { data } = await supabase.from("pvp_battles")
-          .select("id").eq("challenger_id", playerId)
-          .gte("created_at", today + "T13:00:00Z") // 8am Ecuador
-          .limit(1);
-        if (data?.length) checked[task.id] = true;
-      }
+  async function handleComplete(task) {
+    if (awarding.has(task.id) || awardedToday[task.id]) return;
 
-      if (task.id === "pvp_pending") {
-        const { data } = await supabase.from("pvp_battles")
-          .select("id").eq("opponent_id", playerId).eq("status", "pending");
-        if (data?.length === 0) checked[task.id] = true; // no pending = all resolved
-      }
-
-      if (task.id === "propaganda") {
-        const { data } = await supabase.from("message_logs")
-          .select("id").eq("player_id", playerId)
-          .gte("created_at", today + "T13:00:00Z")
-          .limit(1);
-        if (data?.length) checked[task.id] = true;
-      }
-
-      if (task.id === "asamblea") {
-        const { data } = await supabase.from("assembly_votes")
-          .select("id").eq("voter_id", playerId).eq("week", week).limit(1);
-        if (data?.length) checked[task.id] = true;
-      }
-
-      if (task.id === "intel") {
-        const { data } = await supabase.from("difficulty_votes")
-          .select("id").eq("player_id", playerId).eq("week", week).limit(1);
-        if (data?.length) checked[task.id] = true;
-      }
-
-      if (task.id === "stats") {
-        const { data } = await supabase.from("players")
-          .select("stats_updated_week").eq("id", playerId).single();
-        if (data?.stats_updated_week === week) checked[task.id] = true;
-      }
-
-      if (task.id === "codigo") {
-        const { data } = await supabase.from("players")
-          .select("unique_code").eq("id", playerId).single();
-        if (data?.unique_code?.length === 6) checked[task.id] = true;
-      }
-
-      if (task.id === "pvp_win2") {
-        const { data } = await supabase.from("pvp_battles")
-          .select("challenger_wins,opponent_wins,challenger_id,opponent_id,status")
-          .or(`challenger_id.eq.${playerId},opponent_id.eq.${playerId}`)
-          .in("status", ["confirmed", "auto_confirmed"])
-          .gte("created_at", today + "T13:00:00Z");
-        const wins = (data||[]).filter(b => {
-          const isChallenger = String(b.challenger_id) === String(playerId);
-          const myWins = isChallenger ? b.challenger_wins : b.opponent_wins;
-          return myWins >= 2;
-        }).length;
-        if (wins >= 2) checked[task.id] = true;
-      }
-
-      if (task.id === "pvp_9battles") {
-        const { data } = await supabase.from("pvp_battles")
-          .select("challenger_wins,opponent_wins,challenger_id,opponent_id,status")
-          .or(`challenger_id.eq.${playerId},opponent_id.eq.${playerId}`)
-          .in("status", ["confirmed", "auto_confirmed"])
-          .gte("created_at", today + "T13:00:00Z");
-        const totalWins = (data||[]).reduce((sum, b) => {
-          const isChallenger = String(b.challenger_id) === String(playerId);
-          return sum + (isChallenger ? b.challenger_wins : b.opponent_wins);
-        }, 0);
-        if (totalWins >= 9) checked[task.id] = true;
-      }
-    }
-    return checked;
-  }
-
-  async function markDone(taskId) {
-    if (completed[taskId] || awarding) return;
-    const newCompleted = { ...completed, [taskId]: true };
-    setCompleted(newCompleted);
-    localStorage.setItem(storageKey, JSON.stringify(newCompleted));
+    // Mark as awarding
+    setAwarding(prev => new Set(prev).add(task.id));
 
     // Award +1pt
-    setAwarding(true);
-    await awardPt(1, "checklist_tarea", `Checklist: ${taskId} — jornada ${jkey}`);
+    await awardPt(playerId, 1, "checklist_tarea", `Checklist: ${task.id} — ${jkey}`);
 
-    // Check if all 3 done → bonus +3pts
-    const allDone = tasks.every(t => newCompleted[t.id]);
-    if (allDone) {
-      await awardPt(3, "checklist_bonus", `Checklist completo — jornada ${jkey}`);
-      setMsg("🏆 ¡Checklist completo! +1+1+1+3 = +6pts");
+    // Update weight +3 (completed)
+    await updateWeight(playerId, task.id, 3);
+
+    // Save to localStorage
+    const newAwarded = { ...awardedToday, [task.id]: true };
+    setAwardedToday(newAwarded);
+    localStorage.setItem(awardKey, JSON.stringify(newAwarded));
+
+    // Check if all visible tasks done = bonus
+    const allVisible = [...urgentTasks, ...randomTasks];
+    const allDone = allVisible.every(t => newAwarded[t.id] || taskStatus[t.id]?.done);
+    if (allDone && !awardedToday["__bonus__"]) {
+      await awardPt(playerId, 3, "checklist_bonus", `Checklist completo — ${jkey}`);
+      const withBonus = { ...newAwarded, "__bonus__": true };
+      setAwardedToday(withBonus);
+      localStorage.setItem(awardKey, JSON.stringify(withBonus));
+      setMsg("🏆 ¡Checklist completo! +6pts totales");
     } else {
       setMsg("+1pt por completar la tarea");
     }
-    setAwarding(false);
+
+    setAwarding(prev => { const s = new Set(prev); s.delete(task.id); return s; });
     setTimeout(() => setMsg(""), 3000);
+
+    // Refresh status
+    const newStatus = await checkTask(task.id, playerId, jkey, week);
+    setTaskStatus(prev => ({ ...prev, [task.id]: newStatus }));
   }
 
-  async function awardPt(pts, source, note) {
-    const week = getWarWeek();
-    const month = new Date().toISOString().slice(0, 7);
-    try {
-      const { data: p } = await supabase.from("players")
-        .select("pts_acumulados").eq("id", playerId).single();
-      await supabase.from("players")
-        .update({ pts_acumulados: (p?.pts_acumulados || 0) + pts })
-        .eq("id", playerId);
-      await supabase.from("pts_ledger").insert({
-        player_id: parseInt(playerId), pts, source, note,
-        week, month, created_at: new Date().toISOString()
-      });
-    } catch (e) {}
-  }
-
-  function handleDiscord() {
-    const msg = DISCORD_MSG(playerName || "Guerrero");
-    navigator.clipboard.writeText(msg).then(() => setCopied(true));
+  async function handleDiscord() {
+    const text = DISCORD_MSG(playerName || "Guerrero");
+    navigator.clipboard.writeText(text).then(() => setCopied(true));
     setTimeout(() => setCopied(false), 3000);
-    // Open Discord
     window.open(DISCORD_URL, "_blank");
-    // Mark done
-    markDone("discord");
+    await handleComplete(ALL_TASKS.find(t => t.id === "discord"));
   }
 
-  const doneCount = tasks.filter(t => completed[t.id]).length;
-  const allDone = doneCount === 3;
+  function isDone(task) {
+    return awardedToday[task.id] || taskStatus[task.id]?.done;
+  }
+
+  const allVisible = [...urgentTasks, ...randomTasks];
+  const doneCount = allVisible.filter(t => isDone(t)).length;
+  const totalCount = allVisible.length;
+  const bonusDone = awardedToday["__bonus__"];
 
   if (!playerId) return null;
   if (loading) return (
-    <div style={{ width: "100%", maxWidth: "480px", marginBottom: "16px" }}>
-      <div style={{ fontFamily: "monospace", fontSize: "9px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.2em" }}>Cargando misiones...</div>
+    <div style={{ width:"100%",maxWidth:"480px",marginBottom:"16px" }}>
+      <div style={{ fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.2)",letterSpacing:"0.2em" }}>
+        Cargando misiones...
+      </div>
     </div>
   );
 
-  return (
-    <div style={{ width: "100%", maxWidth: "480px", marginBottom: "20px" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-        <div>
-          <div style={{ fontFamily: "monospace", fontSize: "9px", letterSpacing: "0.2em", color: "rgba(255,215,0,0.5)", marginBottom: "2px" }}>
-            MISIONES DIARIAS
+  function TaskRow({ task, isUrgent }) {
+    const done = isDone(task);
+    const status = taskStatus[task.id];
+    const inProgress = awarding.has(task.id);
+
+    return (
+      <div style={{
+        display:"flex", alignItems:"center", gap:"10px",
+        padding:"10px 12px", marginBottom:"5px",
+        background: done ? "rgba(168,255,120,0.04)" : isUrgent ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.02)",
+        border:"1px solid "+(done?"rgba(168,255,120,0.15)":isUrgent?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.05)"),
+        borderLeft:"3px solid "+(done?"rgba(168,255,120,0.5)":isUrgent?"rgba(255,215,0,0.4)":"rgba(255,255,255,0.1)"),
+        borderRadius:"7px", transition:"all 0.3s ease",
+        opacity: inProgress ? 0.6 : 1,
+      }}>
+        {/* Checkbox */}
+        <div style={{
+          width:"18px", height:"18px", borderRadius:"4px", flexShrink:0,
+          background: done?"rgba(168,255,120,0.2)":"rgba(255,255,255,0.04)",
+          border:"1px solid "+(done?"rgba(168,255,120,0.5)":"rgba(255,255,255,0.15)"),
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:"11px", color:"#A8FF78",
+        }}>
+          {done ? "✓" : ""}
+        </div>
+
+        {/* Label + desc */}
+        <div style={{ flex:1, minWidth:0 }}>
+          {isUrgent && !done && (
+            <div style={{ fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.15em",color:"rgba(255,215,0,0.5)",marginBottom:"2px" }}>
+              URGENTE
+            </div>
+          )}
+          <div style={{ display:"flex",alignItems:"center",gap:"5px" }}>
+            <span style={{ fontSize:"12px" }}>{task.icon}</span>
+            <span style={{ fontSize:"11px",fontFamily:"Georgia,serif",
+              color:done?"rgba(168,255,120,0.6)":"rgba(255,255,255,0.6)",
+              textDecoration:done?"line-through":"none" }}>
+              {task.label}
+            </span>
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: "8px", color: "rgba(255,255,255,0.2)" }}>
-            Jornada {jkey} · Se renuevan a las 8:00am Ecuador
+          <div style={{ fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace",marginTop:"1px" }}>
+            {task.desc}
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "monospace", fontSize: "11px", color: allDone ? "#FFD700" : "rgba(255,255,255,0.3)", fontWeight: "bold" }}>
-            {doneCount}/3
+
+        {/* Action */}
+        {done ? (
+          <div style={{ fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.5)",flexShrink:0 }}>+1pt</div>
+        ) : task.discord ? (
+          <div style={{ flexShrink:0 }}>
+            <button onClick={handleDiscord} disabled={inProgress}
+              style={{ padding:"4px 8px",background:"rgba(114,137,218,0.15)",
+                border:"1px solid rgba(114,137,218,0.3)",borderRadius:"4px",
+                color:"#7289DA",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",
+                display:"block",marginBottom:"2px" }}>
+              🎮 Ir + copiar
+            </button>
+            {copied && <div style={{ fontSize:"8px",color:"rgba(168,255,120,0.6)",fontFamily:"monospace",textAlign:"center" }}>✓ copiado</div>}
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: "8px", color: "rgba(255,255,255,0.2)" }}>
-            {allDone ? "🏆 +6pts" : `+${doneCount}/${doneCount<3?"6":6}pts`}
+        ) : (
+          <button onClick={() => window.__aorNavigate && window.__aorNavigate(task.href)}
+            disabled={done || inProgress}
+            style={{ padding:"4px 8px",background:"rgba(64,224,255,0.08)",
+              border:"1px solid rgba(64,224,255,0.2)",borderRadius:"4px",
+              color:"#40E0FF",fontSize:"9px",cursor:"pointer",
+              fontFamily:"monospace",flexShrink:0 }}>
+            Ir ›
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width:"100%",maxWidth:"480px",marginBottom:"20px" }}>
+      {/* Header */}
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px" }}>
+        <div>
+          <div style={{ fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.2em",color:"rgba(255,215,0,0.5)",marginBottom:"2px" }}>
+            MISIONES DIARIAS
+          </div>
+          <div style={{ fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)" }}>
+            Jornada {jkey} · Renueva a las 8:00am Ecuador
+          </div>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <div style={{ fontFamily:"monospace",fontSize:"11px",fontWeight:"bold",
+            color: bonusDone?"#FFD700":"rgba(255,255,255,0.3)" }}>
+            {doneCount}/{totalCount}
+          </div>
+          <div style={{ fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)" }}>
+            {bonusDone?"🏆 +6pts":`máx +${totalCount+3}pts`}
           </div>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: "2px", background: "rgba(255,255,255,0.06)", borderRadius: "1px", marginBottom: "10px", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${(doneCount / 3) * 100}%`, background: allDone ? "#FFD700" : "#40E0FF", borderRadius: "1px", transition: "width 0.4s ease" }} />
+      <div style={{ height:"2px",background:"rgba(255,255,255,0.06)",borderRadius:"1px",marginBottom:"10px",overflow:"hidden" }}>
+        <div style={{ height:"100%",width:`${totalCount>0?(doneCount/totalCount)*100:0}%`,
+          background:bonusDone?"#FFD700":"#40E0FF",borderRadius:"1px",transition:"width 0.4s ease" }}/>
       </div>
 
-      {/* Tasks */}
-      {tasks.map((task) => {
-        const done = completed[task.id];
-        return (
-          <div key={task.id} style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            padding: "10px 12px", marginBottom: "5px",
-            background: done ? "rgba(168,255,120,0.04)" : "rgba(255,255,255,0.02)",
-            border: "1px solid " + (done ? "rgba(168,255,120,0.15)" : "rgba(255,255,255,0.05)"),
-            borderLeft: "3px solid " + (done ? "rgba(168,255,120,0.5)" : "rgba(255,255,255,0.1)"),
-            borderRadius: "7px", transition: "all 0.3s ease",
-          }}>
-            {/* Checkbox */}
-            <div onClick={() => !done && !task.discord && window.__aorNavigate && window.__aorNavigate(task.href)}
-              style={{
-                width: "18px", height: "18px", borderRadius: "4px", flexShrink: 0,
-                background: done ? "rgba(168,255,120,0.2)" : "rgba(255,255,255,0.04)",
-                border: "1px solid " + (done ? "rgba(168,255,120,0.5)" : "rgba(255,255,255,0.15)"),
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: done ? "default" : "pointer",
-                fontSize: "11px",
-              }}>
-              {done ? "✓" : ""}
-            </div>
+      {/* URGENT tasks (above random) */}
+      {urgentTasks.length > 0 && (
+        <>
+          {urgentTasks.map(t => <TaskRow key={t.id} task={t} isUrgent={true}/>)}
+          {randomTasks.length > 0 && (
+            <div style={{ height:"1px",background:"rgba(255,255,255,0.05)",margin:"6px 0" }}/>
+          )}
+        </>
+      )}
 
-            {/* Content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <span style={{ fontSize: "12px" }}>{task.icon}</span>
-                <span style={{ fontSize: "11px", fontFamily: "Georgia,serif", color: done ? "rgba(168,255,120,0.7)" : "rgba(255,255,255,0.6)", textDecoration: done ? "line-through" : "none" }}>
-                  {task.label}
-                </span>
-              </div>
-              <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", fontFamily: "monospace", marginTop: "1px" }}>
-                {task.desc}
-              </div>
-            </div>
-
-            {/* Action button */}
-            {!done && (
-              task.discord ? (
-                <div>
-                  <button onClick={handleDiscord}
-                    style={{ padding: "4px 8px", background: "rgba(114,137,218,0.15)", border: "1px solid rgba(114,137,218,0.3)", borderRadius: "4px", color: "#7289DA", fontSize: "9px", cursor: "pointer", fontFamily: "monospace", display: "block", marginBottom: "2px" }}>
-                    🎮 Ir + copiar
-                  </button>
-                  {copied && <div style={{ fontSize: "8px", color: "rgba(168,255,120,0.6)", fontFamily: "monospace", textAlign: "center" }}>✓ copiado</div>}
-                </div>
-              ) : (
-                <button onClick={() => window.__aorNavigate && window.__aorNavigate(task.href)}
-                  style={{ padding: "4px 8px", background: "rgba(64,224,255,0.08)", border: "1px solid rgba(64,224,255,0.2)", borderRadius: "4px", color: "#40E0FF", fontSize: "9px", cursor: "pointer", fontFamily: "monospace", flexShrink: 0 }}>
-                  Ir ›
-                </button>
-              )
-            )}
-            {done && (
-              <div style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(168,255,120,0.5)", flexShrink: 0 }}>+1pt</div>
-            )}
-          </div>
-        );
-      })}
+      {/* Random 3 tasks */}
+      {randomTasks.map(t => <TaskRow key={t.id} task={t} isUrgent={false}/>)}
 
       {/* Bonus indicator */}
-      {allDone && (
-        <div style={{ display: "flex", justifyContent: "center", padding: "8px", background: "rgba(255,215,0,0.05)", border: "1px solid rgba(255,215,0,0.15)", borderRadius: "7px", marginTop: "4px" }}>
-          <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#FFD700" }}>🏆 Bonus completado · +3pts extra · Total: +6pts</span>
+      {bonusDone && (
+        <div style={{ display:"flex",justifyContent:"center",padding:"8px",
+          background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",
+          borderRadius:"7px",marginTop:"4px" }}>
+          <span style={{ fontFamily:"monospace",fontSize:"10px",color:"#FFD700" }}>
+            🏆 Checklist completo · +3pts bonus · Total: +6pts
+          </span>
         </div>
       )}
 
-      {/* Discord message hint */}
-      {tasks.some(t => t.discord && !completed[t.id]) && (
-        <div style={{ marginTop: "6px", padding: "6px 10px", background: "rgba(114,137,218,0.05)", border: "1px solid rgba(114,137,218,0.15)", borderRadius: "6px", fontSize: "9px", color: "rgba(114,137,218,0.6)", fontFamily: "monospace" }}>
-          💬 Mensaje a copiar: "{DISCORD_MSG(playerName || "Guerrero")}"
+      {/* Discord hint */}
+      {randomTasks.some(t => t.discord && !isDone(t)) && (
+        <div style={{ marginTop:"6px",padding:"6px 10px",background:"rgba(114,137,218,0.05)",
+          border:"1px solid rgba(114,137,218,0.15)",borderRadius:"6px",
+          fontSize:"9px",color:"rgba(114,137,218,0.6)",fontFamily:"monospace" }}>
+          💬 Mensaje: "{DISCORD_MSG(playerName||"Guerrero")}"
         </div>
       )}
 
-      {/* Feedback message */}
+      {/* Feedback */}
       {msg && (
-        <div style={{ textAlign: "center", fontFamily: "monospace", fontSize: "10px", color: "#A8FF78", marginTop: "6px", fontWeight: "bold" }}>
+        <div style={{ textAlign:"center",fontFamily:"monospace",fontSize:"10px",
+          color:"#A8FF78",marginTop:"6px",fontWeight:"bold" }}>
           {msg}
         </div>
       )}
