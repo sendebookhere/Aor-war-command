@@ -529,7 +529,10 @@ export default function Asamblea() {
                   <div style={{fontSize:"12px",color:i===0?"#FFD700":"rgba(255,255,255,0.6)",fontWeight:i===0?"bold":"normal"}}>{w.winner}</div>
                   <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{w.week}</div>
                 </div>
-                <div style={{fontSize:"11px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace"}}>{w.votes} pts</div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:"11px",color:"rgba(255,215,0,0.7)",fontFamily:"monospace",fontWeight:"bold"}}>+10 pts</div>
+                  <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>{w.votes} votos</div>
+                </div>
               </div>
             ))}
           </div>
