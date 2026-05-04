@@ -618,6 +618,40 @@ function PlayerProfile({ player, onBack }) {
           );
         })()}
 
+        {/* Points Ledger grouped by source */}
+        {ptsLedger.length>0&&(
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,255,255,0.3)",marginBottom:"10px"}}>HISTORIAL DE PUNTOS POR CATEGORÍA</div>
+            {(()=>{
+              const cats={"📡 Propaganda":["propaganda"],"🗳 Asamblea":["asamblea_voto","asamblea_ganador","asamblea_pichichi","asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje"],"🔍 Intel":["intel_voto"],"📰 Noticias":["noticia_leida","solicitud_cumplida"],"⚔ PvP":["pvp_registro","pvp_confirmo","pvp_ganador","pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video","ranking_semanal","ranking_mensual"],"🔑 Código":["codigo_unico"],"📦 Cierres semana":["weekly_archive"],"⚠ Penalizaciones":["penalizacion"]};
+              const lbl={propaganda:"Mensaje enviado",asamblea_voto:"Voto",asamblea_ganador:"Guerrero Implacable",asamblea_pichichi:"Pichichi",asamblea_mayor_puntaje:"Mayor puntaje",asamblea_empate_votos:"Empate votos",intel_voto:"Voto intel",noticia_leida:"Noticia leída",solicitud_cumplida:"Solicitud cumplida",pvp_registro:"Set registrado",pvp_confirmo:"Confirmado",pvp_ganador:"Ganador",pvp_dudo_exitoso:"DUDO exitoso",pvp_acepto_dudo:"DUDO aceptado",pvp_escalo:"Escalado",pvp_gano_video:"Ganó videos",ranking_semanal:"Top semanal",ranking_mensual:"Top mensual",codigo_unico:"Código único",weekly_archive:"Cierre semana",penalizacion:"Penalización"};
+              return Object.entries(cats).map(([cat,sources])=>{
+                const entries=ptsLedger.filter(e=>sources.includes(e.source));
+                if(!entries.length)return null;
+                const total=entries.reduce((s,e)=>s+(e.pts||0),0);
+                return(
+                  <div key={cat} style={{marginBottom:"8px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.06)",marginBottom:"3px"}}>
+                      <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em"}}>{cat}</span>
+                      <span style={{fontFamily:"monospace",fontSize:"10px",fontWeight:"bold",color:total>=0?"#A8FF78":"#FF6B6B"}}>{total>=0?"+":""}{total}</span>
+                    </div>
+                    {entries.slice(0,4).map((e,i)=>(
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"2px 6px",marginBottom:"1px",background:"rgba(255,255,255,0.01)",borderRadius:"3px"}}>
+                        <div>
+                          <span style={{fontSize:"9px",color:"rgba(255,255,255,0.45)"}}>{lbl[e.source]||e.source}</span>
+                          {e.note&&<span style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}> · {e.note.slice(0,25)}</span>}
+                        </div>
+                        <span style={{fontFamily:"monospace",fontSize:"9px",color:e.pts>=0?"rgba(168,255,120,0.7)":"rgba(255,107,107,0.7)"}}>{e.pts>=0?"+":""}{e.pts}</span>
+                      </div>
+                    ))}
+                    {entries.length>4&&<div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace",paddingLeft:"6px"}}>+{entries.length-4} más</div>}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
+
         {/* War history */}
         <div style={{color:"#FFD700",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📅 Historial de guerras</div>
         {loading && <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)"}}>Cargando...</div>}

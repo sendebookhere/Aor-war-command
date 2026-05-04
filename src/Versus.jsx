@@ -143,7 +143,19 @@ export default function Versus(){
   const allConf=battles.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed");
   function buildRecord(bList){
     const r={};
-    bList.forEach(b=>{const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0};if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0};r[b.challenger_name].w+=cW;r[b.challenger_name].l+=oW;r[b.opponent_name].w+=oW;r[b.opponent_name].l+=cW;});
+    // Include confirmed + pending battles (pending shown with indicator)
+    bList.filter(b=>b.status!=="claimed").forEach(b=>{
+      const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
+      const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
+      if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0,pending:0};
+      if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0,pending:0};
+      if(b.status==="pending"||b.status==="disputed"){
+        r[b.challenger_name].pending++;r[b.opponent_name].pending++;
+      }else{
+        r[b.challenger_name].w+=cW;r[b.challenger_name].l+=oW;
+        r[b.opponent_name].w+=oW;r[b.opponent_name].l+=cW;
+      }
+    });
     return Object.entries(r).sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
   }
   const rankGeneral=buildRecord(allConf); // ALL confirmed battles

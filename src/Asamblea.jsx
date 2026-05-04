@@ -58,25 +58,38 @@ export default function Asamblea() {
     ]).then(([ve, wm])=>{
       const mode = wm.data?.value || "classic";
       setWarModeLocal(mode);
-      // Auto-activate if war has ended and not manually disabled
+      // Voting window: Sunday 9:00am Spain → Friday 1h before war
+      // Classic war starts Friday 14:00h → votings close Friday 13:00h Spain
+      // New war starts Friday 22:00h → votings close Friday 21:00h Spain
       const now = new Date();
       const spain = new Date(now.getTime() + 2*60*60*1000); // CEST UTC+2
-      const day  = spain.getDay();  // 0=Sun, 6=Sat
+      const day  = spain.getDay();  // 0=Sun, 1=Mon...5=Fri, 6=Sat
       const hour = spain.getHours();
-      let warEnded = false;
-      if (mode === "new") {
-        // New: war ends Saturday 18:00 Spain
-        warEnded = (day === 6 && hour >= 18) || day === 0; // Sat 18+ or Sunday
-      } else {
-        // Classic: war ends Sunday 8:00 Spain
-        warEnded = (day === 0 && hour >= 8); // Sunday 8am+
-      }
-      if (warEnded) {
+      const min  = spain.getMinutes();
+      const timeH = hour + min/60; // decimal hours
+
+      // Voting OPENS: Sunday >= 9:00am Spain
+      const votingOpens = (day === 0 && timeH >= 9) ||  // Sunday after 9am
+                          (day >= 1 && day <= 4) ||      // Mon-Thu all day
+                          (day === 5 && (                  // Friday before close
+                            mode === "classic" ? timeH < 13 : timeH < 21
+                          ));
+
+      // Voting CLOSES: Friday >= 13:00 (classic) or >= 21:00 (new), Sat
+      const votingCloses = day === 6 ||  // Saturday
+                           (day === 5 && (mode === "classic" ? timeH >= 13 : timeH >= 21)) ||
+                           (day === 0 && timeH < 9); // Sunday before 9am
+
+      const shouldBeOpen = votingOpens && !votingCloses;
+
+      if (shouldBeOpen && ve.data?.value === "false") {
+        // Auto-open in DB
         setVotingEnabled(true);
-        // Auto-enable in DB if it was disabled
-        if (ve.data?.value === "false") {
-          supabase.from("app_settings").upsert({key:"voting_enabled",value:"true"},{onConflict:"key"}).then(()=>{});
-        }
+        supabase.from("app_settings").upsert({key:"voting_enabled",value:"true"},{onConflict:"key"}).then(()=>{});
+      } else if (votingCloses && ve.data?.value === "true") {
+        // Auto-close in DB
+        setVotingEnabled(false);
+        supabase.from("app_settings").upsert({key:"voting_enabled",value:"false"},{onConflict:"key"}).then(()=>{});
       } else {
         setVotingEnabled(ve.data?.value !== "false");
       }
