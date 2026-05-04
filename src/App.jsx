@@ -342,6 +342,143 @@ function isRegistrationOpen(warMode="classic") {
   return true;
 }
 
+// ── DoneScreen: shown after registration OR when already registered ──────────
+function DoneScreen({ playerName, avail, warMode, isAlreadyRegistered }) {
+  const [timeLeft, setTimeLeft] = React.useState(null);
+
+  React.useEffect(() => {
+    function calc() {
+      const schedule = warMode === "new" ? SCHEDULE.new : SCHEDULE.classic;
+      const ws = schedule.warStart; // { day, h, m } in Ecuador time (UTC-5)
+      const DAY_MAP = { dom:0, lun:1, mar:2, mié:3, jue:4, vie:5, sáb:6 };
+      const targetDay = DAY_MAP[ws.day];
+
+      const now = new Date();
+      const ec = new Date(now.getTime() - 5*3600000); // Ecuador UTC-5
+      const curDay = ec.getUTCDay();
+      let daysUntil = (targetDay - curDay + 7) % 7;
+
+      // Build target datetime in Ecuador
+      const target = new Date(ec);
+      target.setUTCDate(ec.getUTCDate() + daysUntil);
+      target.setUTCHours(ws.h, ws.m || 0, 0, 0);
+
+      // If target is in the past (same day but past the hour), add 7 days
+      if (target <= ec) {
+        target.setUTCDate(target.getUTCDate() + 7);
+      }
+
+      const diff = target - ec;
+      if (diff <= 0) { setTimeLeft(null); return; }
+
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ d, h, m, s, total: diff });
+    }
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [warMode]);
+
+  const av = AVAILABILITY[avail] || AVAILABILITY.siempre;
+  const C = "#A8FF78";
+
+  return (
+    <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+      <div style={{textAlign:"center",maxWidth:"420px",width:"100%"}}>
+        <NavBar current="/registro"/>
+
+        {/* Main message */}
+        <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.2)",
+          borderRadius:"12px",padding:"24px 20px",marginBottom:"16px"}}>
+          <div style={{fontSize:"40px",marginBottom:"12px"}}>⚔</div>
+          <div style={{fontSize:"11px",fontFamily:"monospace",letterSpacing:"0.2em",
+            color:"rgba(168,255,120,0.4)",marginBottom:"8px"}}>
+            {isAlreadyRegistered ? "YA CONFIRMADO" : "REGISTRO CONFIRMADO"}
+          </div>
+          <div style={{fontFamily:"serif",fontSize:"20px",color:"#FFD700",
+            fontWeight:"bold",marginBottom:"6px",lineHeight:"1.3"}}>
+            Gracias <span style={{color:C}}>{playerName}</span>
+          </div>
+          <div style={{fontSize:"13px",color:"rgba(255,255,255,0.5)",lineHeight:"1.7",marginBottom:"16px"}}>
+            por unir tus fuerzas en esta<br/>
+            <strong style={{color:"rgba(168,255,120,0.8)"}}>Guerra de Clanes [AOR]</strong>
+          </div>
+
+          {/* Role confirmed */}
+          <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",
+            borderRadius:"8px",padding:"8px 14px",marginBottom:"16px",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:"8px"}}>
+            <span style={{fontSize:"14px"}}>{av.icon}</span>
+            <span style={{fontFamily:"monospace",fontSize:"10px",color:av.color}}>{av.label}</span>
+            <span style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.2)"}}>
+              · {warMode==="new"?"Sistema Nuevo":"Sistema Clásico"}
+            </span>
+          </div>
+
+          {/* War start countdown */}
+          <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",
+            borderRadius:"8px",padding:"12px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",
+              color:"rgba(64,224,255,0.4)",marginBottom:"8px"}}>
+              ⚔ INICIO DE GUERRA
+            </div>
+            {timeLeft ? (
+              <>
+                <div style={{display:"flex",justifyContent:"center",gap:"12px",marginBottom:"6px"}}>
+                  {timeLeft.d > 0 && (
+                    <div style={{textAlign:"center"}}>
+                      <div style={{fontFamily:"monospace",fontSize:"28px",color:"#40E0FF",fontWeight:"bold",lineHeight:"1"}}>{timeLeft.d}</div>
+                      <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.4)"}}>días</div>
+                    </div>
+                  )}
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"monospace",fontSize:"28px",color:"#40E0FF",fontWeight:"bold",lineHeight:"1"}}>{String(timeLeft.h).padStart(2,"0")}</div>
+                    <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.4)"}}>horas</div>
+                  </div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"monospace",fontSize:"28px",color:"#40E0FF",fontWeight:"bold",lineHeight:"1"}}>{String(timeLeft.m).padStart(2,"0")}</div>
+                    <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.4)"}}>min</div>
+                  </div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"monospace",fontSize:"28px",color:"rgba(64,224,255,0.5)",fontWeight:"bold",lineHeight:"1"}}>{String(timeLeft.s).padStart(2,"0")}</div>
+                    <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.3)"}}>seg</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.25)"}}>
+                  {warMode==="new"?"Viernes 12:00pm Ecuador · 18:00h España":"Viernes 8:00am Ecuador · 14:00h España"}
+                </div>
+              </>
+            ) : (
+              <div style={{fontFamily:"monospace",fontSize:"12px",color:"#A8FF78"}}>¡LA GUERRA HA COMENZADO!</div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick nav */}
+        <div style={{display:"flex",gap:"8px",justifyContent:"center"}}>
+          <button onClick={()=>window.__aorNavigate&&window.__aorNavigate("/reporte")}
+            style={{fontSize:"11px",color:"#40E0FF",background:"transparent",
+              padding:"6px 14px",border:"1px solid rgba(64,224,255,0.3)",
+              borderRadius:"20px",cursor:"pointer",fontFamily:"monospace"}}>
+            Ver ranking
+          </button>
+          <button onClick={()=>window.__aorNavigate&&window.__aorNavigate("/propaganda")}
+            style={{fontSize:"11px",color:"#FFD700",background:"transparent",
+              padding:"6px 14px",border:"1px solid rgba(255,215,0,0.3)",
+              borderRadius:"20px",cursor:"pointer",fontFamily:"monospace"}}>
+            Propaganda
+          </button>
+        </div>
+      </div>
+      <NalguitasFooter/>
+    </div>
+  );
+}
+
 function RegistrationForm({onRegistered, warMode="classic"}) {
   const [name, setName]             = useState("");
   const [avail, setAvail]           = useState("");
@@ -510,23 +647,13 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
   // Registration closed - form shown but disabled (timer handles messaging)
 
-  if (done) return (
-    <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-      <div style={{textAlign:"center",maxWidth:"400px",width:"100%",marginBottom:"24px"}}>
-        <div style={{fontSize:"48px",marginBottom:"16px"}}>⚔</div>
-        <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",marginBottom:"8px"}}>¡Registrado!</div>
-        <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"16px"}}>Tu participación ha sido confirmada. El comando de [AOR] ha sido notificado.</div>
-        <div style={{background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"8px",padding:"12px",fontSize:"12px",color:"#A8FF78",marginBottom:"16px"}}>
-          +{5 + (AVAILABILITY[avail]?.declaredPts||0)} puntos acreditados a tu cuenta
-        </div>
-        <div style={{display:"flex",gap:"8px",justifyContent:"center",marginBottom:"24px"}}>
-          <a href="/reporte" style={{fontSize:"11px",color:"#40E0FF",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(64,224,255,0.3)",borderRadius:"20px"}}>Ver ranking</a>
-          <a href="/propaganda" style={{fontSize:"11px",color:"#FFD700",textDecoration:"none",padding:"6px 14px",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"20px"}}>Propaganda</a>
-        </div>
-      </div>
-      <WaReportButtons/>
-      <NalguitasFooter/>
-    </div>
+  if (done || alreadyRegistered) return (
+    <DoneScreen
+      playerName={selectedPlayer?.name || sessionStorage.getItem("aor_player_name") || "Guerrero"}
+      avail={avail || selectedPlayer?.availability}
+      warMode={warMode}
+      isAlreadyRegistered={alreadyRegistered && !done}
+    />
   );
 
   return (
