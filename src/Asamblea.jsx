@@ -269,9 +269,9 @@ export default function Asamblea() {
                   acum>0 && {l:"📡 Acumulado histórico",v:acum,c:"#C8A2FF"},
                 ].filter(x=>x&&x.v>0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
-const topPts2 = ranked[1]?tp(ranked[1]):0;
-const isUniqueTop = topPts > topPts2;
-const isDouble = isUniqueTop && winner===top.name;
+                const topPts2 = ranked.length>1 ? ranked[1].pts : 0;
+                const isUniqueTop = topPts > topPts2;
+                const isDouble = isUniqueTop && winner===top.name;
                 return (
                   <div style={{background:isDouble?"linear-gradient(135deg,rgba(168,255,120,0.1),rgba(255,215,0,0.05))":"linear-gradient(135deg,rgba(168,255,120,0.06),rgba(168,255,120,0.01))",border:"1px solid "+(isDouble?"rgba(168,255,120,0.4)":"rgba(168,255,120,0.2)"),borderRadius:"10px",padding:"14px",position:"relative"}}>
                     {isDouble && <div style={{position:"absolute",top:"8px",right:"8px",fontSize:"8px",color:"#A8FF78",background:"rgba(168,255,120,0.15)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:"4px",padding:"2px 6px",fontFamily:"monospace"}}>+10 EXTRA = 30 TOTAL</div>}
@@ -279,19 +279,18 @@ const isDouble = isUniqueTop && winner===top.name;
                     {isUniqueTop?"MAYOR PUNTAJE +10 pts":"EMPATE EN PUNTAJE"}
                   </div>
                   {!isUniqueTop && (() => {
-                    const tied = ranked.filter(p=>tp(p)===topPts);
+                    const tied = ranked.filter(r=>r.pts===topPts);
                     return (
                       <div style={{marginBottom:"8px"}}>
                         <div style={{fontSize:"9px",color:"#A8FF78",fontFamily:"monospace",marginBottom:"6px"}}>EMPATE — CADA JUGADOR RECIBE +3 PUNTOS:</div>
-                        {tied.map(p=>(
-                          <div key={p.id} style={{padding:"4px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
+                        {tied.map(r=>(
+                          <div key={r.id} style={{padding:"4px 0",borderBottom:"1px solid rgba(168,255,120,0.08)"}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                              <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"#A8FF78",fontWeight:"bold"}}>{p.name}</span>
+                              <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"#A8FF78",fontWeight:"bold"}}>{r.name}</span>
                               <span style={{fontFamily:"monospace",fontSize:"11px",color:"#A8FF78"}}>+3 pts</span>
                             </div>
-                            <div style={{display:"flex",justifyContent:"space-between",fontSize:"9px",color:"rgba(168,255,120,0.5)"}}>
-                              <span>{topPts>0?"+":""}{topPts} pts jornada</span>
-                              <span>{(p.pts_acumulados||0).toLocaleString()} pts acum.</span>
+                            <div style={{fontSize:"9px",color:"rgba(168,255,120,0.5)"}}>
+                              <span>{r.pts} pts acumulados totales</span>
                             </div>
                           </div>
                         ))}
