@@ -816,24 +816,12 @@ export default function PublicReport() {
   useEffect(() => {
     supabase.from("players").select("*, unique_code").eq("active", true).then(({ data }) => {
       if (data) {
-        const rankOrder = p => {
-          if (p.name === "PUNK'Z" || p.clan_role === "Líder") return 0;
-          if (p.clan_role === "Co-Líder") return 1;
-          if (p.clan_role === "Oficial")  return 2;
-          const total = (p.pts_acumulados||0) + totalPts(p); // honorificos excluded (buffer only)
-          if (total >= 1000) return 3;
-          if (total >= 500)  return 4;
-          if (total >= 100)  return 5;
-          if (total >= 0)    return 6;
-          return 7;
-        };
+        // Sort purely by pts (acc + warPts) — rank is reference only, not ordering
         data.sort((a, b) => {
-          const ra = rankOrder(a), rb = rankOrder(b);
-          if (ra !== rb) return ra - rb;
           const totalA = (a.pts_acumulados||0) + totalPts(a);
           const totalB = (b.pts_acumulados||0) + totalPts(b);
           if (totalB !== totalA) return totalB - totalA;
-          return (b.bp||0) - (a.bp||0);
+          return (b.bp||0) - (a.bp||0); // tiebreak by BP
         });
         setPlayers(data);
         // Expose global to open own profile (used by NavBar "MI PERFIL")
@@ -940,14 +928,19 @@ export default function PublicReport() {
 
         {/* Ranks table */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"16px"}}>
-          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"12px",marginBottom:"8px"}}>⚜️ Sistema de Rangos [AOR]</div>
-          {RANKS.map(rank => (
+          <div style={{fontFamily:"serif",color:"#FFD700",fontSize:"12px",marginBottom:"4px"}}>⚜️ Sistema de Rangos [AOR]</div>
+          <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",marginBottom:"8px",lineHeight:"1.5"}}>
+            El colchón protege el rango — no suma a tus puntos.<br/>
+            Si caes por debajo del mínimo, bajas al rango inferior.
+          </div>
+          {RANKS.filter(rank=>rank.min!==Infinity&&rank.min!==-Infinity&&!rank.protected).map(rank => (
             <div key={rank.label} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",borderRadius:"4px",background:rank.color+"08"}}>
               <div>
                 <span style={{fontSize:"11px",color:rank.color,fontWeight:"bold"}}>{rank.label}</span>
-                <span style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",marginLeft:"8px"}}>{rank.desc}</span>
+                {rank.buffer>0&&rank.buffer!==Infinity&&
+                  <span style={{fontSize:"8px",color:"rgba(255,215,0,0.35)",marginLeft:"6px",fontFamily:"monospace"}}>colchón {rank.buffer.toLocaleString()}</span>}
               </div>
-              <span style={{fontSize:"10px",color:rank.color}}>{rank.min>=0?rank.min.toLocaleString()+"+ pts":"< 0 pts"}</span>
+              <span style={{fontSize:"10px",color:rank.color,fontFamily:"monospace"}}>{rank.min>=0?rank.min.toLocaleString()+"+ pts":"— pts"}</span>
             </div>
           ))}
         </div>
@@ -957,38 +950,61 @@ export default function PublicReport() {
           const pts     = totalPts(p);
           const acc     = p.pts_acumulados || 0;
           const hon     = p.pts_honorificos || 0;
-          const combined = acc + pts + hon;
+          const ptsTotal = acc + pts; // protagonist — no hon
           const rank    = getRank(acc, hon, p.name, p.clan_role);
           const avail   = AVAILABILITY[p.availability] || AVAILABILITY.pendiente;
+          const tz = {sur:"🌎",norte:"🇲🇽",espana:"🇪🇸",otro:"🌍"}[p.timezone]||"";
           return (
-            <div key={p.id} onClick={() => { setSelected(p); sessionStorage.setItem("aor_last_viewed_player", String(p.id)); }} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
-              <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
-                <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.4)",minWidth:"24px"}}>
+            <div key={p.id} onClick={() => { setSelected(p); sessionStorage.setItem("aor_last_viewed_player", String(p.id)); }}
+              style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",
+                borderLeft:"3px solid "+rank.color,borderRadius:"8px",padding:"10px 14px",
+                marginBottom:"6px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
+              {/* Left: position + name + pills */}
+              <div style={{display:"flex",gap:"10px",alignItems:"center",flex:1,minWidth:0}}>
+                <span style={{fontSize:"14px",color:i<3?"#FFD700":"rgba(255,255,255,0.35)",minWidth:"22px",flexShrink:0}}>
                   {i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"."}
                 </span>
-                <div>
-                  <div style={{fontSize:"13px",color:"#40E0FF",textDecoration:"underline",marginBottom:"3px",display:"flex",alignItems:"center",gap:"5px"}}>
-                    {p.name} <span style={{fontSize:"12px"}}>{p.whatsapp?"📱":"📵"}</span>
+                <div style={{minWidth:0}}>
+                  {/* Name row */}
+                  <div style={{fontSize:"13px",color:"#d4c9a8",fontFamily:"Georgia,serif",fontWeight:"bold",
+                    marginBottom:"3px",display:"flex",alignItems:"center",gap:"5px",
+                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {p.name}
+                    <span style={{fontSize:"11px"}}>{p.whatsapp?"📱":"📵"}</span>
+                    {tz&&<span style={{fontSize:"11px"}}>{tz}</span>}
                   </div>
-                  <div style={{display:"flex",gap:"4px",flexWrap:"wrap",marginBottom:"2px"}}>
-                    <Pill color={rank.color}>{rank.label}</Pill>
-                    {p.availability && p.availability !== "pendiente" && <Pill color={avail.color}>{avail.icon} {avail.label}</Pill>}
-                    {hon > 0 && <Pill color="#FFD700">⭐ {hon.toLocaleString()}</Pill>}
-                    {(p.pt_whatsapp||0) > 0 && <Pill color="#25D366">📱 +{p.pt_whatsapp}</Pill>}
+                  {/* Rank + availability — reference only, smaller */}
+                  <div style={{display:"flex",gap:"4px",flexWrap:"wrap",alignItems:"center"}}>
+                    <span style={{fontFamily:"monospace",fontSize:"9px",color:rank.color,
+                      background:rank.color+"18",padding:"1px 6px",borderRadius:"3px",
+                      border:"1px solid "+rank.color+"30"}}>
+                      {rank.label}
+                    </span>
+                    {p.availability && p.availability !== "pendiente" &&
+                      <span style={{fontFamily:"monospace",fontSize:"8px",color:avail.color,opacity:0.7}}>
+                        {avail.icon} {avail.label}
+                      </span>}
+                    {hon > 0 &&
+                      <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.4)"}}>
+                        colchón {hon.toLocaleString()}
+                      </span>}
                   </div>
-                  <div style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.35)"}}>
+                  {/* Stats row */}
+                  <div style={{display:"flex",gap:"8px",fontSize:"9px",color:"rgba(255,255,255,0.25)",marginTop:"2px",fontFamily:"monospace"}}>
                     <span>⚔ {((p.level||0)/1000).toFixed(1)}k</span>
                     <span>💀 {(p.bp||0).toLocaleString()}</span>
-                    {p.timezone==="mexico" && <span>🇲🇽</span>}
-                    {p.timezone==="espana" && <span>🇪🇸</span>}
-                    {p.timezone==="otra"   && <span>🌍</span>}
                   </div>
                 </div>
               </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",color:combined>=0?rank.color:"#FF6B6B",fontWeight:"bold"}}>{combined.toLocaleString()}</div>
-                <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)"}}>{acc} acum + {pts} sem</div>
-                {hon > 0 && <div style={{fontSize:"9px",color:"rgba(255,215,0,0.4)"}}>+{hon.toLocaleString()} cargo</div>}
+              {/* Right: pts as protagonist */}
+              <div style={{textAlign:"right",flexShrink:0,marginLeft:"10px"}}>
+                <div style={{fontSize:"20px",color:ptsTotal>=0?rank.color:"#FF6B6B",
+                  fontWeight:"bold",fontFamily:"monospace",lineHeight:"1"}}>
+                  {ptsTotal.toLocaleString()}
+                </div>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace",marginTop:"2px"}}>
+                  {acc} + {pts>0?"+":""}{pts}
+                </div>
               </div>
             </div>
           );
