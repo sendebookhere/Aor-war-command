@@ -410,15 +410,19 @@ export default function DailyChecklist({ playerId, playerName }) {
         {done ? (
           <div style={{ fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.5)",flexShrink:0 }}>+1pt</div>
         ) : task.discord ? (
-          <div style={{ flexShrink:0 }}>
+          <div style={{ flexShrink:0, maxWidth:"130px" }}>
             <button onClick={handleDiscord} disabled={inProgress}
               style={{ padding:"4px 8px",background:"rgba(114,137,218,0.15)",
                 border:"1px solid rgba(114,137,218,0.3)",borderRadius:"4px",
                 color:"#7289DA",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",
-                display:"block",marginBottom:"2px" }}>
-              🎮 Ir + copiar
+                display:"block",marginBottom:"3px",width:"100%",textAlign:"center" }}>
+              📋 Copiar saludo
             </button>
-            {copied && <div style={{ fontSize:"8px",color:"rgba(168,255,120,0.6)",fontFamily:"monospace",textAlign:"center" }}>✓ copiado</div>}
+            <div style={{ fontSize:"7px",color:"rgba(114,137,218,0.4)",fontFamily:"monospace",
+              lineHeight:"1.3",wordBreak:"break-word",fontStyle:"italic" }}>
+              Copia el mensaje y visita Discord
+            </div>
+            {copied && <div style={{ fontSize:"8px",color:"rgba(168,255,120,0.7)",fontFamily:"monospace",marginTop:"2px",fontWeight:"bold" }}>✓ Texto copiado</div>}
           </div>
         ) : (
           <button onClick={() => window.__aorNavigate && window.__aorNavigate(task.href)}
@@ -490,14 +494,7 @@ export default function DailyChecklist({ playerId, playerName }) {
         </div>
       )}
 
-      {/* Discord hint */}
-      {randomTasks.some(t => t.discord && !isDone(t)) && (
-        <div style={{ marginTop:"6px",padding:"6px 10px",background:"rgba(114,137,218,0.05)",
-          border:"1px solid rgba(114,137,218,0.15)",borderRadius:"6px",
-          fontSize:"9px",color:"rgba(114,137,218,0.6)",fontFamily:"monospace" }}>
-          💬 Mensaje: "{DISCORD_MSG(playerName||"Guerrero")}"
-        </div>
-      )}
+
 
       {/* Feedback */}
       {msg && (
