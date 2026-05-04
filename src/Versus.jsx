@@ -58,29 +58,38 @@ export default function Versus(){
       week,month,status:"pending",created_at:new Date().toISOString(),
     });
     if(error){setMsg("Error: "+error.message);setSaving(false);return;}
-    const pts=myWins>=2?2:1;
-    await awardPts(parseInt(playerId),pts,"pvp_registro",`vs ${opponent.name}`);
+    // Challenger always gets +1pt for declaring the set (win or lose)
+    await awardPts(parseInt(playerId),1,"pvp_registro",`vs ${opponent.name}`);
     await load();
-    setMsg(`✓ Batalla registrada (+${pts}pt). ${opponent.name} debe confirmar o DUDAR.`);
+    setMsg(`✓ Batalla registrada (+1pt). ${opponent.name} debe confirmar o DUDAR.`);
     setSaving(false);setFormOpen(false);setOpponent(null);setMyWins(null);
     setTimeout(()=>setMsg(""),7000);
   }
 
   async function confirm(b){
     await supabase.from("pvp_battles").update({status:"confirmed"}).eq("id",b.id);
-    // Award confirmer
+
+    // Opponent confirms → gets +1pt for confirming
     await awardPts(parseInt(b.opponent_id),1,"pvp_confirmo",`vs ${b.challenger_name}`);
-    if(b.opponent_wins>=2) await awardPts(parseInt(b.opponent_id),1,"pvp_ganador",`vs ${b.challenger_name}`);
-    // Retroactively award challenger if they never got their registration pts
-    // (covers battles registered before pts logic existed)
+
+    // Whoever won 2-3 of 3 gets +1pt EXTRA (can be challenger OR opponent)
+    if(b.challenger_wins>=2){
+      // Challenger won majority → gets +1pt extra
+      await awardPts(parseInt(b.challenger_id),1,"pvp_ganador",`vs ${b.opponent_name} (ganó ${b.challenger_wins}-${b.opponent_wins})`);
+    } else if(b.opponent_wins>=2){
+      // Opponent won majority → gets +1pt extra
+      await awardPts(parseInt(b.opponent_id),1,"pvp_ganador",`vs ${b.challenger_name} (ganó ${b.opponent_wins}-${b.challenger_wins})`);
+    }
+    // If 0-1 wins: loser already has their +1pt from declaration, no extra
+
+    // Retroactive: ensure challenger got their +1pt for declaring
     const {data:challLedger} = await supabase.from("pts_ledger")
       .select("id").eq("player_id",parseInt(b.challenger_id))
       .eq("source","pvp_registro")
-      .eq("note",`vs ${b.opponent_name}`)
+      .ilike("note",`%${b.opponent_name}%`)
       .limit(1);
-    if(!challLedger?.length) {
-      const pts = b.challenger_wins>=2?2:1;
-      await awardPts(parseInt(b.challenger_id),pts,"pvp_registro",`vs ${b.opponent_name}`);
+    if(!challLedger?.length){
+      await awardPts(parseInt(b.challenger_id),1,"pvp_registro",`vs ${b.opponent_name}`);
     }
     await load();
   }
@@ -273,7 +282,10 @@ export default function Versus(){
                 <div style={{display:"flex",gap:"5px",marginBottom:"8px"}}>
                   {[0,1,2,3].map(n=><button key={n} onClick={()=>setMyWins(n)} style={{flex:1,padding:"10px 2px",borderRadius:"6px",cursor:"pointer",background:myWins===n?C.redA+"0.15)":"rgba(255,255,255,0.02)",border:"1px solid "+(myWins===n?C.redA+"0.4)":"rgba(255,255,255,0.08)"),color:myWins===n?C.red:C.gray,fontFamily:"monospace",fontSize:"16px",fontWeight:"bold"}}>{n}</button>)}
                 </div>
-                {myWins!==null&&<div style={{fontSize:"9px",color:C.gray,marginBottom:"8px",textAlign:"center",fontFamily:"monospace"}}>Tú {myWins}V · {opponent.name} {3-myWins}V · {myWins>=2?"+2pts":"+1pt"}</div>}
+                {myWins!==null&&<div style={{fontSize:"9px",color:C.gray,marginBottom:"8px",textAlign:"center",fontFamily:"monospace"}}>
+                Tú: <span style={{color:myWins>=2?C.green:C.gray}}>{myWins}V</span> · {opponent.name}: <span style={{color:(3-myWins)>=2?C.red:C.gray}}>{3-myWins}V</span>
+                {" · "}Al declarar: +1pt · Al confirmar: {myWins>=2?"tú +1pt extra":"rival +1pt extra si ganó 2-3"}
+              </div>}
               </>)}
               {msg&&<div style={{fontSize:"10px",color:msg.startsWith("✓")?C.green:C.red,marginBottom:"6px"}}>{msg}</div>}
               <div style={{display:"flex",gap:"6px"}}>
@@ -291,8 +303,8 @@ export default function Versus(){
           <div style={{background:C.redA+"0.04)",border:`1px solid ${C.redA}0.15)`,borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
             <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",color:C.red,opacity:0.7,marginBottom:"10px"}}>🎲 VERSUS — REGLAS (inspirado en el juego Dudo)</div>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.5)",lineHeight:"1.8"}}>
-              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Registrar:</strong> 3 batallas vs un rival. Ganaste 0-1: <strong style={{color:C.red}}>+1pt</strong>. Ganaste 2-3: <strong style={{color:C.red}}>+2pts</strong>. Máx 1 por rival/día, 5/día.</div>
-              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Confirmar:</strong> El rival acepta y recibe <strong style={{color:C.red}}>+1pt</strong>. El ganador declarado también recibe <strong style={{color:C.red}}>+1pt</strong> extra.</div>
+              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Registrar:</strong> Declara el resultado de 3 batallas vs un rival → <strong style={{color:C.red}}>+1pt siempre</strong> por declarar. Máx 1 desafío por rival/día, 5/día.</div>
+              <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Confirmar:</strong> El rival acepta → <strong style={{color:C.red}}>+1pt al confirmador</strong>. Además, quien ganó 2 o 3 de 3 batallas recibe <strong style={{color:C.red}}>+1pt extra</strong> (challenger o opponent). El que ganó 0-1 ya tiene su +1pt de declaración.</div>
               <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>🎲 DUDO:</strong> El rival desafía con 5 batallas propias. Si gana 3+ de 5: <strong style={{color:C.red}}>+3pts</strong> y se anulan los puntos del desafiador. Solo 1 DUDO por rival/día.</div>
               <div style={{marginBottom:"6px"}}><strong style={{color:C.red}}>Escalar:</strong> El desafiador puede escalar a admins con videos (<strong style={{color:C.red}}>+5pts</strong>). El que gane en video se lleva <strong style={{color:C.red}}>+5pts</strong>.</div>
               <div><strong style={{color:C.red}}>Rankings:</strong> Top 1 semanal <strong style={{color:C.red}}>+5pts</strong> · Top 1 mensual <strong style={{color:C.red}}>+10pts</strong></div>

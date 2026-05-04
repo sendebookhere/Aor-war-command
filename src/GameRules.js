@@ -67,9 +67,22 @@ export const PTS = {
   },
   ASAMBLEA_ELIGIBLE: ["siempre","intermitente","solo_una"],
   versus: {
-    registrar_0_1_victorias:1, registrar_2_3_victorias:2, confirmar:1,
-    dudo_exitoso:3, aceptar_dudo:1, escalar_admin:5, ganar_en_video:5,
-    ranking_semanal:5, ranking_mensual:10,
+    // Al DECLARAR: siempre +1pt por registrar el set (ganaste o perdiste)
+    declarar_set: 1,
+    // Al CONFIRMAR: +1pt al confirmador + +1pt extra al ganador de 2-3 batallas
+    confirmar: 1,          // al que confirma
+    bonus_ganador: 1,      // al que ganó 2-3 de 3 (challenger o opponent)
+    // DUDO
+    dudo_exitoso: 3,       // al dudador si gana 3+ de 5
+    aceptar_dudo: 1,       // al challenger que acepta
+    escalar_admin: 5,      // al challenger que escala con videos
+    ganar_en_video: 5,     // al ganador en videos (admin resuelve)
+    // Rankings
+    ranking_semanal: 5,    // top 1 semanal (cierre domingo)
+    ranking_mensual: 10,   // top 1 mensual (último día del mes)
+    // Totales posibles por set:
+    // Challenger ganó 2-3: +1 (declarar) + +1 (bonus ganador al confirmar) = 2pts
+    // Challenger ganó 0-1: +1 (declarar) = 1pt. El opponent recibe +1 (confirmar) + +1 (bonus) = 2pts
   },
   VERSUS_LIMITS: {
     max_batallas_dia:5, max_por_rival_dia:1,

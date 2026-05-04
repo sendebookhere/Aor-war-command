@@ -136,14 +136,23 @@ export default function Puntos(){
         </Card>
 
         <Card title="VERSUS — PvP (estilo Dudo)" color="#FF6B6B">
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Solo 1 batalla por rival por dia. Max 5 desafios diarios. Solo 1 DUDO por rival por dia.</div>
-          <Row label="Registrar 3 batallas — ganaste 0 o 1" pts="+1" color="#FF6B6B"/>
-          <Row label="Registrar 3 batallas — ganaste 2 o 3" pts="+2" color="#FF6B6B" highlight/>
-          <Row label="El rival confirma el resultado" pts="+1 al rival" color="#A8FF78"/>
-          <Row label="DUDO exitoso — ganaste 3 o mas de 5" pts="+3" color="#FFD700" highlight desc="Al que DUDO. Se anulan pts del desafiador"/>
-          <Row label="Desafiador acepta el DUDO" pts="+1" color="#A8FF78"/>
-          <Row label="Desafiador escala a admins con videos" pts="+5" color="#FF9F43" highlight/>
-          <Row label="Gana en videos (admin resuelve)" pts="+5" color="#FF9F43" desc="El perdedor recibe 0"/>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginBottom:"8px"}}>Solo 1 desafío por rival por día · Máx 5 desafíos diarios · Solo 1 DUDO por rival por día</div>
+          <div style={{marginBottom:"6px",padding:"6px 8px",background:"rgba(255,107,107,0.06)",borderRadius:"5px",border:"1px solid rgba(255,107,107,0.15)"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,107,107,0.5)",marginBottom:"4px",letterSpacing:"0.1em"}}>AL DECLARAR EL SET</div>
+            <Row label="Declarar resultado de 3 batallas vs un rival" pts="+1" color="#FF6B6B" highlight desc="Siempre, ganes o pierdas. El rival debe confirmar o DUDAR."/>
+          </div>
+          <div style={{marginBottom:"6px",padding:"6px 8px",background:"rgba(168,255,120,0.04)",borderRadius:"5px",border:"1px solid rgba(168,255,120,0.1)"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(168,255,120,0.5)",marginBottom:"4px",letterSpacing:"0.1em"}}>AL CONFIRMAR EL RIVAL</div>
+            <Row label="El rival acepta el resultado" pts="+1" color="#A8FF78" desc="Al confirmador, por confirmar"/>
+            <Row label="Quien ganó 2 o 3 de 3 batallas" pts="+1 extra" color="#A8FF78" highlight desc="Puede ser el challenger o el opponent. El que ganó 0-1 ya tiene su +1pt de declaración."/>
+          </div>
+          <div style={{marginBottom:"6px",padding:"6px 8px",background:"rgba(255,215,0,0.04)",borderRadius:"5px",border:"1px solid rgba(255,215,0,0.1)"}}>
+            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.5)",marginBottom:"4px",letterSpacing:"0.1em"}}>MECÁNICA DUDO (si el rival discrepa)</div>
+            <Row label="DUDO exitoso — ganaste 3 o más de 5" pts="+3" color="#FFD700" highlight desc="Al dudador. Los pts del desafiador son anulados."/>
+            <Row label="Desafiador acepta el DUDO" pts="+1" color="#A8FF78"/>
+            <Row label="Desafiador escala a admins con videos" pts="+5" color="#FF9F43" highlight/>
+            <Row label="Gana en videos (admin resuelve)" pts="+5" color="#FF9F43" desc="El perdedor recibe 0"/>
+          </div>
           <div style={{marginTop:"8px",padding:"6px 8px",background:"rgba(64,224,255,0.05)",borderRadius:"5px",border:"1px solid rgba(64,224,255,0.1)"}}>
             <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.4)",marginBottom:"4px",letterSpacing:"0.1em"}}>RANKINGS PvP</div>
             <Row label="Ganador del ranking semanal (cierre domingo)" pts="+5" color="#40E0FF"/>
