@@ -1,3 +1,4 @@
+import { useState } from "react";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
 
@@ -148,7 +149,6 @@ const TECH_STACK = [
   { label:"Deploy",    value:"Vercel",                  icon:"▲" },
   { label:"Auth",      value:"Teléfono + Código único", icon:"🔐" },
   { label:"Diseño",    value:"CSS-in-JS · Paleta oscura AOR", icon:"🎨" },
-  { label:"IA",        value:"Claude Sonnet (Anthropic)", icon:"🤖" },
 ];
 
 const STATS = [
@@ -159,6 +159,65 @@ const STATS = [
   { label:"Líneas de código",      value:"~8,000" },
   { label:"Tiempo de desarrollo",  value:"~1 semana" },
 ];
+
+function VersionList() {
+  const [open, setOpen] = useState(CURRENT_VERSION);
+  return (
+    <div>
+      {VERSIONS.slice().reverse().map(ver => {
+        const isLatest = ver.v === CURRENT_VERSION;
+        const isOpen = open === ver.v;
+        return (
+          <div key={ver.v} style={{marginBottom:"8px"}}>
+            {/* Header button */}
+            <button
+              onClick={() => setOpen(isOpen ? null : ver.v)}
+              style={{
+                width:"100%", display:"flex", justifyContent:"space-between",
+                alignItems:"center", padding:"12px 14px",
+                background:isLatest?"rgba(255,215,0,0.06)":isOpen?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.02)",
+                border:`1px solid ${isLatest?"rgba(255,215,0,0.25)":isOpen?"rgba(64,224,255,0.2)":"rgba(255,255,255,0.07)"}`,
+                borderLeft:`3px solid ${isLatest?"#FFD700":isOpen?"#40E0FF":"rgba(255,255,255,0.1)"}`,
+                borderRadius:isOpen?"10px 10px 0 0":"10px",
+                cursor:"pointer", textAlign:"left",
+              }}
+            >
+              <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+                <span style={{fontFamily:"monospace",fontSize:"13px",color:isLatest?"#FFD700":"#40E0FF",fontWeight:"bold"}}>{ver.v}</span>
+                {isLatest && (
+                  <span style={{fontFamily:"monospace",fontSize:"7px",background:"rgba(255,215,0,0.12)",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"3px",padding:"1px 6px",color:"#FFD700",letterSpacing:"0.1em"}}>ACTUAL</span>
+                )}
+                <span style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em"}}>{ver.title.toUpperCase()}</span>
+              </div>
+              <div style={{display:"flex",gap:"10px",alignItems:"center",flexShrink:0}}>
+                <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.15)"}}>{ver.date}</span>
+                <span style={{fontFamily:"monospace",fontSize:"12px",color:isLatest?"#FFD700":isOpen?"#40E0FF":"rgba(255,255,255,0.2)",transition:"transform 0.2s",display:"inline-block",transform:isOpen?"rotate(180deg)":"rotate(0deg)"}}>▾</span>
+              </div>
+            </button>
+
+            {/* Collapsible content */}
+            {isOpen && (
+              <div style={{
+                background:"rgba(255,255,255,0.01)",
+                border:`1px solid ${isLatest?"rgba(255,215,0,0.15)":"rgba(64,224,255,0.12)"}`,
+                borderTop:"none", borderRadius:"0 0 10px 10px",
+                padding:"10px 14px 12px",
+              }}>
+                {ver.items.map((item, i) => (
+                  <div key={i} style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.5)",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                    <span style={{color:isLatest?"rgba(255,215,0,0.4)":"rgba(64,224,255,0.3)",fontFamily:"monospace",flexShrink:0}}>·</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+                <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.1)",marginTop:"6px",textAlign:"right"}}>{ver.items.length} cambios</div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function AcercaDe() {
   return (
@@ -221,37 +280,7 @@ export default function AcercaDe() {
           CHANGELOG — HISTORIAL DE VERSIONES
         </div>
 
-        {VERSIONS.slice().reverse().map((ver,idx)=>{
-          const isLatest = ver.v === CURRENT_VERSION;
-          return(
-            <div key={ver.v} style={{
-              background:isLatest?"rgba(255,215,0,0.04)":"rgba(255,255,255,0.02)",
-              border:`1px solid ${isLatest?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.07)"}`,
-              borderLeft:`3px solid ${isLatest?"#FFD700":"rgba(64,224,255,0.2)"}`,
-              borderRadius:"10px",padding:"14px",marginBottom:"10px"
-            }}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-                  <span style={{fontFamily:"monospace",fontSize:"12px",color:isLatest?"#FFD700":"#40E0FF",fontWeight:"bold"}}>{ver.v}</span>
-                  {isLatest&&<span style={{fontFamily:"monospace",fontSize:"7px",background:"rgba(255,215,0,0.1)",border:"1px solid rgba(255,215,0,0.3)",borderRadius:"3px",padding:"1px 5px",color:"#FFD700",letterSpacing:"0.1em"}}>ACTUAL</span>}
-                  <span style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>{ver.title.toUpperCase()}</span>
-                </div>
-                <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
-                  <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.15)"}}>{ver.date}</span>
-                  <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.1)"}}>{ver.items.length} cambios</span>
-                </div>
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
-                {ver.items.map((item,i)=>(
-                  <div key={i} style={{display:"flex",gap:"8px",fontSize:"10px",color:"rgba(255,255,255,0.5)",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                    <span style={{color:isLatest?"rgba(255,215,0,0.4)":"rgba(64,224,255,0.3)",fontFamily:"monospace",flexShrink:0}}>·</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        <VersionList/>
 
         {/* ── CRÉDITOS ─────────────────────────────────────────────────── */}
         <div style={{marginTop:"24px",textAlign:"center",padding:"20px",background:"rgba(255,255,255,0.01)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"10px"}}>
