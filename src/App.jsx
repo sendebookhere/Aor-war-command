@@ -198,6 +198,71 @@ function WaReportButtons() {
 
 
 // ── Registration Timer ──────────────────────────────────────────────────────
+function WarStartTimer({warMode="classic"}) {
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [started, setStarted] = useState(false);
+
+  useEffect(()=>{
+    function calc() {
+      const schedule = warMode==="new" ? SCHEDULE.new : SCHEDULE.classic;
+      const ws = schedule.warStart;
+      const DAY = {dom:0,lun:1,mar:2,'mié':3,jue:4,vie:5,'sáb':6};
+      const targetDay = DAY[ws.day];
+      const now = new Date();
+      const ec = new Date(now.getTime()-5*3600000);
+      const curDay = ec.getUTCDay();
+      let daysUntil = (targetDay-curDay+7)%7;
+      const target = new Date(ec);
+      target.setUTCDate(ec.getUTCDate()+daysUntil);
+      target.setUTCHours(ws.h, ws.m||0, 0, 0);
+      if(target<=ec) { target.setUTCDate(target.getUTCDate()+7); }
+      const diff = target-ec;
+      if(diff<=0){setStarted(true);setTimeLeft(null);return;}
+      setStarted(false);
+      const d=Math.floor(diff/86400000);
+      const h=Math.floor((diff%86400000)/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      setTimeLeft({d,h,m,s});
+    }
+    calc();
+    const iv=setInterval(calc,1000);
+    return()=>clearInterval(iv);
+  },[warMode]);
+
+  if(started) return(
+    <div style={{background:"rgba(168,255,120,0.08)",border:"1px solid rgba(168,255,120,0.3)",
+      borderRadius:"8px",padding:"10px",marginBottom:"10px",textAlign:"center"}}>
+      <div style={{fontFamily:"monospace",fontSize:"12px",color:"#A8FF78",fontWeight:"bold"}}>
+        ⚔ ¡LA GUERRA HA COMENZADO!
+      </div>
+    </div>
+  );
+  if(!timeLeft) return null;
+  return(
+    <div style={{background:"rgba(64,224,255,0.04)",border:"1px solid rgba(64,224,255,0.15)",
+      borderRadius:"8px",padding:"10px 14px",marginBottom:"10px"}}>
+      <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",
+        color:"rgba(64,224,255,0.4)",marginBottom:"6px"}}>⚔ INICIO DE GUERRA</div>
+      <div style={{display:"flex",gap:"10px",justifyContent:"center",marginBottom:"4px"}}>
+        {timeLeft.d>0&&<div style={{textAlign:"center"}}>
+          <div style={{fontFamily:"monospace",fontSize:"22px",color:"#40E0FF",fontWeight:"bold",lineHeight:"1"}}>{timeLeft.d}</div>
+          <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(64,224,255,0.4)"}}>días</div>
+        </div>}
+        {[["horas",timeLeft.h],["min",timeLeft.m],["seg",timeLeft.s]].map(([lbl,val])=>(
+          <div key={lbl} style={{textAlign:"center"}}>
+            <div style={{fontFamily:"monospace",fontSize:"22px",color:lbl==="seg"?"rgba(64,224,255,0.5)":"#40E0FF",fontWeight:"bold",lineHeight:"1"}}>{String(val).padStart(2,"0")}</div>
+            <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(64,224,255,0.4)"}}>{lbl}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.2)",textAlign:"center"}}>
+        {warMode==="new"?"Viernes 12:00pm Ecuador · 18:00h España":"Viernes 8:00am Ecuador · 14:00h España"}
+      </div>
+    </div>
+  );
+}
+
 function RegistrationTimer({warMode="classic"}) {
   const [timeLeft, setTimeLeft] = useState(null);
   const [closed, setClosed] = useState(false);
@@ -593,6 +658,43 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
     setTimeout(()=>setStatsSaved(false), 3000);
   }
 
+  async function cancelRegistration() {
+    if (!selectedPlayer) return;
+    const ptReg = selectedPlayer.pt_registro || 0;
+    const ptEarly = selectedPlayer.pt_registro_temprano || 0;
+    const totalToRemove = ptReg + ptEarly;
+    // Reset war registration fields + remove pts
+    const updates = {
+      availability: "pendiente",
+      registered_form: false,
+      registered_week: "",
+      pt_registro: 0,
+      pt_registro_temprano: 0,
+      pt_disponibilidad_declarada: 0,
+    };
+    if (totalToRemove > 0) {
+      updates.pts_acumulados = Math.max(0, (selectedPlayer.pts_acumulados || 0) - totalToRemove);
+    }
+    const { error: cancelErr } = await supabase.from("players").update(updates).eq("id", selectedPlayer.id);
+    if (cancelErr) { setError("Error al cancelar: " + cancelErr.message); return; }
+    // Log revocation to pts_ledger
+    if (totalToRemove > 0) {
+      const week = currentWeek;
+      await supabase.from("pts_ledger").insert({
+        player_id: selectedPlayer.id, pts: -totalToRemove,
+        source: "penalizacion",
+        note: `Cancelación de registro — semana ${week}`,
+        week, created_at: new Date().toISOString(),
+      }).catch(() => {});
+    }
+    // Reload player data
+    const { data: fresh } = await supabase.from("players").select("*").eq("id", selectedPlayer.id).single();
+    if (fresh) setSelectedPlayer(fresh);
+    setAlreadyRegistered(false);
+    setAvail("");
+    window.__aorUserRegistered = false;
+  }
+
   async function handleSubmit() {
     if ((!name.trim() && !selectedPlayer) || !avail) { setError("Completa nombre y disponibilidad."); return; }
     setSubmitting(true);
@@ -647,12 +749,13 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
   // Registration closed - form shown but disabled (timer handles messaging)
 
-  if (done || alreadyRegistered) return (
+  // Only show full DoneScreen when explicitly done (just submitted)
+  if (done) return (
     <DoneScreen
       playerName={selectedPlayer?.name || sessionStorage.getItem("aor_player_name") || "Guerrero"}
       avail={avail || selectedPlayer?.availability}
       warMode={warMode}
-      isAlreadyRegistered={alreadyRegistered && !done}
+      isAlreadyRegistered={false}
     />
   );
 
@@ -809,16 +912,45 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
         )}
         {error && <div style={{background:"rgba(255,107,107,0.1)",border:"1px solid rgba(255,107,107,0.3)",borderRadius:"6px",padding:"10px",fontSize:"11px",color:"#FF6B6B",marginBottom:"12px"}}>{error}</div>}
 
-        <button onClick={handleSubmit} disabled={submitting||alreadyRegistered||!isOpen}
-          style={{width:"100%",padding:"14px",
-            background:!isOpen?"rgba(255,255,255,0.02)":alreadyRegistered?"rgba(255,255,255,0.05)":"rgba(64,224,255,0.15)",
-            border:"1px solid "+(!isOpen?"rgba(255,255,255,0.06)":alreadyRegistered?"rgba(255,255,255,0.1)":"rgba(64,224,255,0.3)"),
-            borderRadius:"8px",
-            color:!isOpen?"rgba(255,255,255,0.15)":alreadyRegistered?"rgba(255,255,255,0.3)":"#40E0FF",
-            fontFamily:"serif",fontSize:"14px",
-            cursor:!isOpen||alreadyRegistered?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
-          {submitting ? "Registrando..." : !isOpen ? "Registro cerrado" : alreadyRegistered ? "Ya registrado esta semana" : "CONFIRMAR PARTICIPACION"}
-        </button>
+        {alreadyRegistered ? (
+          <>
+            {/* Thank-you message */}
+            <div style={{background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.2)",
+              borderRadius:"8px",padding:"12px 14px",marginBottom:"10px",textAlign:"center"}}>
+              <div style={{fontSize:"10px",fontFamily:"monospace",letterSpacing:"0.15em",
+                color:"rgba(168,255,120,0.5)",marginBottom:"6px"}}>✓ REGISTRO CONFIRMADO</div>
+              <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px"}}>
+                Gracias {selectedPlayer?.name || sessionStorage.getItem("aor_player_name")}
+              </div>
+              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)"}}>
+                por unir tus fuerzas en esta Guerra de Clanes [AOR]
+              </div>
+            </div>
+            {/* War start countdown */}
+            <WarStartTimer warMode={warMode}/>
+            {/* Cancel button */}
+            <button onClick={cancelRegistration}
+              style={{width:"100%",padding:"12px",marginTop:"8px",
+                background:"rgba(255,107,107,0.08)",
+                border:"1px solid rgba(255,107,107,0.3)",
+                borderRadius:"8px",color:"#FF6B6B",
+                fontFamily:"monospace",fontSize:"12px",
+                cursor:"pointer",letterSpacing:"0.05em"}}>
+              ✕ CANCELAR PARTICIPACIÓN
+            </button>
+          </>
+        ) : (
+          <button onClick={handleSubmit} disabled={submitting||!isOpen||!avail||(!name.trim()&&!selectedPlayer)}
+            style={{width:"100%",padding:"14px",
+              background:!isOpen?"rgba(255,255,255,0.02)":"rgba(64,224,255,0.15)",
+              border:"1px solid "+(!isOpen?"rgba(255,255,255,0.06)":"rgba(64,224,255,0.3)"),
+              borderRadius:"8px",
+              color:!isOpen?"rgba(255,255,255,0.15)":"#40E0FF",
+              fontFamily:"serif",fontSize:"14px",
+              cursor:!isOpen?"not-allowed":"pointer",letterSpacing:"0.1em"}}>
+            {submitting ? "Registrando..." : !isOpen ? "Registro cerrado" : "CONFIRMAR PARTICIPACION"}
+          </button>
+        )}
 
         <div style={{textAlign:"center",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"12px"}}>
           Al registrarte recibes +{avail?AVAILABILITY[avail].pts:0} puntos automaticamente
