@@ -322,14 +322,15 @@ export default function Versus(){
             <div>
               <div style={C.lbl}>SELECCIONA TU RIVAL</div>
               <div style={{maxHeight:"150px",overflow:"auto",marginBottom:"10px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px"}}>
-                {players.filter(p=>String(p.id)!==String(playerId)).map(p=>(
-                  {(()=>{ const rem=cooldownRemaining36h(p.id); const blocked=rem>0; return(
+                {players.filter(p=>String(p.id)!==String(playerId)).map(p=>{
+                  const rem=cooldownRemaining36h(p.id); const blocked=rem>0;
+                  return(
                   <button key={p.id} onClick={()=>!blocked&&setOpponent(p)} style={{padding:"6px 8px",borderRadius:"5px",cursor:blocked?"not-allowed":"pointer",textAlign:"left",background:opponent?.id===p.id?C.redA+"0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(opponent?.id===p.id?C.redA+"0.3)":"rgba(255,255,255,0.06)"),color:opponent?.id===p.id?C.red:blocked?C.gray:"rgba(255,255,255,0.5)",fontSize:"11px",fontFamily:"Georgia,serif"}}>
                     {!blocked && p.name}
                     {blocked && <span style={{color:C.gray,fontSize:"9px",fontFamily:"monospace"}}>{p.name} <span style={{fontSize:"8px"}}>⏳{Math.ceil(rem)}h</span></span>}
                   </button>
-                  ); })()}
-                ))}
+                  );
+                })}
               </div>
               {opponent&&(<>
                 <div style={C.lbl}>¿CUÁNTAS DE 3 GANASTE vs {(opponent.name||"").toUpperCase()}?</div>
