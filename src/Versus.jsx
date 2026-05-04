@@ -413,52 +413,34 @@ export default function Versus(){
           </div>
         )}
 
-        {/* RANKINGS — sets ganados y perdidos, mismo formato tablas inferiores */}
-        <div style={{marginBottom:"16px"}}>
-          <div style={C.lbl}>RANKINGS — SETS GANADOS (2-3 de 3) · TOP 10</div>
-          {/* Bonus admin buttons */}
-          <div style={{display:"flex",gap:"6px",marginBottom:"8px"}}>
-            {isAdmin&&<button onClick={()=>awardPvpRankingBonus("weekly")} style={{flex:1,padding:"5px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"5px",color:C.red,fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS SEMANA (+5pts)</button>}
-            {isAdmin&&<button onClick={()=>awardPvpRankingBonus("monthly")} style={{flex:1,padding:"5px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"5px",color:C.red,fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS MES (+10pts)</button>}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px"}}>
-            {[
-              {title:"🏆 GENERAL",data:rankGeneral,sub:"todos los tiempos"},
-              {title:"🏆 SEMANA",data:rankWeek,sub:"semana "+week.split("-W")[1]},
-              {title:"🏆 MES",data:rankMonth,sub:month},
-            ].map(({title,data,sub})=>{
-              const withWins=[...data].filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10);
-              const withLoss=[...data].filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l).slice(0,10);
-              return(
-                <div key={title}>
-                  {/* Sets ganados */}
-                  <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.12)",borderRadius:"8px",padding:"10px",marginBottom:"6px"}}>
-                    <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(168,255,120,0.5)",letterSpacing:"0.15em",marginBottom:"2px"}}>{title}</div>
-                    <div style={{fontFamily:"monospace",fontSize:"7px",color:C.gray,marginBottom:"6px"}}>{sub}</div>
-                    {withWins.length===0
-                      ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin sets ganados</div>
-                      :withWins.map(([name,r],i)=>(
-                      <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
-                        <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(168,255,120,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"75px"}}>{i+1}. {name}</span>
-                        <span style={{fontFamily:"monospace",fontSize:"12px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Sets perdidos */}
-                  <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"8px",padding:"10px"}}>
-                    <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(255,107,107,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>💀 SETS PERDIDOS</div>
-                    {withLoss.length===0
-                      ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin sets perdidos</div>
-                      :withLoss.map(([name,r],i)=>(
-                      <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
-                        <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(255,107,107,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"75px"}}>{i+1}. {name}</span>
-                        <span style={{fontFamily:"monospace",fontSize:"12px",color:C.red,fontWeight:"bold"}}>{r.l}</span>
-                      </div>
-                    ))}
-                  </div>
+        {/* FILA 1: Sets ganados | Sets perdidos */}
+        <div style={{marginBottom:"16px"}}> 
+          <div style={C.lbl}>RANKING SETS — TOP 10</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
+            {/* Sets ganados (2-3 de 3) */}
+            <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.12)",borderRadius:"8px",padding:"10px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(168,255,120,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>🏆 SETS GANADOS (2-3 de 3)</div>
+              {rankGeneral.filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10).length===0
+                ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin datos</div>
+                :rankGeneral.filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10).map(([name,r],i)=>(
+                <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
+                  <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(168,255,120,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"80px"}}>{i+1}. {name}</span>
+                  <span style={{fontFamily:"monospace",fontSize:"13px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            {/* Sets perdidos (0-1 de 3) */}
+            <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"8px",padding:"10px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(255,107,107,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>💀 SETS PERDIDOS (0-1 de 3)</div>
+              {rankGeneral.filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l).slice(0,10).length===0
+                ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin datos</div>
+                :rankGeneral.filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l).slice(0,10).map(([name,r],i)=>(
+                <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
+                  <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(255,107,107,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"80px"}}>{i+1}. {name}</span>
+                  <span style={{fontFamily:"monospace",fontSize:"13px",color:C.red,fontWeight:"bold"}}>{r.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
