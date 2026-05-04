@@ -3674,19 +3674,19 @@ function AdminAuth({onAuth}) {
       {/* Page list — toned-down colors for sobriety */}
       <div style={{width:"100%",maxWidth:"480px",marginBottom:"24px",animation:"fadeIn 0.7s ease"}}>
         {[
-          {href:"/registro",     color:"rgba(168,255,120,0.5)", label:"Registro de Guerra",    desc:"Confirma tu disponibilidad y suma puntos"},
-          {href:"/reporte",      color:"rgba(64,224,255,0.5)",  label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
-          {href:"/puntos",       color:"rgba(255,159,67,0.5)",  label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
-          {href:"/propaganda",   color:"rgba(200,162,255,0.5)", label:"Propaganda de Guerra",   desc:"Mensajes aprobados para difundir en el clan"},
-          {href:"/inteligencia", color:"rgba(255,107,107,0.5)", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
-          {href:"/asamblea",     color:"rgba(244,208,63,0.5)",  label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
-          {href:"/noticias",     color:"rgba(255,159,67,0.5)",  label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
-          {href:"/versus",       color:"rgba(255,107,107,0.5)", label:"Versus — PvP",           desc:"Registra batallas 1v1 y sigue el ranking de combate"},
+          {href:"/registro",     color:"rgba(168,255,120,0.25)", label:"Registro de Guerra",    desc:"Confirma tu disponibilidad y suma puntos"},
+          {href:"/reporte",      color:"rgba(64,224,255,0.25)",  label:"Ranking [AOR]",          desc:"Posiciones, perfiles y puntos del clan"},
+          {href:"/puntos",       color:"rgba(255,159,67,0.25)",  label:"Sistema de Puntos",      desc:"Cómo ganar y perder puntos en cada guerra"},
+          {href:"/propaganda",   color:"rgba(200,162,255,0.25)", label:"Propaganda de Guerra",   desc:"Mensajes aprobados para difundir en el clan"},
+          {href:"/inteligencia", color:"rgba(255,107,107,0.25)", label:"Inteligencia Militar",   desc:"Resultados de guerra y análisis de rivales"},
+          {href:"/asamblea",     color:"rgba(244,208,63,0.25)",  label:"Asamblea",               desc:"Vota al Guerrero Implacable de la semana"},
+          {href:"/noticias",     color:"rgba(255,159,67,0.25)",  label:"Noticias Clan",          desc:"Noticias y requerimientos del clan"},
+          {href:"/versus",       color:"rgba(255,107,107,0.25)", label:"Versus — PvP",           desc:"Registra batallas 1v1 y sigue el ranking de combate"},
         ].map(l=>(
           <a key={l.href} onClick={e=>{e.preventDefault();window.__aorNavigate&&window.__aorNavigate(l.href);}} href={l.href} style={{
             display:"flex",alignItems:"center",gap:"10px",
             padding:"9px 14px",marginBottom:"4px",
-            background:`linear-gradient(90deg, ${l.color.replace("0.5)","0.07)")} 0%, transparent 100%)`,
+            background:`linear-gradient(90deg, ${l.color.replace("0.25)","0.04)")} 0%, transparent 100%)`,
             border:"1px solid "+l.color,
             borderRadius:"7px",textDecoration:"none",cursor:"pointer",
           }}>
