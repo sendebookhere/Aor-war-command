@@ -87,7 +87,8 @@ async function checkTask(taskId, playerId, jkey, week) {
         const completions = n.completions || [];
         return !completions.some(c => String(c.player_id) === String(playerId));
       });
-      return { applicable: news.length > 0, done: !hasUnread };
+      // applicable: only when there is unread content
+      return { applicable: news.length > 0 && hasUnread, done: !hasUnread };
     }
     case "asamblea": {
       const { data: settings } = await supabase.from("app_settings")
@@ -96,7 +97,9 @@ async function checkTask(taskId, playerId, jkey, week) {
       if (!open) return { applicable: false, done: false };
       const { data: vote } = await supabase.from("assembly_votes")
         .select("id").eq("voter_id", playerId).eq("week", week).limit(1);
-      return { applicable: true, done: vote?.length > 0 };
+      // applicable: only when open AND not yet voted
+      const voted = vote?.length > 0;
+      return { applicable: open && !voted, done: voted };
     }
     case "intel": {
       const { data: vote } = await supabase.from("difficulty_votes")
@@ -104,12 +107,16 @@ async function checkTask(taskId, playerId, jkey, week) {
       const { data: clans } = await supabase.from("war_intel")
         .select("id").limit(1);
       const hasClans = clans?.length > 0;
-      return { applicable: hasClans, done: vote?.length > 0 };
+      const voted = vote?.length > 0;
+      // applicable: only when there are clans to vote AND not yet voted this week
+      return { applicable: hasClans && !voted, done: voted };
     }
     case "stats": {
       const { data: p } = await supabase.from("players")
         .select("stats_updated_week").eq("id", playerId).single();
-      return { applicable: true, done: p?.stats_updated_week === week };
+      const alreadyDone = p?.stats_updated_week === week;
+      // applicable: true only if NOT already done this week
+      return { applicable: !alreadyDone, done: alreadyDone };
     }
     case "codigo": {
       const { data: p } = await supabase.from("players")
@@ -241,8 +248,8 @@ export default function DailyChecklist({ playerId, playerName }) {
     // Load weights for random selection
     const weights = await loadWeights(playerId);
 
-    // Pick today's 3 random tasks (deterministic per player+jornada)
-    const randomPool = ALL_TASKS.filter(t => t.priority === "normal");
+    // Always pick exactly 3 random tasks (normal priority only)
+    // Urgent tasks are shown separately and never replace the random 3
     const picks = pickRandomTasks(weights, jkey, playerId);
     setRandomTasks(picks);
 
@@ -255,8 +262,12 @@ export default function DailyChecklist({ playerId, playerName }) {
     }));
     setTaskStatus(statuses);
 
-    // Filter urgent tasks to only applicable ones
-    setUrgentTasks(urgentList.filter(t => statuses[t.id]?.applicable));
+    // Urgent tasks: only show when applicable AND not yet done
+    // Once done → disappears until next activation
+    setUrgentTasks(urgentList.filter(t => {
+      const s = statuses[t.id];
+      return s?.applicable && !s?.done;
+    }));
 
     // Update weights: +1 for each task that was shown but not done
     // (only once per jornada, tracked in localStorage)
