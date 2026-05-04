@@ -21,7 +21,9 @@ function nav(href) {
 function logout() {
   // Clear all session data
   ["aor_session","aor_player_id","aor_player_name","aor_user_identity","aor_auth",
-   "aor_auth_enabled_cache","aor_goto_profile"].forEach(k=>sessionStorage.removeItem(k));
+   "aor_auth_enabled_cache","aor_goto_profile","aor_last_viewed_player"].forEach(k=>sessionStorage.removeItem(k));
+  window.__aorUserRegistered = false;
+  window.__aorRegistroOpen = false;
   // Force full page reload so LoginGate re-mounts and shows the login screen
   window.location.replace("/");
 }
@@ -31,11 +33,16 @@ function Btn({p, cur, current}) {
   const isRegistro = p.href==="/registro";
   const active = cur===p.href && !(isRanking && current==="profile");
   // Pulse registro button when registration is open AND user hasn't registered yet
-  const registroOpen = isRegistro && window.__aorRegistroOpen && !window.__aorUserRegistered;
-  const pulse = registroOpen && !active;
+  // Registro glows when: registration is open AND player hasn't registered this week
+  const registroOpen = isRegistro && window.__aorRegistroOpen;
+  const userRegistered = window.__aorUserRegistered || false;
+  const pulse = registroOpen && !userRegistered && !active;
   return (
     <button onClick={()=>{
-      if(isRanking) sessionStorage.removeItem("aor_goto_profile");
+      if(isRanking) {
+        sessionStorage.removeItem("aor_goto_profile");
+        sessionStorage.removeItem("aor_last_viewed_player");
+      }
       nav(p.href);
     }} style={{
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",

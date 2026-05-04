@@ -380,7 +380,13 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
         const lockedId = sessionStorage.getItem("aor_player_id");
         if (lockedId) {
           const locked = data.find(p=>String(p.id)===lockedId);
-          if (locked) { setSelectedPlayer(locked); setName(locked.name); }
+          if (locked) {
+            setSelectedPlayer(locked);
+            setName(locked.name);
+            // Set global flag so NavBar knows if user already registered this week
+            const cw = (()=>{const now=new Date(),ec=new Date(now.getTime()-5*3600000);const d=new Date(ec);d.setUTCDate(ec.getUTCDate()-((ec.getUTCDay()+6)%7));const y=d.getUTCFullYear(),w=Math.ceil(((d-new Date(Date.UTC(y,0,1)))/86400000+1)/7);return `${y}-W${w}`;})();
+            window.__aorUserRegistered = locked.registered_week === cw;
+          }
         }
       }
     });
