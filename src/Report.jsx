@@ -256,19 +256,28 @@ function PlayerProfile({ player, onBack }) {
   ].filter(i=>i.show);
 
   // Read ALL direct pts from pts_ledger — single source of truth
-  // ── Current war week ─────────────────────────────────────────────────────
-  const currentWeek = (() => {
-    const now = new Date(), ec = new Date(now.getTime() - 5*3600000);
-    const fri = new Date(ec); fri.setDate(ec.getDate() - ((ec.getDay()+2)%7));
-    const y = fri.getFullYear(), w = Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
-    return `${y}-W${w}`;
+  // ── Week start: last Monday 8:00am Ecuador (UTC-5) = Monday 13:00 UTC ──────
+  const weekStartUTC = (() => {
+    const now = new Date();
+    // Convert to Ecuador time (UTC-5)
+    const ec = new Date(now.getTime() - 5 * 3600000);
+    // Find last Monday
+    const dayOfWeek = ec.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
+    const daysToLastMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const lastMonEc = new Date(ec);
+    lastMonEc.setUTCDate(ec.getUTCDate() - daysToLastMon);
+    // Set to 8:00am Ecuador = 13:00 UTC
+    lastMonEc.setUTCHours(13, 0, 0, 0);
+    // If we haven't reached 8am Ecuador yet today (and today is Monday), go back 7 days
+    if (now < lastMonEc) lastMonEc.setUTCDate(lastMonEc.getUTCDate() - 7);
+    return lastMonEc; // UTC Date object
   })();
 
   // ── Helper: sum ledger by source ──────────────────────────────────────────
-  // acc = ALL time | week = this week only
+  // acc = ALL time | weekOnly = only entries after last Monday 8am Ecuador
   const ledgerBySource = (sources, weekOnly=false) => {
     let entries = ptsLedger.filter(e => sources.includes(e.source));
-    if(weekOnly) entries = entries.filter(e => e.week === currentWeek);
+    if(weekOnly) entries = entries.filter(e => new Date(e.created_at) >= weekStartUTC);
     return entries.reduce((s,e)=>s+(e.pts||0), 0);
   };
 
@@ -413,7 +422,7 @@ function PlayerProfile({ player, onBack }) {
                 {src:["codigo_unico"],      icon:"🔑", label:"código", color:"rgba(255,215,0,0.7)", bg:"rgba(255,215,0,0.05)",   border:"rgba(255,215,0,0.12)"},
                 
               ].map(({src,icon,label,color,bg,border})=>{
-                const n=ptsLedger.filter(e=>src.includes(e.source)&&e.week===currentWeek);
+                const n=ptsLedger.filter(e=>src.includes(e.source)&&new Date(e.created_at)>=weekStartUTC);
                 const t=n.reduce((s,e)=>s+(e.pts||0),0);
                 if(!n.length) return null;
                 return(
