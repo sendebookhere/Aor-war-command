@@ -587,7 +587,13 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             setName(locked.name);
             // Set global flag so NavBar knows if user already registered this week
             const cw = (()=>{const now=new Date(),ec=new Date(now.getTime()-5*3600000);const d=new Date(ec);d.setUTCDate(ec.getUTCDate()-((ec.getUTCDay()+6)%7));const y=d.getUTCFullYear(),w=Math.ceil(((d-new Date(Date.UTC(y,0,1)))/86400000+1)/7);return `${y}-W${w}`;})();
-            window.__aorUserRegistered = locked.registered_week === cw;
+            const isReg = locked.registered_week === cw;
+            window.__aorUserRegistered = isReg;
+            if (isReg) {
+              setAlreadyRegistered(true);
+              setExistingAvail(locked.availability);
+              setAvail(locked.availability);
+            }
           }
         }
       }
