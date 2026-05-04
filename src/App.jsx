@@ -240,8 +240,8 @@ function RegistrationTimer({warMode="classic"}) {
         <br/>
         <strong style={{color:"#A8FF78"}}>Viernes</strong>
         {warMode==="new"
-          ? <span> · <strong style={{color:"#FF9F43"}}>22:00h España</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 16:00h Ecuador · 15:00h México</span></span>
-          : <span> · <strong style={{color:"#A8FF78"}}>14:00h España</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 8:00h Ecuador · 7:00h México</span></span>
+          ? <span> · <strong style={{color:"#FF9F43"}}>{spainHStr(11)}</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 11:00am Ecuador · 10:00am México</span></span>
+          : <span> · <strong style={{color:"#A8FF78"}}>{spainHStr(7)}</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 7:00am Ecuador · 6:00am México</span></span>
         }
       </div>
     </div>
@@ -536,7 +536,21 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             NOMBRE EN EL JUEGO
             {sessionStorage.getItem("aor_player_id") && <span style={{color:"#40E0FF",marginLeft:"6px",fontSize:"9px"}}>🔒 sesión: {sessionStorage.getItem("aor_player_name")}</span>}
           </label>
-          <input value={name} onChange={e=>{ if(sessionStorage.getItem("aor_player_id")) return; handleNameChange(e.target.value); }} readOnly={!!sessionStorage.getItem("aor_player_id")} placeholder="Escribe tu nombre..." style={{width:"100%",background:sessionStorage.getItem("aor_player_id")?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:"6px",color:selectedPlayer?"#A8FF78":"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box",cursor:sessionStorage.getItem("aor_player_id")?"not-allowed":"text",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/>
+          <input value={name} onChange={e=>{ if(sessionStorage.getItem("aor_player_id")) return; handleNameChange(e.target.value); }} readOnly={!!sessionStorage.getItem("aor_player_id")} placeholder="Escribe tu nombre..." style={{width:"100%",background:sessionStorage.getItem("aor_player_id")?"rgba(64,224,255,0.05)":"rgba(255,255,255,0.05)",border:"1px solid "+(selectedPlayer?"#A8FF78":"rgba(255,255,255,0.15)"),borderRadius:selectedPlayer?"6px 6px 0 0":"6px",color:selectedPlayer?"#A8FF78":"#fff",padding:"10px 12px",fontSize:"13px",outline:"none",boxSizing:"border-box",cursor:sessionStorage.getItem("aor_player_id")?"not-allowed":"text",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/>
+          {selectedPlayer&&(
+            <div style={{background:"rgba(168,255,120,0.05)",border:"1px solid #A8FF78",borderTop:"none",borderRadius:"0 0 6px 6px",padding:"6px 12px",display:"flex",gap:"16px"}}>
+              {selectedPlayer.player_level>0
+                ? <span style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.7)"}}>Nv. <strong style={{color:"#A8FF78"}}>{selectedPlayer.player_level}</strong></span>
+                : null}
+              {selectedPlayer.bp>0
+                ? <span style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.7)"}}>BP <strong style={{color:"#A8FF78"}}>{(selectedPlayer.bp/1000).toFixed(1)}k</strong></span>
+                : null}
+              {selectedPlayer.level>0
+                ? <span style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.7)"}}>Poder <strong style={{color:"#A8FF78"}}>{(selectedPlayer.level/1000).toFixed(1)}k</strong></span>
+                : null}
+              <span style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(168,255,120,0.4)",marginLeft:"auto"}}>{selectedPlayer.clan_role||"Recluta"}</span>
+            </div>
+          )}
           {suggestions.length > 0 && (
             <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1a1f",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"6px",zIndex:100,overflow:"hidden",marginTop:"2px"}}>
               {suggestions.map(p=>(
@@ -554,14 +568,19 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           <><div style={{marginBottom:"12px",background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.1)",borderRadius:"8px",padding:"10px"}}>
             <div style={{fontSize:"9px",color:"rgba(64,224,255,0.4)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"6px"}}>TU REGIÓN</div>
             <div style={{display:"flex",gap:"6px"}}>
-              {[{id:"sur",label:"América del Sur",sub:"hora Ecuador"},{id:"norte",label:"América del Norte",sub:"hora México"}].map(reg=>(
-                <button key={reg.id} type="button" onClick={()=>{ setRegion(reg.id); localStorage.setItem("aor_region",reg.id); }} style={{flex:1,padding:"8px 6px",background:region===reg.id?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(region===reg.id?"rgba(64,224,255,0.3)":"rgba(255,255,255,0.07)"),borderRadius:"6px",color:region===reg.id?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"10px",cursor:"pointer",fontFamily:"monospace"}}>
-                  {reg.label}<br/><span style={{fontSize:"8px",opacity:0.6}}>{reg.sub}</span>
+              {[
+                {id:"sur",   label:"Sudamérica",   sub:"hora Ecuador"},
+                {id:"norte", label:"Norteamérica", sub:"hora México"},
+                {id:"spain", label:"España",        sub:"hora España"},
+                {id:"otro",  label:"Otro",          sub:"hora Ecuador"},
+              ].map(reg=>(
+                <button key={reg.id} type="button" onClick={()=>{ setRegion(reg.id); localStorage.setItem("aor_region",reg.id); }} style={{flex:1,padding:"8px 4px",background:region===reg.id?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(region===reg.id?"rgba(64,224,255,0.3)":"rgba(255,255,255,0.07)"),borderRadius:"6px",color:region===reg.id?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",textAlign:"center"}}>
+                  {reg.label}<br/><span style={{fontSize:"7px",opacity:0.6}}>{reg.sub}</span>
                 </button>
               ))}
             </div>
             {region&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.3)",fontFamily:"monospace",marginTop:"4px"}}>✓ guardado · cambia cuando quieras</div>}
-            {sessionStorage.getItem("aor_player_id")&&<button type="button" onClick={()=>{setRegion(""); localStorage.removeItem("aor_region");}} style={{marginTop:"4px",padding:"2px 8px",background:"transparent",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"3px",color:"rgba(255,255,255,0.2)",fontSize:"8px",cursor:"pointer",fontFamily:"monospace"}}>cambiar región</button>}
+
           </div>
 
           <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
