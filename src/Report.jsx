@@ -516,7 +516,7 @@ function PlayerProfile({ player, onBack }) {
 
         {/* Points breakdown - current week all categories */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-          <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📊 Puntos de la semana</div>
+          <div style={{color:"#40E0FF",fontSize:"13px",marginBottom:"10px",fontFamily:"serif"}}>📊 Resumen de puntos acumulados</div>
 
           {warItems.length>0&&<div style={{marginBottom:"8px"}}>
             <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(64,224,255,0.4)",marginBottom:"4px"}}>⚔ GUERRA DE CLANES</div>
@@ -527,24 +527,32 @@ function PlayerProfile({ player, onBack }) {
           </div>}
 
           <div style={{marginBottom:"8px"}}>
-            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(200,162,255,0.4)",marginBottom:"4px"}}>📡 ACTIVIDAD SEMANAL</div>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(200,162,255,0.4)",marginBottom:"4px"}}>📡 ACUMULADO DIRECTO</div>
             {[
-              {l:"📊 BP / Poder / Nivel actualizado", v:player.pt_stats||0, show:(player.pt_stats||0)>0},
-              // pt_whatsapp is already included in pts_acumulados (no double display)
-              {l:"📡 Propaganda publicada",         v: propTotal,   note:null},
-              {l:"🗳 Asamblea",                        v: asmTotal,    note:null},
-              {l:"🔍 Inteligencia",                    v: intelTotal,  note:null},
-              {l:"⚔ Versus PvP",                      v: pvpTotal,    note:null},
-              {l:"📰 Noticias",                        v: noticTotal,  note:null},
-              {l:"🔑 Código único (1pt/día)", v:null, note:"+1pt/día"},
-              {l:"📰 Noticias leídas", v:null, note:"+1pt c/noticia"},
-            ].filter(x=>x.show!==false).map((x,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:"2px",background:"rgba(200,162,255,0.03)",borderRadius:"4px"}}>
-              <span style={{fontSize:"10px",color:"rgba(255,255,255,0.55)"}}>{x.l}</span>
-              {x.v!=null?<span style={{fontSize:"11px",color:"#C8A2FF",fontWeight:"bold",fontFamily:"monospace"}}>+{x.v}</span>:<span style={{fontSize:"9px",color:"rgba(200,162,255,0.4)",fontFamily:"monospace"}}>{x.note}</span>}
-            </div>)}
-            <div style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginTop:"3px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-              <span style={{fontSize:"10px",color:"rgba(200,162,255,0.6)",fontFamily:"monospace"}}>Total acumulado histórico</span>
-              <span style={{fontSize:"12px",color:"#C8A2FF",fontWeight:"bold",fontFamily:"monospace"}}>+{acc}</span>
+              {l:"📱 WhatsApp",                        v: waTotal,                              color:"#A8FF78"},
+              {l:"📊 Stats BP/Poder/Nivel",            v: player.pt_stats||0,                   color:"#40E0FF"},
+              {l:"📡 Propaganda publicada",            v: propTotal,                            color:"#C8A2FF"},
+              {l:"🗳 Asamblea",                        v: asmTotal,                             color:"#FFD700"},
+              {l:"🔍 Inteligencia",                    v: intelTotal,                           color:"#FF6B6B"},
+              {l:"⚔ Versus PvP",                      v: pvpTotal,                             color:"#FF6B6B"},
+              {l:"📰 Noticias",                        v: noticTotal,                           color:"#FF9F43"},
+              {l:"🔑 Código único",                    v: codigoTotal,                          color:"#FFD700"},
+              {l:"📦 Cierres de semana anteriores",   v: archTotal,                            color:"rgba(200,200,200,0.7)"},
+              {l:"⚠ Penalizaciones",                  v: penalTotal,                           color:"#FF6B6B"},
+            ].map((x,i)=>{
+              const hasVal = x.v !== 0;
+              return(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"3px 6px",marginBottom:"1px",borderRadius:"3px",background:hasVal?"rgba(255,255,255,0.02)":"transparent"}}>
+                  <span style={{fontSize:"10px",color:hasVal?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.2)"}}>{x.l}</span>
+                  <span style={{fontSize:"11px",color:hasVal?x.color:"rgba(255,255,255,0.15)",fontWeight:hasVal?"bold":"normal",fontFamily:"monospace"}}>
+                    {hasVal?(x.v>0?"+":"")+x.v:"—"}
+                  </span>
+                </div>
+              );
+            })}
+            <div style={{display:"flex",justifyContent:"space-between",padding:"5px 6px",marginTop:"4px",borderTop:"1px solid rgba(255,215,0,0.2)",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
+              <span style={{fontSize:"10px",color:"rgba(255,215,0,0.6)",fontFamily:"monospace",letterSpacing:"0.05em"}}>TOTAL ACUMULADO</span>
+              <span style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</span>
             </div>
           </div>
 
