@@ -297,7 +297,15 @@ function PlayerProfile({ player, onBack }) {
   ].filter(i=>i.show);
 
   // Grand total from GameRules.calcGrandTotal
-  const grandTotal = calcGrandTotal(player);
+  // grandTotal: sum of all pts_ledger entries + active war columns
+  // This ensures the number matches the category breakdown shown below
+  // pts_acumulados may diverge if some entries bypassed the ledger
+  const ledgerSum = ptsLedger.reduce((s,e)=>s+(e.pts||0), 0);
+  const warPtsForTotal = calcWarPts(player);
+  // Use the higher of ledgerSum or pts_acumulados to not shortchange anyone
+  // The definitive base is pts_acumulados (what DB says); ledger is the breakdown
+  const accBase = Math.max(player.pts_acumulados||0, ledgerSum);
+  const grandTotal = accBase + warPtsForTotal;
 
   // Current war week
   const currentWeek = (() => {
@@ -311,7 +319,7 @@ function PlayerProfile({ player, onBack }) {
   //   - ledger entries this week: direct awards (propaganda, votos, pvp, código, WA)
   // Note: WA bonus and other direct pts go to pts_acumulados via awardPts
   //       but MAY also appear in ledger. We use pts_acumulados as the base truth.
-  const warPtsNow = calcWarPts(player);
+  const warPtsNow = warPtsForTotal; // same as used in grandTotal
   const ledgerThisWeek = ptsLedger
     .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
     .reduce((sum, e) => sum + (e.pts || 0), 0);
