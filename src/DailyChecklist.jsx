@@ -44,7 +44,7 @@ const DISCORD_MSG = name => `Saludos nobles guerreros, aquí ${name} los saluda 
 
 // ── Weight-based random selection ────────────────────────────────────────────
 // Lower weight = more likely to be picked (avoid repetition)
-function pickRandomTasks(weights, jkey, playerId) {
+function pickRandomTasks(weights, jkey, playerId, count=3) {
   const normalPool = ALL_TASKS.filter(t => t.priority === "normal");
   // Build weighted pool: tasks with lower weight get more tickets
   const maxW = Math.max(...normalPool.map(t => weights[t.id] || 0), 1);
@@ -63,12 +63,12 @@ function pickRandomTasks(weights, jkey, playerId) {
     s = Math.floor(Math.abs(Math.sin(s + i) * 10000)) % (i + 1);
     [shuffled[i], shuffled[s]] = [shuffled[s], shuffled[i]];
   }
-  // Pick 3 unique tasks
+  // Pick `count` unique tasks
   const picked = [];
   const seen = new Set();
   for (const id of shuffled) {
     if (!seen.has(id)) { seen.add(id); picked.push(id); }
-    if (picked.length === 3) break;
+    if (picked.length === count) break;
   }
   return picked.map(id => ALL_TASKS.find(t => t.id === id));
 }
@@ -252,14 +252,14 @@ export default function DailyChecklist({ playerId, playerName }) {
     // Load weights for random selection
     const weights = await loadWeights(playerId);
 
-    // Always pick exactly 3 random tasks (normal priority only)
-    // Urgent tasks are shown separately and never replace the random 3
-    const picks = pickRandomTasks(weights, jkey, playerId);
-    setRandomTasks(picks);
+    // Pick 6 candidates (normal priority), then filter non-applicable, keep first 3
+    // This ensures we always show 3 tasks even if some are not applicable
+    const candidates = pickRandomTasks(weights, jkey, playerId, 6);
+    setRandomTasks(candidates); // store all candidates, filter in render
 
     // Check ALL tasks statuses
     const urgentList = ALL_TASKS.filter(t => t.priority === "urgent");
-    const allToCheck = [...urgentList, ...picks];
+    const allToCheck = [...urgentList, ...candidates]; // check all 6 candidates
     const statuses = {};
     await Promise.all(allToCheck.map(async t => {
       statuses[t.id] = await checkTask(t.id, playerId, jkey, week);
@@ -280,7 +280,7 @@ export default function DailyChecklist({ playerId, playerName }) {
       localStorage.setItem(shownKey, "1");
       allToCheck.forEach(t => {
         if (!statuses[t.id]?.done) updateWeight(playerId, t.id, 1);
-      });
+      }); // only weight tasks that were actually shown (first 3 applicable)
     }
 
     await balanceWeights(playerId, weights);
@@ -345,7 +345,7 @@ export default function DailyChecklist({ playerId, playerName }) {
     return awardedToday[task.id] || taskStatus[task.id]?.done;
   }
 
-  const visibleRandom = randomTasks.filter(t => taskStatus[t.id]?.applicable !== false);
+  const visibleRandom = randomTasks.filter(t => taskStatus[t.id]?.applicable !== false).slice(0, 3);
   const allVisible = [...urgentTasks, ...visibleRandom];
   const doneCount = allVisible.filter(t => isDone(t)).length;
   const totalCount = allVisible.length;
@@ -473,9 +473,10 @@ export default function DailyChecklist({ playerId, playerName }) {
         </>
       )}
 
-      {/* Random 3 tasks — skip if not applicable (e.g. pvp_pending with no battles) */}
+      {/* Random tasks — show first 3 that are applicable from candidates */}
       {randomTasks
         .filter(t => taskStatus[t.id]?.applicable !== false)
+        .slice(0, 3)
         .map(t => <TaskRow key={t.id} task={t} isUrgent={false}/>)}
 
       {/* Bonus indicator */}

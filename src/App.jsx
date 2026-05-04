@@ -3686,16 +3686,15 @@ function AdminAuth({onAuth}) {
           <a key={l.href} onClick={e=>{e.preventDefault();window.__aorNavigate&&window.__aorNavigate(l.href);}} href={l.href} style={{
             display:"flex",alignItems:"center",gap:"10px",
             padding:"9px 14px",marginBottom:"4px",
-            background:"rgba(255,255,255,0.015)",
-            border:"1px solid rgba(255,255,255,0.05)",
-            borderLeft:"3px solid "+l.color,
+            background:`linear-gradient(90deg, ${l.color.replace("0.5)","0.07)")} 0%, transparent 100%)`,
+            border:"1px solid "+l.color,
             borderRadius:"7px",textDecoration:"none",cursor:"pointer",
           }}>
             <div style={{flex:1}}>
               <div style={{fontSize:"11px",color:l.color,fontFamily:"monospace",letterSpacing:"0.05em",marginBottom:"1px"}}>{l.label}</div>
               <div style={{fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"Georgia,serif"}}>{l.desc}</div>
             </div>
-            <div style={{fontSize:"10px",color:"rgba(255,255,255,0.1)",fontFamily:"monospace"}}>›</div>
+            <div style={{fontSize:"10px",color:l.color,fontFamily:"monospace",opacity:0.4}}>›</div>
           </a>
         ))}
       </div>
