@@ -343,10 +343,6 @@ function PlayerProfile({ player, onBack }) {
     .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
     .reduce((sum, e) => sum + (e.pts || 0), 0);
   // grandTotal = pts_acumulados (all direct+archived) + warPtsNow (active war cols)
-  // week 1: pts_acumulados holds all direct awards (WA, votos, etc.)
-  //         warPtsNow holds active war cols (registro, batallas, etc.)
-  //         Together = everything earned
-    .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
