@@ -726,9 +726,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           <div style={{background:"rgba(255,107,107,0.06)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",textAlign:"center"}}>
             <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,107,107,0.7)",marginBottom:"2px"}}>REGISTRO CERRADO</div>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
-              warMode==="new"
-                ? <span>Abre <strong style={{color:"#A8FF78"}}>lunes</strong> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.3)"}}> · 9:00am Ecuador · 8:00am México</span></span>
-                : <span>Abre <strong style={{color:"#A8FF78"}}>lunes</strong> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.3)"}}> · 9:00am Ecuador · 8:00am México</span></span>
+              <span>Abre <strong style={{color:"#A8FF78"}}>lunes</strong> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.3)"}}> · 9:00am Ecuador · 8:00am México</span></span>
             </div>
           </div>
         )}
