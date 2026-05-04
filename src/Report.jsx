@@ -1,7 +1,7 @@
 import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
-import { calcWarPts, calcGrandTotal, RANKS, getRankLabel, getRankColor } from "./GameRules";
+import { calcWarPts, calcGrandTotal, RANKS } from "./GameRules";
 
 function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
   const [code, setCode]       = useState(initialCode||"");
@@ -90,15 +90,7 @@ const AVAILABILITY = {
   pendiente:    { label:"Sin responder",                      color:"#888888", icon:"⚪" },
 };
 
-const RANKS = [
-  { label:"Co-Líder 👑",  color:"#FFD700", min:25000, desc:"Leyenda del clan"        },
-  { label:"Oficial ⚜️",   color:"#40E0FF", min:5000,  desc:"Pilar de la comunidad"  },
-  { label:"Veterano ★★★", color:"#A8FF78", min:1000,  desc:"Guerrero experimentado" },
-  { label:"Guerrero ★★",  color:"#FFD700", min:500,   desc:"Miembro consolidado"    },
-  { label:"Soldado ★",    color:"#FF9F43", min:100,   desc:"En camino"              },
-  { label:"Recluta",      color:"#888888", min:0,     desc:"Recién llegado"         },
-  { label:"⚠ Vigilado",  color:"#FF6B6B", min:-9999, desc:"Bajo observación"       },
-];
+// RANKS imported from GameRules
 
 function getRank(acc, hon, name, clanRole) {
   if (name === "PUNK'Z" || clanRole === "Líder")    return { label:"Líder 👑",    color:"#FFD700" };
