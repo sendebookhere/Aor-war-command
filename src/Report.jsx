@@ -344,6 +344,7 @@ function PlayerProfile({ player, onBack }) {
   const ledgerThisWeek = ptsLedger
     .filter(e => new Date(e.created_at) >= weekStartUTC && e.source !== "weekly_archive")
     .reduce((sum, e) => sum + (e.pts || 0), 0);
+  const weeklyTotal = warPtsNow + ledgerThisWeek;
   // grandTotal = pts_acumulados (all direct+archived) + warPtsNow (active war cols)
 
   return (
