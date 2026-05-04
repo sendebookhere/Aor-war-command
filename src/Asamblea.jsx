@@ -249,24 +249,24 @@ export default function Asamblea() {
                 const eligibleIds = new Set(
                   players.filter(p=>eligible.includes(p.availability)).map(p=>p.id)
                 );
-                // "Mayor puntaje jornada" = only THIS week's war pts (not historical acc)
-                const rankedByJornada = players
+                // "Mayor puntaje acumulado" = TOTAL: pts_acumulados + warPts (all sources)
+                // calcPeriodScore already computes this: pts_acumulados + calcWarPts
+                const rankedByTotal = players
                   .filter(p=>eligibleIds.has(p.id))
-                  .map(p=>({id:p.id, name:p.name, pts:calcWarPts(p)}))
+                  .map(p=>({id:p.id, name:p.name, pts:calcPeriodScore(p)}))
                   .sort((a,b)=>b.pts-a.pts);
-                const ranked = rankedByJornada; // war pts only for jornada award
+                const ranked = rankedByTotal;
                 const top = ranked[0] ? players.find(p=>p.id===ranked[0].id) : null;
                 if (!top) return null;
-                const tp = p => livePlayerPts.find(x=>x.id===p.id)?.pts || 0;
+                // tp = total score for display (same as ranking)
+                const tp = p => calcPeriodScore(p);
                 const topPts = tp(top);
-                const warPts = (top.pt_registro||0)+(top.pt_disponibilidad_declarada||0)+(top.pt_disponibilidad||0)+(top.pt_obediencia||0)+(top.pt_batallas_ganadas||0)*2+(top.pt_batallas_perdidas||0)+(top.pt_defensas||0)+(top.pt_bonus||0)+(top.pt_bandido_post||0)+(top.pt_stats||0)+((top.pt_batallas_ganadas||0)>=6?10:0)-(top.pt_penalizacion||0)-(top.pt_no_aparecio||0)-(top.pt_ignoro_orden||0)*2-(top.pt_abandono||0)*2-(top.pt_inactivo_4h||0)*3-(top.pt_bandido_pre||0);
-                const totalPeriod = tp(top); // pts_acumulados + warPts
-                // Total = pts_acumulados(propaganda+PvP+votes+code+prev wars) + warPts(this war)
+                const warPts = calcWarPts(top);
                 const acum = top.pts_acumulados||0;
+                const totalAll = acum + warPts; // = calcPeriodScore(top) = topPts
                 const breakdown = [
                   warPts>0 && {l:"⚔ Esta guerra",v:warPts,c:"#40E0FF"},
-                  // pt_whatsapp included in acumulado row below
-                  acum>0 && {l:"📡 Acumulado (propaganda · votos · PvP · código)",v:acum,c:"#C8A2FF"},
+                  acum>0 && {l:"📡 Acumulado histórico",v:acum,c:"#C8A2FF"},
                 ].filter(x=>x&&x.v>0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
 const topPts2 = ranked[1]?tp(ranked[1]):0;

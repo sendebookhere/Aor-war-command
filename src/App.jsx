@@ -2037,12 +2037,13 @@ function WarModeSwitch() {
       const eligible = ["siempre","intermitente","solo_una"];
       const eligiblePlayers = allP.filter(p=>eligible.includes(p.availability));
 
-      // "Mayor puntaje de la JORNADA" = ONLY war pts earned THIS week (pt_* columns)
-      // NOT pts_acumulados which is the historical total from all previous weeks
+      // "Mayor puntaje ACUMULADO" = TOTAL points (pts_acumulados + this week's warPts)
+      // pts_acumulados includes: WA bonus, propaganda, votos, PvP, código, previous wars
+      // calcWarPts includes: this week's pt_registro, batallas, órdenes, defensas, etc.
       const scores = eligiblePlayers.map(p=>({
         id: String(p.id),
         name: p.name,
-        pts: calcWarPts(p)  // war columns only — reset each week, reflect THIS jornada
+        pts: (p.pts_acumulados||0) + calcWarPts(p)  // TOTAL accumulated since day 1
       }));
       const positiveScores = scores.filter(s=>s.pts > 0);
 
