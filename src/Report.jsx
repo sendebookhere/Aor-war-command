@@ -256,9 +256,15 @@ function PlayerProfile({ player, onBack }) {
   ].filter(i=>i.show);
 
   // Read ALL direct pts from pts_ledger — single source of truth
-  const ledgerBySource = (sources) =>
-    ptsLedger.filter(e => sources.includes(e.source)).reduce((s,e)=>s+(e.pts||0), 0);
+  // ── Helper: sum ledger by source ──────────────────────────────────────────
+  // acc = ALL time | week = this week only
+  const ledgerBySource = (sources, weekOnly=false) => {
+    let entries = ptsLedger.filter(e => sources.includes(e.source));
+    if(weekOnly) entries = entries.filter(e => e.week === currentWeek);
+    return entries.reduce((s,e)=>s+(e.pts||0), 0);
+  };
 
+  // ── ACUMULADO (all time) ──────────────────────────────────────────────────
   const propTotal   = ledgerBySource(["propaganda"]);
   const asmTotal    = ledgerBySource(["asamblea_voto","asamblea_ganador","asamblea_pichichi",
     "asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje",
@@ -273,17 +279,30 @@ function PlayerProfile({ player, onBack }) {
   const archTotal   = ledgerBySource(["weekly_archive"]);
   const penalTotal  = ledgerBySource(["penalizacion"]);
 
+  // ── SEMANAL (this week only) ──────────────────────────────────────────────
+  const wProp   = ledgerBySource(["propaganda"], true);
+  const wAsm    = ledgerBySource(["asamblea_voto","asamblea_ganador","asamblea_pichichi",
+    "asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje",
+    "asamblea_racha_2","asamblea_racha_extra"], true);
+  const wIntel  = ledgerBySource(["intel_voto"], true);
+  const wPvp    = ledgerBySource(["pvp_registro","pvp_confirmo","pvp_ganador",
+    "pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video",
+    "ranking_semanal","ranking_mensual"], true);
+  const wCodigo = ledgerBySource(["codigo_unico"], true);
+  const wNotic  = ledgerBySource(["noticia_leida","solicitud_cumplida"], true);
+  const wPenal  = ledgerBySource(["penalizacion"], true);
+  // WA bonus is one-time — show in acc only, not weekly
+  // Stats pt_stats is a war column — shown in war section already
+
+  // Upper section = SEMANAL: war cols (pt_*) + ledger entries from currentWeek
   const directItems = [
-    { label:"📡 Propaganda publicada",    val: propTotal,            show: true },
-    { label:"🗳 Asamblea",               val: asmTotal,             show: true },
-    { label:"🔍 Inteligencia",            val: intelTotal,           show: true },
-    { label:"⚔ Versus PvP",             val: pvpTotal,             show: true },
-    { label:"📰 Noticias",               val: noticTotal,           show: true },
-    { label:"🔑 Código único",           val: codigoTotal,          show: true },
-    { label:waLabel,                      val: waTotal,              show: true },
-    { label:"📦 Cierres de semana",      val: archTotal,            show: archTotal > 0 },
-    { label:"📊 Stats BP/Poder/Nivel",   val: player.pt_stats||0,   show: true },
-    { label:"⚠ Penalizaciones directas", val: penalTotal,           show: penalTotal !== 0 },
+    { label:"📡 Propaganda",    val: wProp,              show: true },
+    { label:"🗳 Asamblea",      val: wAsm,               show: true },
+    { label:"🔍 Inteligencia",  val: wIntel,             show: true },
+    { label:"⚔ Versus PvP",    val: wPvp,               show: true },
+    { label:"📰 Noticias",      val: wNotic,             show: true },
+    { label:"🔑 Código único",  val: wCodigo,            show: true },
+    { label:"⚠ Penalizaciones", val: wPenal,             show: wPenal !== 0 },
   ];
 
   const penalties = [
@@ -327,7 +346,7 @@ function PlayerProfile({ player, onBack }) {
   // week 1: pts_acumulados holds all direct awards (WA, votos, etc.)
   //         warPtsNow holds active war cols (registro, batallas, etc.)
   //         Together = everything earned
-  const weeklyTotal = warPtsNow + ledgerThisWeek;
+    .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
 
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
@@ -394,9 +413,9 @@ function PlayerProfile({ player, onBack }) {
                 {src:["noticia_leida","solicitud_cumplida"],
                                             icon:"📰", label:"noticias", color:"rgba(255,159,67,0.8)", bg:"rgba(255,159,67,0.07)", border:"rgba(255,159,67,0.15)"},
                 {src:["codigo_unico"],      icon:"🔑", label:"código", color:"rgba(255,215,0,0.7)", bg:"rgba(255,215,0,0.05)",   border:"rgba(255,215,0,0.12)"},
-                {src:["weekly_archive"],    icon:"📦", label:"archivo", color:"rgba(255,255,255,0.4)", bg:"rgba(255,255,255,0.03)", border:"rgba(255,255,255,0.08)"},
+                
               ].map(({src,icon,label,color,bg,border})=>{
-                const n=ptsLedger.filter(e=>src.includes(e.source));
+                const n=ptsLedger.filter(e=>src.includes(e.source)&&e.week===currentWeek);
                 const t=n.reduce((s,e)=>s+(e.pts||0),0);
                 if(!n.length) return null;
                 return(
