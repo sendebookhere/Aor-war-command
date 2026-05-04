@@ -770,7 +770,25 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
       <div style={{maxWidth:"560px",margin:"0 auto"}}>
         <NavBar current="/registro"/>
         <PageHeader page="/registro"/>
-        <RegistrationTimer warMode={warMode}/>
+        {/* TOP TIMER: shows registration countdown OR war start (if registered) */}
+        {alreadyRegistered ? (
+          <>
+            <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.2)",
+              borderRadius:"8px",padding:"12px 14px",marginBottom:"10px",textAlign:"center"}}>
+              <div style={{fontSize:"10px",fontFamily:"monospace",letterSpacing:"0.15em",
+                color:"rgba(168,255,120,0.5)",marginBottom:"6px"}}>✓ REGISTRO CONFIRMADO</div>
+              <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px"}}>
+                Gracias {selectedPlayer?.name || sessionStorage.getItem("aor_player_name")}
+              </div>
+              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)"}}>
+                por unir tus fuerzas en esta Guerra de Clanes [AOR]
+              </div>
+            </div>
+            <WarStartTimer warMode={warMode}/>
+          </>
+        ) : (
+          <RegistrationTimer warMode={warMode}/>
+        )}
 
         {/* Name */}
         <div style={{marginBottom:"16px",position:"relative"}}>
@@ -902,11 +920,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           </div>
         )}
 
-        {alreadyRegistered && (
-          <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:"8px",padding:"12px",marginBottom:"14px",fontSize:"12px",color:"#FFD700"}}>
-            ⚠ Ya te registraste esta semana como <strong>{AVAILABILITY[existingAvail]?.label}</strong> (+{AVAILABILITY[existingAvail]?.pts} pts). No puedes volver a registrarte hasta la próxima guerra.
-          </div>
-        )}
+
 
         {!isOpen && (
           <div style={{background:"rgba(255,107,107,0.06)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",textAlign:"center"}}>
@@ -920,23 +934,9 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
         {alreadyRegistered ? (
           <>
-            {/* Thank-you message */}
-            <div style={{background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.2)",
-              borderRadius:"8px",padding:"12px 14px",marginBottom:"10px",textAlign:"center"}}>
-              <div style={{fontSize:"10px",fontFamily:"monospace",letterSpacing:"0.15em",
-                color:"rgba(168,255,120,0.5)",marginBottom:"6px"}}>✓ REGISTRO CONFIRMADO</div>
-              <div style={{fontSize:"13px",color:"#FFD700",fontWeight:"bold",marginBottom:"2px"}}>
-                Gracias {selectedPlayer?.name || sessionStorage.getItem("aor_player_name")}
-              </div>
-              <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)"}}>
-                por unir tus fuerzas en esta Guerra de Clanes [AOR]
-              </div>
-            </div>
-            {/* War start countdown */}
-            <WarStartTimer warMode={warMode}/>
-            {/* Cancel button */}
+            {/* Cancel button only — thank-you and timer are at top */}
             <button onClick={cancelRegistration}
-              style={{width:"100%",padding:"12px",marginTop:"8px",
+              style={{width:"100%",padding:"12px",
                 background:"rgba(255,107,107,0.08)",
                 border:"1px solid rgba(255,107,107,0.3)",
                 borderRadius:"8px",color:"#FF6B6B",
