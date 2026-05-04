@@ -38,32 +38,44 @@ export const PT_SOURCES = {
 
 export async function awardPts(playerId, pts, source, note = "") {
   if (!playerId || !pts) return;
+  
+  // Step 1: ALWAYS update pts_acumulados — this must never fail silently
   try {
-    // Update pts_acumulados
-    const { data: p } = await supabase
+    const { data: p, error: selectErr } = await supabase
       .from("players")
       .select("pts_acumulados")
       .eq("id", parseInt(playerId))
       .single();
     
-    await supabase
+    if (selectErr) throw selectErr;
+    
+    const { error: updateErr } = await supabase
       .from("players")
       .update({ pts_acumulados: (p?.pts_acumulados || 0) + pts })
       .eq("id", parseInt(playerId));
+    
+    if (updateErr) throw updateErr;
+  } catch (e) {
+    console.error("awardPts FAILED to update pts_acumulados:", e.message, {playerId, pts, source});
+    return; // Don't continue if pts couldn't be awarded
+  }
 
-    // Log to pts_ledger for tracking
-    await supabase.from("pts_ledger").insert({
+  // Step 2: Log to pts_ledger — separate try so failure doesn't block pts award
+  try {
+    const { error: ledgerErr } = await supabase.from("pts_ledger").insert({
       player_id: parseInt(playerId),
       pts,
       source,
-      note,
+      note: note || "",
       week: getWarWeek(),
       month: new Date().toISOString().slice(0, 7),
       created_at: new Date().toISOString(),
     });
+    if (ledgerErr) {
+      console.error("pts_ledger insert failed:", ledgerErr.message, {playerId, pts, source});
+    }
   } catch (e) {
-    // Ledger table may not exist yet - still award pts
-    console.warn("Ledger insert failed:", e.message);
+    console.error("pts_ledger exception:", e.message);
   }
 }
 

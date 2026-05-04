@@ -93,6 +93,8 @@ export default function Comunicaciones() {
     if (!playerId) return;
     const pendingKey = "aor_prop_pending_"+msg.id;
     if (!localStorage.getItem(pendingKey)) return;
+    // Prevent double-click: remove key IMMEDIATELY before any await
+    localStorage.removeItem(pendingKey);
     // Award +1pt
     await awardPts(parseInt(playerId), 1, "propaganda", msg.title?.slice(0,40));
     // Log the message
@@ -102,7 +104,7 @@ export default function Comunicaciones() {
     }).catch(()=>{});
     const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
     setLogs(data||[]);
-    localStorage.removeItem(pendingKey); // remove AFTER reload so isPending stays true during await
+    // key already removed at start of function
     setFeedback(f=>({...f,[msg.id]:"✓ +1pt acreditado. ¡Gracias por difundir!"}));
     setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 5000);
   }
@@ -288,7 +290,12 @@ export default function Comunicaciones() {
                     {/* CONFIRM button — only shows when pending */}
                     {isPending && (
                       <button
-                        onClick={()=>confirmSent(msg)}
+                        onClick={()=>{
+                          // Remove key immediately to prevent double-click
+                          const pk = "aor_prop_pending_"+msg.id;
+                          if(!localStorage.getItem(pk)) return;
+                          confirmSent(msg);
+                        }}
                         style={{
                           width:"100%",padding:"8px",
                           background:"rgba(200,162,255,0.15)",
