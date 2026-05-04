@@ -372,26 +372,32 @@ function PlayerProfile({ player, onBack }) {
             <span style={{fontSize:"9px",fontFamily:"monospace",color:"rgba(64,224,255,0.4)",letterSpacing:"0.15em"}}>ROL GUERRA ACTUAL · </span>
             <span style={{fontSize:"11px",color:avail.color}}>{avail.icon} {player.availability==="pendiente"||!player.availability?"No definido — regístrate en la guerra actual":avail.label}</span>
           </div>
-          {/* Stats */}
-          <div style={{display:"flex",gap:"12px",flexWrap:"wrap",marginBottom:"10px",padding:"8px 0",borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>PODER</div>
-              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{((player.level||0)/1000).toFixed(1)}k</div>
+          {/* Stats + grandTotal inline */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",padding:"8px 0",borderTop:"1px solid rgba(255,255,255,0.06)",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{display:"flex",gap:"12px",flexWrap:"wrap"}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>PODER</div>
+                <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{((player.level||0)/1000).toFixed(1)}k</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>BP</div>
+                <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{(player.bp||0).toLocaleString()}</div>
+              </div>
+              {(player.player_level||0)>0&&<div style={{textAlign:"center"}}>
+                <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>NIVEL</div>
+                <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{player.player_level}</div>
+              </div>}
             </div>
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>BP</div>
-              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{(player.bp||0).toLocaleString()}</div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:"9px",color:"rgba(255,215,0,0.4)",fontFamily:"monospace",letterSpacing:"0.1em"}}>ACUMULADO</div>
+              <div style={{fontSize:"22px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
             </div>
-            {(player.player_level||0)>0&&<div style={{textAlign:"center"}}>
-              <div style={{fontSize:"9px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>NIVEL</div>
-              <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{player.player_level}</div>
-            </div>}
           </div>
-          {/* Total box — grandTotal = pts_acumulados + warPtsNow */}
-          <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px",marginTop:"4px"}}>
+          {/* Weekly summary box — shows this week's earnings */}
+          <div style={{background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.12)",borderRadius:"8px",padding:"10px",marginTop:"4px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}}>
-              <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.4)",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
-              <div style={{fontFamily:"monospace",fontSize:"22px",color:rank.color,fontWeight:"bold"}}>{grandTotal}</div>
+              <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(64,224,255,0.4)",letterSpacing:"0.1em"}}>ESTA SEMANA</div>
+              <div style={{fontFamily:"monospace",fontSize:"18px",color:"#40E0FF",fontWeight:"bold"}}>{weeklyTotal>0?"+":""}{weeklyTotal}</div>
             </div>
             {/* Tags por categoría — todas suman a grandTotal */}
             <div style={{display:"flex",flexWrap:"wrap",gap:"4px"}}>
@@ -450,9 +456,9 @@ function PlayerProfile({ player, onBack }) {
                   <span style={{color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>+{(player.pts_acumulados||0)-ledgerSum}</span>
                 </div>
               )}
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"4px 6px",borderTop:"1px solid rgba(255,215,0,0.15)",marginTop:"4px",background:"rgba(255,215,0,0.03)",borderRadius:"4px"}}>
-                <span style={{color:"rgba(255,215,0,0.6)",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</span>
-                <span style={{color:"#FFD700",fontFamily:"monospace",fontWeight:"bold",fontSize:"13px"}}>{grandTotal}</span>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",padding:"4px 6px",borderTop:"1px solid rgba(64,224,255,0.15)",marginTop:"4px",background:"rgba(64,224,255,0.03)",borderRadius:"4px"}}>
+                <span style={{color:"rgba(64,224,255,0.6)",fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.1em"}}>TOTAL SEMANAL</span>
+                <span style={{color:"#40E0FF",fontFamily:"monospace",fontWeight:"bold",fontSize:"13px"}}>{weeklyTotal>0?"+":""}{weeklyTotal}</span>
               </div>
             </div>
             {penalties.length>0&&(<div style={{marginTop:"6px"}}>
