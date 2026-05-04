@@ -327,10 +327,13 @@ function PlayerProfile({ player, onBack }) {
   // grandTotal: sum of all pts_ledger entries + active war columns
   // This ensures the number matches the category breakdown shown below
   // pts_acumulados may diverge if some entries bypassed the ledger
-  const ledgerSum = ptsLedger.reduce((s,e)=>s+(e.pts||0), 0);
+  // ledgerSum excludes war-column sources (pt_stats, weekly_archive fragments)
+  // because those are already counted in calcWarPts or pts_acumulados via reset
+  const WAR_SOURCES = ["stats"]; // sources that are pt_* columns, not direct pts
+  const ledgerSum = ptsLedger
+    .filter(e => !WAR_SOURCES.includes(e.source))
+    .reduce((s,e)=>s+(e.pts||0), 0);
   const warPtsForTotal = calcWarPts(player);
-  // Use the higher of ledgerSum or pts_acumulados to not shortchange anyone
-  // The definitive base is pts_acumulados (what DB says); ledger is the breakdown
   const accBase = Math.max(player.pts_acumulados||0, ledgerSum);
   const grandTotal = accBase + warPtsForTotal;
 
