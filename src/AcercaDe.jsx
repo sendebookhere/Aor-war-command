@@ -173,20 +173,17 @@ export default function AcercaDe() {
           <div style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(255,255,255,0.2)",marginBottom:"18px",letterSpacing:"0.2em"}}>{CURRENT_VERSION} · {CURRENT_DATE}</div>
 
           {/* Creator badge */}
-          <div style={{display:"inline-block",background:"rgba(64,224,255,0.05)",border:"1px solid rgba(64,224,255,0.2)",borderRadius:"8px",padding:"10px 20px",marginBottom:"14px"}}>
-            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(64,224,255,0.4)",marginBottom:"4px"}}>ARQUITECTO DE GUERRA</div>
-            <div style={{fontSize:"16px",color:"#40E0FF",fontWeight:"bold",letterSpacing:"0.1em"}}>N̷̦A̸͓L̵͙G̶͓U̸̹I̷͎T̴͔A̵͙S̶̰</div>
-            <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginTop:"2px"}}>Co-Líder · Antigua Orden [AOR]</div>
+          <div style={{display:"inline-block",background:"rgba(64,224,255,0.05)",border:"1px solid rgba(64,224,255,0.25)",borderRadius:"12px",padding:"14px 28px",marginBottom:"16px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.4em",color:"rgba(64,224,255,0.35)",marginBottom:"6px"}}>DESARROLLADO POR</div>
+            <div style={{fontSize:"22px",color:"#40E0FF",fontWeight:"bold",letterSpacing:"0.05em",marginBottom:"2px"}}>Nalguitas Tech™</div>
+            <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(255,255,255,0.15)",letterSpacing:"0.2em"}}>SOLUCIONES PARA EL CAMPO DE BATALLA</div>
           </div>
 
-          <div style={{fontFamily:"monospace",fontSize:"8px",letterSpacing:"0.2em",color:"rgba(255,255,255,0.15)",marginBottom:"10px"}}>
-            POWERED BY NALGUITAS TECH™
-          </div>
-
-          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.3)",lineHeight:"1.8",maxWidth:"400px",margin:"0 auto"}}>
-            Sistema de comando diseñado en el fragor de la batalla.<br/>
-            Cada línea de código escrita para una sola misión:<br/>
-            <span style={{color:"rgba(168,255,120,0.6)"}}>llevar a Antigua Orden a la cima del reino.</span>
+          <div style={{fontSize:"10px",color:"rgba(255,255,255,0.35)",lineHeight:"1.9",maxWidth:"420px",margin:"0 auto"}}>
+            Infraestructura de comando diseñada en el fragor de la batalla.<br/>
+            Cada función, cada punto, cada rango — construidos con precisión táctica<br/>
+            y desplegados bajo fuego real.<br/>
+            <span style={{color:"rgba(168,255,120,0.6)"}}>Misión: llevar a Antigua Orden a la cima del reino.</span>
           </div>
         </div>
 
@@ -260,14 +257,18 @@ export default function AcercaDe() {
         <div style={{marginTop:"24px",textAlign:"center",padding:"20px",background:"rgba(255,255,255,0.01)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"10px"}}>
           <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.4em",color:"rgba(255,255,255,0.15)",marginBottom:"10px"}}>CRÉDITOS</div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",lineHeight:"2"}}>
-            <div>⚔ Diseño y desarrollo — <span style={{color:"#40E0FF"}}>NALGUITAS</span></div>
+            <div>⚔ Diseño y desarrollo — <span style={{color:"#40E0FF"}}>Nalguitas Tech™</span></div>
             <div>👑 Líder del clan — <span style={{color:"#FFD700"}}>PUNK'Z</span></div>
             <div>🤝 Clan — <span style={{color:"rgba(255,255,255,0.5)"}}>Antigua Orden [AOR]</span></div>
             <div>🎮 Juego — <span style={{color:"rgba(255,255,255,0.5)"}}>Dawn of Ages</span></div>
             <div>🤖 IA asistente — <span style={{color:"rgba(255,255,255,0.5)"}}>Claude Sonnet · Anthropic</span></div>
+            <div style={{marginTop:"8px",padding:"8px 12px",background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"6px",fontSize:"9px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",letterSpacing:"0.05em"}}>
+              🔒 Acceso exclusivo para miembros de Antigua Orden [AOR].<br/>
+              Si eres miembro y no tienes acceso, contacta a un oficial del clan.
+            </div>
           </div>
           <div style={{marginTop:"16px",fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,255,255,0.1)"}}>
-            © 2026 NALGUITAS TECH™ · TODOS LOS DERECHOS RESERVADOS
+            © 2026 Nalguitas Tech™ · Todos los derechos reservados
           </div>
         </div>
 
