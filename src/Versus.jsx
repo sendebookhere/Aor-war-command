@@ -68,8 +68,20 @@ export default function Versus(){
 
   async function confirm(b){
     await supabase.from("pvp_battles").update({status:"confirmed"}).eq("id",b.id);
+    // Award confirmer
     await awardPts(parseInt(b.opponent_id),1,"pvp_confirmo",`vs ${b.challenger_name}`);
     if(b.opponent_wins>=2) await awardPts(parseInt(b.opponent_id),1,"pvp_ganador",`vs ${b.challenger_name}`);
+    // Retroactively award challenger if they never got their registration pts
+    // (covers battles registered before pts logic existed)
+    const {data:challLedger} = await supabase.from("pts_ledger")
+      .select("id").eq("player_id",parseInt(b.challenger_id))
+      .eq("source","pvp_registro")
+      .eq("note",`vs ${b.opponent_name}`)
+      .limit(1);
+    if(!challLedger?.length) {
+      const pts = b.challenger_wins>=2?2:1;
+      await awardPts(parseInt(b.challenger_id),pts,"pvp_registro",`vs ${b.opponent_name}`);
+    }
     await load();
   }
 
