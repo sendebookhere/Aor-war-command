@@ -36,6 +36,50 @@ export const MIN_MONTHLY_PTS = 20;
 // Candidato a expulsión (decisión manual del admin)
 export const EXPULSION_THRESHOLD = -100;
 
+// ── PUNTOS POR CATEGORÍA ─────────────────────────────────────────────────────
+export const PTS = {
+  codigo_unico_dia: 1,
+  registro: { conquistador:10, refuerzos:5, reserva:2, no_disponible:1 },
+  registro_bonus_anticipado: { conquistador:5, refuerzos:2, reserva:2 },
+  guerra: {
+    aparecio:3, siguio_ordenes:2, batalla_ganada:2, batalla_perdida:1,
+    defensa:1, bonus_6_batallas:10, bandido_post:1, bonus_completo:5,
+    sin_registro_participo:1, primer_movilizador:3,
+    bp_solo:1, poder_solo:1, nivel_solo:1, stats_completo:5,
+  },
+  penalizaciones: {
+    conquistador_no_aparecio:-15, refuerzos_no_aparecio:-10,
+    reserva_no_aparecio:-5, sin_registro_sin_participar:-20,
+    ignoro_orden:-2, abandono_defensa:-2, fuera_castillo:-2,
+    inactivo_12h:-3, bandido_pre:-1,
+  },
+  propaganda: { mensaje_confirmado:1, publicacion_falsa:-50 },
+  PROPAGANDA_COOLDOWN_MIN: 120,
+  intel: { voto_dificultad:1 },
+  INTEL_VOTE_WEIGHTS: { siempre:3, intermitente:2, solo_una:1 },
+  asamblea: {
+    votar:3, mas_votado:10, mayor_puntaje:10, pichichi_extra:10,
+    empate:3, racha_2sem:20, racha_extra_por_sem:10,
+  },
+  ASAMBLEA_VOTE_WEIGHTS: {
+    "Líder 👑":5,"Co-Líder 👑":4,"Oficial ⚜":3,
+    "Veterano ★★★":2,"Leyenda 🌟":2, default:1,
+  },
+  ASAMBLEA_ELIGIBLE: ["siempre","intermitente","solo_una"],
+  versus: {
+    registrar_0_1_victorias:1, registrar_2_3_victorias:2, confirmar:1,
+    dudo_exitoso:3, aceptar_dudo:1, escalar_admin:5, ganar_en_video:5,
+    ranking_semanal:5, ranking_mensual:10,
+  },
+  VERSUS_LIMITS: {
+    max_batallas_dia:5, max_por_rival_dia:1,
+    max_dudo_por_rival_dia:1, dudo_victorias_necesarias:3,
+    batallas_por_set:3, batallas_dudo:5,
+  },
+  noticias: { leida:1, requerimiento:1 },
+  whatsapp: { bono_incorporacion:25 },
+};
+
 // ── HORARIOS DE GUERRA ────────────────────────────────────────────────────────
 // TODOS LOS HORARIOS EN BASE ECUADOR (UTC-5)
 // Conversión automática:
@@ -248,4 +292,4 @@ export function calcGrandTotal(p) {
 // availability         — siempre / intermitente / solo_una / no_disponible / pendiente
 // clan_role            — Líder / Co-Líder / Oficial / Veterano / Guerrero / Soldado / Recluta
 
-export default { RANKS, PTS, getRank, getRankLabel, getRankColor, calcWarPts, calcGrandTotal, MIN_MONTHLY_PTS, EXPULSION_THRESHOLD, WAR_SCHEDULES };
+export default { RANKS, PTS, getRank, getRankLabel, getRankColor, calcWarPts, calcGrandTotal, MIN_MONTHLY_PTS, EXPULSION_THRESHOLD, SCHEDULE };

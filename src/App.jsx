@@ -102,7 +102,15 @@ function totalPts(p) {
 function acumulado(p) { return p.pts_acumulados||0; }
 
 // Ranks and points imported from central rules file
-import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS, spainOffset } from "./GameRules";
+import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS } from "./GameRules";
+// Spain offset: +7h in summer (Apr-Oct), +6h in winter (Nov-Mar)
+function getSpainH(ecH, ecDay=null) {
+  const m = new Date().getMonth()+1; // 1-12
+  const off = (m>=4&&m<=10)?7:6;
+  const h = ecH+off; return h>=24?h-24:h;
+}
+function spainHStr(ecH) { const h=getSpainH(ecH); return String(h).padStart(2,'0')+':00h'; }
+function mxHStr(ecH) { const h=ecH-1<0?ecH+23:ecH-1; const p=h<12?'am':'pm'; const h12=h%12||12; return h12+':00'+p; }
 
 function Pill({color,children}) {
   return <span style={{fontSize:"9px",padding:"1px 6px",borderRadius:"10px",background:color+"22",color,border:"1px solid "+color+"44"}}>{children}</span>;
@@ -246,8 +254,8 @@ function RegistrationTimer({warMode="classic"}) {
       <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.25em",color:"rgba(255,255,255,0.25)",marginBottom:"2px"}}>REGISTRO CIERRA EN</div>
       <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)",marginBottom:"6px"}}>
         {warMode==="new"
-          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>{spainOffset()===6?"17:00h":"18:00h"} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 11:00am Ecuador · 10:00am México</span></span>
-          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>{spainOffset()===6?"13:00h":"14:00h"} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 7:00am Ecuador · 6:00am México</span></span>
+          ? <span><strong style={{color:"rgba(255,159,67,0.6)"}}>{spainHStr(11)} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 11:00am Ecuador · 10:00am México</span></span>
+          : <span><strong style={{color:"rgba(168,255,120,0.6)"}}>{spainHStr(7)} España</strong><span style={{color:"rgba(255,255,255,0.15)"}}> · 7:00am Ecuador · 6:00am México</span></span>
         }
       </div>
       <div style={{display:"flex",gap:"8px",alignItems:"baseline"}}>
@@ -628,7 +636,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             <div style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)",borderRadius:"8px",padding:"8px 12px",marginBottom:"8px",fontSize:"10px"}}>
               ⭐ <strong style={{color:"#FFD700"}}>¡Bonus por registro anticipado!</strong>
               <span style={{color:"rgba(255,255,255,0.5)"}}> Quedan <strong style={{color:"#FFD700"}}>{earlyBonusTimeLeft()}</strong> para el bono anticipado
-              <span style={{color:"rgba(255,255,255,0.35)",fontSize:"9px"}}>{" · "}jue 7:00am Ecuador{" · "}{spainOffset()===6?"13:00h":"14:00h"} España{" · "}jue 6:00am México</span>
+              <span style={{color:"rgba(255,255,255,0.35)",fontSize:"9px"}}>{" · "}jue 7:00am Ecuador{" · "}{spainHStr(7)} España{" · "}jue 6:00am México</span>
             </span>
               <div style={{marginTop:"4px",color:"rgba(255,255,255,0.5)"}}>Conquistador <strong style={{color:"#A8FF78"}}>+5 pts</strong> · Refuerzos <strong style={{color:"#FFD700"}}>+2 pts</strong> · Reserva <strong style={{color:"#FFD700"}}>+2 pts</strong></div>
             </div>
