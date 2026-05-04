@@ -341,17 +341,34 @@ function PlayerProfile({ player, onBack }) {
               <div style={{fontSize:"14px",color:"rgba(255,255,255,0.7)"}}>{player.player_level}</div>
             </div>}
           </div>
-          {/* Points summary — two boxes */}
-          <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
-            <div style={{flex:1,background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
-              <div style={{fontSize:"8px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>ESTA SEMANA</div>
-              <div style={{fontSize:"22px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace"}}>{warPtsNow>0?"+":""}{warPtsNow}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts de guerra activos</div>
+          {/* Points: grandTotal prominently, desglose below */}
+          <div style={{background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"10px",marginTop:"4px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
+              <div style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,215,0,0.4)",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
+              <div style={{fontFamily:"monospace",fontSize:"22px",color:rank.color,fontWeight:"bold"}}>{grandTotal}</div>
             </div>
-            <div style={{flex:1,background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
-              <div style={{fontSize:"8px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
-              <div style={{fontSize:"22px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts_acumulados + guerra</div>
+            {/* Mini desglose */}
+            <div style={{display:"flex",flexWrap:"wrap",gap:"4px"}}>
+              {warPtsNow!==0&&<div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(64,224,255,0.7)",background:"rgba(64,224,255,0.06)",padding:"2px 6px",borderRadius:"3px"}}>⚔ guerra: {warPtsNow>0?"+":""}{warPtsNow}</div>}
+              {ptsLedger.filter(e=>e.source==="whatsapp"||e.source?.includes("whatsapp")).slice(0,1).map(e=>(
+                <div key={e.source} style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(168,255,120,0.7)",background:"rgba(168,255,120,0.06)",padding:"2px 6px",borderRadius:"3px"}}>📱 WA: +{e.pts}</div>
+              ))}
+              {(()=>{
+                const prop=ptsLedger.filter(e=>e.source==="propaganda").reduce((s,e)=>s+e.pts,0);
+                return prop>0?<div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(200,162,255,0.7)",background:"rgba(200,162,255,0.06)",padding:"2px 6px",borderRadius:"3px"}}>📡 prop: +{prop}</div>:null;
+              })()}
+              {(()=>{
+                const asm=ptsLedger.filter(e=>e.source?.startsWith("asamblea")).reduce((s,e)=>s+e.pts,0);
+                return asm>0?<div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,215,0,0.7)",background:"rgba(255,215,0,0.06)",padding:"2px 6px",borderRadius:"3px"}}>🗳 asm: +{asm}</div>:null;
+              })()}
+              {(()=>{
+                const pvp=ptsLedger.filter(e=>e.source?.startsWith("pvp")||e.source?.includes("ranking")).reduce((s,e)=>s+e.pts,0);
+                return pvp>0?<div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,107,107,0.7)",background:"rgba(255,107,107,0.06)",padding:"2px 6px",borderRadius:"3px"}}>⚔ pvp: +{pvp}</div>:null;
+              })()}
+              {(()=>{
+                const cod=ptsLedger.filter(e=>e.source==="codigo_unico").reduce((s,e)=>s+e.pts,0);
+                return cod>0?<div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,215,0,0.6)",background:"rgba(255,215,0,0.04)",padding:"2px 6px",borderRadius:"3px"}}>🔑 código: +{cod}</div>:null;
+              })()}
             </div>
           </div>
 
@@ -556,60 +573,80 @@ function PlayerProfile({ player, onBack }) {
           <UniqueCodeManager playerId={player.id} playerName={player.name} uniqueCode={player.unique_code}/>
         )}
 
-        {/* ACTIVIDAD ACUMULADA — contador por fuente */}
+        {/* ACTIVIDAD ACUMULADA — desglose por fuente sumando al grandTotal */}
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px",marginBottom:"16px"}}>
-          <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginBottom:"10px"}}>ACTIVIDAD ACUMULADA — CONTADORES</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
+            <div style={{fontFamily:"monospace",fontSize:"9px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.1em"}}>DESGLOSE DE PUNTOS ACUMULADOS</div>
+            <div style={{fontFamily:"monospace",fontSize:"12px",color:rank.color,fontWeight:"bold"}}>{grandTotal} pts</div>
+          </div>
+          {/* War columns (en curso — se archivan al cerrar semana) */}
+          {warPtsNow!==0&&(
+            <div style={{marginBottom:"6px",padding:"7px 10px",background:"rgba(64,224,255,0.05)",borderRadius:"6px",border:"1px solid rgba(64,224,255,0.15)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"rgba(255,255,255,0.7)"}}>⚔ Guerra en curso</span>
+                <span style={{fontFamily:"monospace",fontSize:"13px",color:"#40E0FF",fontWeight:"bold"}}>{warPtsNow>0?"+":""}{warPtsNow}</span>
+              </div>
+              {/* Sub-desglose guerra */}
+              {[
+                {l:"Registro",v:(player.pt_registro||0)+(player.pt_registro_temprano||0)+(player.pt_disponibilidad_declarada||0)},
+                {l:"Aparición y órdenes",v:(player.pt_disponibilidad||0)+(player.pt_obediencia||0)*2},
+                {l:"Batallas (×2V, ×1D)",v:(player.pt_batallas_ganadas||0)*2+(player.pt_batallas_perdidas||0)},
+                {l:"Defensas",v:player.pt_defensas||0},
+                {l:"Bonus (6B/completo)",v:(player.pt_bonus||0)*5+((player.pt_batallas_ganadas||0)>=6?10:0)},
+                {l:"Stats BP/Poder/Nivel",v:player.pt_stats||0},
+                {l:"Bandidos post",v:player.pt_bandido_post||0},
+                {l:"Penalizaciones",v:-((player.pt_penalizacion||0)+(player.pt_no_aparecio||0)+(player.pt_ignoro_orden||0)*2+(player.pt_abandono||0)*2+(player.pt_inactivo_4h||0)*3+(player.pt_bandido_pre||0)+(player.pt_fuera_castillo||0)*2)},
+              ].filter(x=>x.v!==0).map(x=>(
+                <div key={x.l} style={{display:"flex",justifyContent:"space-between",padding:"1px 4px",fontSize:"9px"}}>
+                  <span style={{color:"rgba(255,255,255,0.35)"}}>{x.l}</span>
+                  <span style={{color:x.v>=0?"rgba(64,224,255,0.7)":"rgba(255,107,107,0.7)",fontFamily:"monospace"}}>{x.v>0?"+":""}{x.v}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Direct pts por fuente (de ptsLedger) */}
           {(()=>{
-            // Count from ptsLedger — each source shows count + total pts
-            const sourceGroups = {
-              "📱 WhatsApp":         {sources:["whatsapp"],          color:"#A8FF78", oneTime:true},
-              "⚔ Guerra":           {sources:["weekly_archive"],    color:"#40E0FF"},
-              "📡 Propaganda":       {sources:["propaganda"],         color:"#C8A2FF"},
-              "🗳 Asamblea":         {sources:["asamblea_voto","asamblea_ganador","asamblea_pichichi","asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje","asamblea_racha_2","asamblea_racha_extra"], color:"#FFD700"},
-              "🔍 Inteligencia":     {sources:["intel_voto"],         color:"#FF6B6B"},
-              "⚔ Versus PvP":       {sources:["pvp_registro","pvp_confirmo","pvp_ganador","pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video","ranking_semanal","ranking_mensual"], color:"#FF6B6B"},
-              "📰 Noticias":         {sources:["noticia_leida","solicitud_cumplida"], color:"#FF9F43"},
-              "🔑 Código único":     {sources:["codigo_unico"],       color:"#FFD700"},
-              "⚠ Penalizaciones":   {sources:["penalizacion"],       color:"rgba(255,107,107,0.7)"},
-            };
-            return(
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px"}}>
-                {Object.entries(sourceGroups).map(([label,{sources,color,oneTime}])=>{
-                  const entries = ptsLedger.filter(e=>sources.includes(e.source));
-                  const totalPts = entries.reduce((s,e)=>s+(e.pts||0),0);
-                  const count = entries.length;
-                  if(count===0) return null;
-                  return(
-                    <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",background:color+"08",borderRadius:"5px",border:"1px solid "+color+"15"}}>
-                      <div>
-                        <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)",fontFamily:"Georgia,serif"}}>{label}</div>
-                        <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>
-                          {oneTime?"una vez":count+" vez"+(count>1?"es":"")}
-                        </div>
-                      </div>
-                      <div style={{textAlign:"right"}}>
-                        <div style={{fontSize:"14px",color,fontWeight:"bold",fontFamily:"monospace"}}>{totalPts>0?"+":""}{totalPts}</div>
-                        <div style={{fontSize:"7px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts</div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {/* War cols not yet archived */}
-                {warPtsNow!==0&&(
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",background:"rgba(64,224,255,0.06)",borderRadius:"5px",border:"1px solid rgba(64,224,255,0.12)"}}>
-                    <div>
-                      <div style={{fontSize:"10px",color:"rgba(255,255,255,0.6)",fontFamily:"Georgia,serif"}}>⚔ Guerra actual</div>
-                      <div style={{fontSize:"8px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>en curso</div>
-                    </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:"14px",color:"#40E0FF",fontWeight:"bold",fontFamily:"monospace"}}>{warPtsNow>0?"+":""}{warPtsNow}</div>
-                      <div style={{fontSize:"7px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts</div>
+            const cats=[
+              {label:"📱 WhatsApp",  sources:["whatsapp"],  color:"#A8FF78", oneTime:true},
+              {label:"📡 Propaganda", sources:["propaganda"], color:"#C8A2FF"},
+              {label:"🗳 Asamblea",   sources:["asamblea_voto","asamblea_ganador","asamblea_pichichi","asamblea_mayor_puntaje","asamblea_empate_votos","asamblea_empate_puntaje","asamblea_racha_2","asamblea_racha_extra"], color:"#FFD700"},
+              {label:"🔍 Intel",      sources:["intel_voto"], color:"#FF6B6B"},
+              {label:"⚔ PvP",        sources:["pvp_registro","pvp_confirmo","pvp_ganador","pvp_dudo_exitoso","pvp_acepto_dudo","pvp_escalo","pvp_gano_video","ranking_semanal","ranking_mensual"], color:"#FF6B6B"},
+              {label:"📰 Noticias",   sources:["noticia_leida","solicitud_cumplida"], color:"#FF9F43"},
+              {label:"🔑 Código",     sources:["codigo_unico"], color:"#FFD700"},
+              {label:"📦 Cierres",    sources:["weekly_archive"], color:"rgba(255,255,255,0.4)"},
+              {label:"⚠ Penal.",     sources:["penalizacion"], color:"rgba(255,107,107,0.8)"},
+            ];
+            return cats.map(({label,sources,color,oneTime})=>{
+              const entries=ptsLedger.filter(e=>sources.includes(e.source));
+              const total=entries.reduce((s,e)=>s+(e.pts||0),0);
+              const count=entries.length;
+              if(!count) return null;
+              return(
+                <div key={label} style={{marginBottom:"4px",padding:"6px 10px",background:color+"06",borderRadius:"5px",border:"1px solid "+color+"12"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontFamily:"Georgia,serif",fontSize:"11px",color:"rgba(255,255,255,0.65)"}}>{label}</span>
+                    <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                      <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.2)"}}>{oneTime?"única vez":count+"×"}</span>
+                      <span style={{fontFamily:"monospace",fontSize:"13px",color,fontWeight:"bold"}}>{total>0?"+":""}{total}</span>
                     </div>
                   </div>
-                )}
-              </div>
-            );
+                  {entries.slice(0,3).map((e,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"1px 4px",fontSize:"9px"}}>
+                      <span style={{color:"rgba(255,255,255,0.3)"}}>{e.note?.slice(0,35)||e.source}</span>
+                      <span style={{color:e.pts>=0?color+"bb":"rgba(255,107,107,0.6)",fontFamily:"monospace"}}>{e.pts>0?"+":""}{e.pts}</span>
+                    </div>
+                  ))}
+                  {entries.length>3&&<div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",paddingLeft:"4px",fontFamily:"monospace"}}>+{entries.length-3} más</div>}
+                </div>
+              );
+            });
           })()}
+          {/* Total check */}
+          <div style={{marginTop:"8px",padding:"5px 8px",background:"rgba(255,255,255,0.02)",borderRadius:"4px",display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontFamily:"monospace",fontSize:"8px",color:"rgba(255,255,255,0.25)"}}>TOTAL = guerra en curso + directo</span>
+            <span style={{fontFamily:"monospace",fontSize:"10px",color:rank.color,fontWeight:"bold"}}>{grandTotal}</span>
+          </div>
         </div>
 
         {/* Guerrero Implacable history */}
