@@ -541,7 +541,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
         {/* Stats update - right after name */}
         {selectedPlayer && !alreadyRegistered && (
-          <div style={{marginBottom:"12px",background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.1)",borderRadius:"8px",padding:"10px"}}>
+          <><div style={{marginBottom:"12px",background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.1)",borderRadius:"8px",padding:"10px"}}>
             <div style={{fontSize:"9px",color:"rgba(64,224,255,0.4)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"6px"}}>TU REGIÓN</div>
             <div style={{display:"flex",gap:"6px"}}>
               {[{id:"sur",label:"América del Sur",sub:"hora Ecuador"},{id:"norte",label:"América del Norte",sub:"hora México"}].map(reg=>(
@@ -598,6 +598,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             </div>
             {statsSaved&&<div style={{fontSize:"11px",color:"#A8FF78",marginTop:"6px",fontWeight:"bold"}}>✓ Stats guardados</div>}
           </div>
+          </>
         )}
 
         {/* Availability with inline tasks */}
