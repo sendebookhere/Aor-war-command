@@ -343,7 +343,6 @@ function PlayerProfile({ player, onBack }) {
   const accBase = Math.max(player.pts_acumulados||0, ledgerSum);
   const grandTotal = accBase + warPtsForTotal;
 
-  // currentWeek defined above
   // weeklyTotal = pts earned this week:
   //   - calcWarPts: war columns (pt_registro, pt_batallas, etc.) active now
   //   - ledger entries this week: direct awards (propaganda, votos, pvp, código, WA)
@@ -351,7 +350,7 @@ function PlayerProfile({ player, onBack }) {
   //       but MAY also appear in ledger. We use pts_acumulados as the base truth.
   const warPtsNow = warPtsForTotal; // same as used in grandTotal
   const ledgerThisWeek = ptsLedger
-    .filter(e => e.week === currentWeek && e.source !== "weekly_archive")
+    .filter(e => new Date(e.created_at) >= weekStartUTC && e.source !== "weekly_archive")
     .reduce((sum, e) => sum + (e.pts || 0), 0);
   // grandTotal = pts_acumulados (all direct+archived) + warPtsNow (active war cols)
 
