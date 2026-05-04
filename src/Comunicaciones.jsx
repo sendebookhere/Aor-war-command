@@ -24,7 +24,8 @@ export default function Comunicaciones() {
   const [feedback, setFeedback]   = useState({});
   const [loading, setLoading]     = useState(true);
   const [dailyLimit, setDailyLimit]   = useState(2);
-  const [weeklyLimit, setWeeklyLimit] = useState(14); // admin configurable
+  const [weeklyLimit, setWeeklyLimit] = useState(14); // admin
+  const [propLedger, setPropLedger] = useState([]); configurable
   const [blockUntil,  setBlockUntil]  = useState(null); // timestamp when block ends
 
   useEffect(() => {

@@ -483,10 +483,14 @@ export default function Asamblea() {
                 if(!pl) return null;
                 const warPts=(pl.pt_registro||0)+(pl.pt_disponibilidad_declarada||0)+(pl.pt_disponibilidad||0)+(pl.pt_obediencia||0)+(pl.pt_batallas_ganadas||0)*2+(pl.pt_batallas_perdidas||0)+(pl.pt_defensas||0)+(pl.pt_bonus||0)+(pl.pt_bandido_post||0)+(pl.pt_stats||0)+((pl.pt_batallas_ganadas||0)>=6?10:0)-(pl.pt_penalizacion||0)-(pl.pt_no_aparecio||0)-(pl.pt_ignoro_orden||0)*2-(pl.pt_abandono||0)*2-(pl.pt_inactivo_4h||0)*3-(pl.pt_bandido_pre||0);
                 const acc=pl.pts_acumulados||0;
+                // acc = pts_acumulados includes WA, propaganda, votos, PvP, código, archives
+                // Show WA separately, then the rest (acc minus WA)
+                const waBonus=pl.pt_whatsapp||0;
+                const directRest=acc-waBonus; // propaganda+votos+PvP+código+archives
                 const breakdownItems=[
                   warPts>0&&{l:"⚔ Guerra",v:warPts,c:"#40E0FF"},
-                  (pl.pt_whatsapp||0)>0&&{l:"📱 WhatsApp",v:pl.pt_whatsapp,c:"#A8FF78"},
-                  acc>0&&{l:"📡 Acumulado (propaganda·votos·PvP·código)",v:acc,c:"#C8A2FF"},
+                  waBonus>0&&{l:"📱 WhatsApp",v:waBonus,c:"#A8FF78"},
+                  directRest>0&&{l:"📡 Acumulado (propaganda·votos·PvP·código)",v:directRest,c:"#C8A2FF"},
                 ].filter(Boolean);
                 return(
                   <div key={p.id} style={{marginBottom:"12px",padding:"10px 12px",background:`rgba(255,255,255,0.0${4-i})`,borderRadius:"8px",border:`1px solid ${medalColors[i]}22`}}>
