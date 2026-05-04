@@ -3006,16 +3006,23 @@ function AdminPanel({players, update, loading, saving, reload}) {
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
                             <div style={{fontSize:"9px",color:"rgba(255,255,255,0.4)"}}>📱 WhatsApp</div>
-                            <button onClick={()=>{
+                            <button onClick={async()=>{
                               const newVal = !p.whatsapp;
                               if (newVal) {
                                 const isFundador = confirm('¿Es Fundador del grupo? OK=+50pts / Cancelar=+25pts');
                                 const pts = isFundador ? 50 : 25;
                                 // Update whatsapp flag + pt_whatsapp column
                                 await update(p.id, {whatsapp: true, pt_whatsapp: pts});
-                                // Add to pts_acumulados + ledger (the proper way)
-                                const {awardPts: ap} = await import('./PtsLedger');
-                                await ap(p.id, pts, 'whatsapp', isFundador ? 'WhatsApp Fundador' : 'WhatsApp Nuevo miembro');
+                                // Add to pts_acumulados + ledger
+                                await supabase.from("players").update({
+                                  pts_acumulados: (p.pts_acumulados||0) + pts
+                                }).eq("id", p.id);
+                                await supabase.from("pts_ledger").insert({
+                                  player_id: p.id, pts, source: "whatsapp",
+                                  note: isFundador ? "WhatsApp Fundador" : "WhatsApp Nuevo miembro",
+                                  week: getWarWeek(), created_at: new Date().toISOString()
+                                }).catch(()=>{});
+                                reload();
                               } else {
                                 update(p.id, {whatsapp: false, pt_whatsapp: 0});
                               }
