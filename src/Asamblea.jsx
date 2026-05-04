@@ -106,22 +106,21 @@ export default function Asamblea() {
   const [msg, setMsg] = useState("");
   const week = getWarWeek();
 
+  // calcPeriodScore must be at component scope (used in render AND in useEffect)
+  function calcPeriodScore(p) {
+    const warPts = (p.pt_registro||0)+(p.pt_registro_temprano||0)
+      +(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
+      +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
+      +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+      +((p.pt_batallas_ganadas||0)>=6?10:0)
+      -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
+      -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2
+      -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0)
+      -(p.pt_fuera_castillo||0)*2;
+    return (p.pts_acumulados||0) + warPts;
+  }
+
   useEffect(()=>{
-    function calcPeriodScore(p) {
-      // Total = ALL point columns + pts_acumulados (propaganda/votos/PvP/código)
-      const warPts = (p.pt_registro||0)+(p.pt_registro_temprano||0)
-        +(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
-        +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
-        +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
-        // pt_whatsapp already in pts_acumulados (set at player creation)
-        // pts_honorificos excluded — rank buffer only, not counted in rankings
-        +((p.pt_batallas_ganadas||0)>=6?10:0)
-        -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
-        -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2
-        -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0)
-        -(p.pt_fuera_castillo||0)*2;
-      return (p.pts_acumulados||0) + warPts;
-    }
     async function loadAll() {
       const [p,v,h] = await Promise.all([
         supabase.from("players").select("*").eq("active",true).order("name"),
