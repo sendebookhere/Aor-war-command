@@ -165,17 +165,22 @@ export default function Versus(){
   // SET LOSS = ganaste 0 o 1 de 3 batallas
   function buildRecord(bList){
     const r={};
-    bList.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed"||b.status==="pending"||b.status==="auto_confirmed").forEach(b=>{
-      const confirmed=b.status==="confirmed"||b.status==="confirmed_reversed"||b.status==="auto_confirmed";
+    bList.filter(b=>["confirmed","confirmed_reversed","pending","auto_confirmed","disputed","disc_accepted"].includes(b.status)).forEach(b=>{
       const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
       const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
       if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0,p:0};
       if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0,p:0};
-      if(confirmed){
-        // SET win = majority (2 or 3 of 3)
-        if(cW>=2){ r[b.challenger_name].w++; r[b.opponent_name].l++; }
-        else      { r[b.challenger_name].l++; r[b.opponent_name].w++; }
-      }else{
+      // Count the declared result for ALL statuses
+      // SET win = ganó 2 o 3 de 3 batallas
+      if(cW>=2){
+        r[b.challenger_name].w++;
+        r[b.opponent_name].l++;
+      } else {
+        r[b.challenger_name].l++;
+        r[b.opponent_name].w++;
+      }
+      // Mark pending sets separately for display
+      if(b.status==="pending"||b.status==="disputed"){
         r[b.challenger_name].p++;
       }
     });
@@ -425,7 +430,10 @@ export default function Versus(){
                 :rankGeneral.filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10).map(([name,r],i)=>(
                 <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
                   <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(168,255,120,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"80px"}}>{i+1}. {name}</span>
-                  <span style={{fontFamily:"monospace",fontSize:"13px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:"3px"}}>
+                    {r.p>0&&<span style={{fontSize:"8px",color:"rgba(255,215,0,0.5)"}}>⏳</span>}
+                    <span style={{fontFamily:"monospace",fontSize:"13px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
+                  </div>
                 </div>
               ))}
             </div>
