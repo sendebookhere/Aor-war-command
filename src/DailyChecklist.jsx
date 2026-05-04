@@ -132,7 +132,11 @@ async function checkTask(taskId, playerId, jkey, week) {
     case "pvp_pending": {
       const { data } = await supabase.from("pvp_battles")
         .select("id").eq("opponent_id", playerId).eq("status","pending");
-      return { applicable: data?.length > 0, done: data?.length === 0 };
+      // Only applicable when you HAVE pending battles to resolve
+      // Not applicable = not shown at all (never marked as done automatically)
+      const hasPending = data?.length > 0;
+      return { applicable: hasPending, done: false };
+      // done:true only set when user manually resolves all pending (via handleComplete)
     }
     case "propaganda": {
       const { data } = await supabase.from("message_logs")
@@ -308,7 +312,9 @@ export default function DailyChecklist({ playerId, playerName }) {
 
     // Check if all visible tasks done = bonus
     const allVisible = [...urgentTasks, ...randomTasks];
-    const allDone = allVisible.every(t => newAwarded[t.id] || taskStatus[t.id]?.done);
+    const visibleRand = randomTasks.filter(t => taskStatus[t.id]?.applicable !== false);
+    const allVisibleNow = [...urgentTasks, ...visibleRand];
+    const allDone = allVisibleNow.length > 0 && allVisibleNow.every(t => newAwarded[t.id] || taskStatus[t.id]?.done);
     if (allDone && !awardedToday["__bonus__"]) {
       await awardPt(playerId, 3, "checklist_bonus", `Checklist completo — ${jkey}`);
       const withBonus = { ...newAwarded, "__bonus__": true };
@@ -339,7 +345,8 @@ export default function DailyChecklist({ playerId, playerName }) {
     return awardedToday[task.id] || taskStatus[task.id]?.done;
   }
 
-  const allVisible = [...urgentTasks, ...randomTasks];
+  const visibleRandom = randomTasks.filter(t => taskStatus[t.id]?.applicable !== false);
+  const allVisible = [...urgentTasks, ...visibleRandom];
   const doneCount = allVisible.filter(t => isDone(t)).length;
   const totalCount = allVisible.length;
   const bonusDone = awardedToday["__bonus__"];
@@ -466,8 +473,10 @@ export default function DailyChecklist({ playerId, playerName }) {
         </>
       )}
 
-      {/* Random 3 tasks */}
-      {randomTasks.map(t => <TaskRow key={t.id} task={t} isUrgent={false}/>)}
+      {/* Random 3 tasks — skip if not applicable (e.g. pvp_pending with no battles) */}
+      {randomTasks
+        .filter(t => taskStatus[t.id]?.applicable !== false)
+        .map(t => <TaskRow key={t.id} task={t} isUrgent={false}/>)}
 
       {/* Bonus indicator */}
       {bonusDone && (
