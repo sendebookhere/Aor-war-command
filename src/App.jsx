@@ -3632,6 +3632,7 @@ export default function App() {
   if (route === "/asamblea")       return <LoginGate><Asamblea/></LoginGate>;
   if (route === "/noticias")       return <LoginGate><Noticias/></LoginGate>;
   if (route === "/versus")         return <LoginGate><Versus/></LoginGate>;
+  if (route === "/acerca")         return <AcercaDe/>;
   if (!authed) return <LoginGate><AdminAuth onAuth={()=>setAuthed(true)}/></LoginGate>;
   return <AdminPanel players={players} update={update} loading={loading} saving={saving} reload={loadPlayers}/>;
 }
