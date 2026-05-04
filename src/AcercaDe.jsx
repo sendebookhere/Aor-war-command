@@ -261,10 +261,16 @@ export default function AcercaDe() {
             <div>👑 Líder del clan — <span style={{color:"#FFD700"}}>PUNK'Z</span></div>
             <div>🤝 Clan — <span style={{color:"rgba(255,255,255,0.5)"}}>Antigua Orden [AOR]</span></div>
             <div>🎮 Juego — <span style={{color:"rgba(255,255,255,0.5)"}}>Dawn of Ages</span></div>
-            <div>🤖 IA asistente — <span style={{color:"rgba(255,255,255,0.5)"}}>Claude Sonnet · Anthropic</span></div>
-            <div style={{marginTop:"8px",padding:"8px 12px",background:"rgba(255,215,0,0.04)",border:"1px solid rgba(255,215,0,0.12)",borderRadius:"6px",fontSize:"9px",color:"rgba(255,215,0,0.5)",fontFamily:"monospace",letterSpacing:"0.05em"}}>
-              🔒 Acceso exclusivo para miembros de Antigua Orden [AOR].<br/>
-              Si eres miembro y no tienes acceso, contacta a un oficial del clan.
+
+            <div style={{marginTop:"8px",padding:"10px 14px",background:"rgba(88,101,242,0.06)",border:"1px solid rgba(88,101,242,0.25)",borderRadius:"6px",display:"flex",alignItems:"center",gap:"10px"}}>
+              <span style={{fontSize:"20px"}}>🎮</span>
+              <div>
+                <div style={{fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.2em",color:"rgba(88,101,242,0.6)",marginBottom:"2px"}}>DISCORD DEL CLAN</div>
+                <a href="https://discord.gg/sb2eHSSmff" target="_blank" rel="noopener noreferrer"
+                  style={{fontSize:"11px",color:"#7289DA",textDecoration:"none",fontFamily:"monospace",letterSpacing:"0.05em"}}>
+                  discord.gg/sb2eHSSmff
+                </a>
+              </div>
             </div>
           </div>
           <div style={{marginTop:"16px",fontFamily:"monospace",fontSize:"7px",letterSpacing:"0.3em",color:"rgba(255,255,255,0.1)"}}>
