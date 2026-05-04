@@ -160,20 +160,23 @@ export default function Versus(){
   const dudoForMe=battles.filter(b=>String(b.challenger_id)===String(playerId)&&b.status==="disputed");
   const claimedAdmin=battles.filter(b=>b.status==="claimed");
 
-  // Rankings: count each battle result as individual wins/losses per player
+  // Rankings: count SET wins/losses per player
+  // SET WIN = ganaste 2 o 3 de 3 batallas
+  // SET LOSS = ganaste 0 o 1 de 3 batallas
   function buildRecord(bList){
     const r={};
-    bList.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed"||b.status==="pending"||b.status==="disputed").forEach(b=>{
-      const confirmed=b.status==="confirmed"||b.status==="confirmed_reversed";
+    bList.filter(b=>b.status==="confirmed"||b.status==="confirmed_reversed"||b.status==="pending"||b.status==="auto_confirmed").forEach(b=>{
+      const confirmed=b.status==="confirmed"||b.status==="confirmed_reversed"||b.status==="auto_confirmed";
       const cW=b.status==="confirmed_reversed"?b.opponent_wins:b.challenger_wins;
       const oW=b.status==="confirmed_reversed"?b.challenger_wins:b.opponent_wins;
       if(!r[b.challenger_name])r[b.challenger_name]={w:0,l:0,p:0};
       if(!r[b.opponent_name])r[b.opponent_name]={w:0,l:0,p:0};
       if(confirmed){
-        r[b.challenger_name].w+=cW;r[b.challenger_name].l+=oW;
-        r[b.opponent_name].w+=oW;r[b.opponent_name].l+=cW;
+        // SET win = majority (2 or 3 of 3)
+        if(cW>=2){ r[b.challenger_name].w++; r[b.opponent_name].l++; }
+        else      { r[b.challenger_name].l++; r[b.opponent_name].w++; }
       }else{
-        r[b.challenger_name].p++;r[b.opponent_name].p++;
+        r[b.challenger_name].p++;
       }
     });
     return r;
@@ -410,33 +413,50 @@ export default function Versus(){
           </div>
         )}
 
-        {/* RANKINGS — 3 columns: general, week, month */}
+        {/* RANKINGS — sets ganados y perdidos, mismo formato tablas inferiores */}
         <div style={{marginBottom:"16px"}}>
-          <div style={C.lbl}>RANKINGS — MÁS VICTORIAS</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px",marginBottom:"8px"}}>
+          <div style={C.lbl}>RANKINGS — SETS GANADOS (2-3 de 3) · TOP 10</div>
+          {/* Bonus admin buttons */}
+          <div style={{display:"flex",gap:"6px",marginBottom:"8px"}}>
+            {isAdmin&&<button onClick={()=>awardPvpRankingBonus("weekly")} style={{flex:1,padding:"5px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"5px",color:C.red,fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS SEMANA (+5pts)</button>}
+            {isAdmin&&<button onClick={()=>awardPvpRankingBonus("monthly")} style={{flex:1,padding:"5px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"5px",color:C.red,fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS MES (+10pts)</button>}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px"}}>
             {[
-              {title:"GENERAL",data:rankGeneral,type:null},
-              {title:"SEMANA",data:rankWeek,type:"weekly",bonus:"+5pts top 1"},
-              {title:"MES",data:rankMonth,type:"monthly",bonus:"+10pts top 1"},
-            ].map(({title,data,type,bonus})=>{
-              // Only players with wins, sorted desc by wins, top 10
-              const withWins = [...data].filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w);
+              {title:"🏆 GENERAL",data:rankGeneral,sub:"todos los tiempos"},
+              {title:"🏆 SEMANA",data:rankWeek,sub:"semana "+week.split("-W")[1]},
+              {title:"🏆 MES",data:rankMonth,sub:month},
+            ].map(({title,data,sub})=>{
+              const withWins=[...data].filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10);
+              const withLoss=[...data].filter(([,r])=>r.l>0).sort((a,b)=>b[1].l-a[1].l).slice(0,10);
               return(
-              <div key={title} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"8px",padding:"10px"}}>
-                <div style={{fontFamily:"monospace",fontSize:"6px",letterSpacing:"0.15em",color:C.redA+"0.5)",marginBottom:"2px"}}>{title}</div>
-                {bonus&&<div style={{fontFamily:"monospace",fontSize:"6px",color:C.gray,marginBottom:"4px"}}>{bonus}</div>}
-                {isAdmin&&type&&<button onClick={()=>awardPvpRankingBonus(type)} style={{width:"100%",padding:"3px",marginBottom:"4px",background:C.redA+"0.08)",border:`1px solid ${C.redA}0.2)`,borderRadius:"3px",color:C.red,fontSize:"7px",cursor:"pointer",fontFamily:"monospace"}}>OTORGAR BONUS ADMIN</button>}
-                {withWins.length===0
-                  ?<div style={{fontSize:"9px",color:C.gray,textAlign:"center",fontFamily:"monospace"}}>sin victorias</div>
-                  :withWins.slice(0,10).map(([name,r],i)=>(
-                  <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                    <span style={{fontSize:"9px",color:i===0?C.red:"rgba(255,255,255,0.5)",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"65px"}}>{i+1}. {name}</span>
-                    <div style={{fontFamily:"monospace",fontSize:"9px",flexShrink:0,marginLeft:"2px"}}>
-                      <span style={{color:C.green,fontWeight:"bold"}}>{r.w}V</span>
-                    </div>
+                <div key={title}>
+                  {/* Sets ganados */}
+                  <div style={{background:"rgba(168,255,120,0.04)",border:"1px solid rgba(168,255,120,0.12)",borderRadius:"8px",padding:"10px",marginBottom:"6px"}}>
+                    <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(168,255,120,0.5)",letterSpacing:"0.15em",marginBottom:"2px"}}>{title}</div>
+                    <div style={{fontFamily:"monospace",fontSize:"7px",color:C.gray,marginBottom:"6px"}}>{sub}</div>
+                    {withWins.length===0
+                      ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin sets ganados</div>
+                      :withWins.map(([name,r],i)=>(
+                      <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
+                        <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(168,255,120,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"75px"}}>{i+1}. {name}</span>
+                        <span style={{fontFamily:"monospace",fontSize:"12px",color:C.green,fontWeight:"bold"}}>{r.w}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {/* Sets perdidos */}
+                  <div style={{background:"rgba(255,107,107,0.04)",border:"1px solid rgba(255,107,107,0.12)",borderRadius:"8px",padding:"10px"}}>
+                    <div style={{fontFamily:"monospace",fontSize:"7px",color:"rgba(255,107,107,0.5)",letterSpacing:"0.15em",marginBottom:"6px"}}>💀 SETS PERDIDOS</div>
+                    {withLoss.length===0
+                      ?<div style={{fontSize:"9px",color:C.gray,fontFamily:"monospace"}}>sin sets perdidos</div>
+                      :withLoss.map(([name,r],i)=>(
+                      <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 4px",marginBottom:"2px"}}>
+                        <span style={{fontFamily:"Georgia,serif",fontSize:"10px",color:i===0?"rgba(255,107,107,0.9)":"rgba(255,255,255,0.45)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"75px"}}>{i+1}. {name}</span>
+                        <span style={{fontFamily:"monospace",fontSize:"12px",color:C.red,fontWeight:"bold"}}>{r.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>
