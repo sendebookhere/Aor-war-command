@@ -4,6 +4,7 @@ import NavBar from "./NavBar";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { awardPts } from "./PtsLedger";
+import { PTS } from "./GameRules";
 import NalguitasFooter from "./NalguitasFooter";
 
 // ── Comunicaciones — public page for approved clan messages ───────────────
@@ -96,7 +97,7 @@ export default function Comunicaciones() {
     // Prevent double-click: remove key IMMEDIATELY before any await
     localStorage.removeItem(pendingKey);
     // Award +1pt
-    await awardPts(parseInt(playerId), 1, "propaganda", msg.title?.slice(0,40));
+    await awardPts(parseInt(playerId), PTS.propaganda.mensaje_confirmado, "propaganda", msg.title?.slice(0,40));
     // Log the message
     await supabase.from("message_logs").insert({
       player_id: parseInt(playerId), player_name: playerName,

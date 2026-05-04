@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import { awardPts } from "./PtsLedger";
+import { PTS } from "./GameRules";
 import { LoadingScreen } from "./LoadingScreen";
 import NavBar from "./NavBar";
 import PageHeader from "./PageHeader";
@@ -49,7 +50,7 @@ export default function Noticias() {
     if (!playerId || hasRead(post)) return;
     const newComp = [...(post.completions || []), { id: playerId, name: playerName, ts: new Date().toISOString() }];
     await supabase.from("clan_news").update({ completions: newComp }).eq("id", post.id);
-    await awardPts(parseInt(playerId), 1, "noticia_leida", post.title?.slice(0, 40));
+    await awardPts(parseInt(playerId), PTS.noticias.leida, "noticia_leida", post.title?.slice(0, 40));
     setMsg("✓ +1pt por lectura");
     setTimeout(() => setMsg(""), 3000);
     load();
@@ -63,7 +64,7 @@ export default function Noticias() {
     // If not yet read, mark as read too
     if (!hasRead(post)) newComp.push({ id: playerId, name: playerName, ts: new Date().toISOString(), cumplido: true });
     await supabase.from("clan_news").update({ completions: newComp }).eq("id", post.id);
-    await awardPts(parseInt(playerId), 3, "solicitud_cumplida", post.title?.slice(0, 40));
+    await awardPts(parseInt(playerId), PTS.noticias.leida + 3, "solicitud_cumplida", post.title?.slice(0, 40));
     setMsg("✓ +3pts por cumplimiento");
     setTimeout(() => setMsg(""), 3000);
     load();
