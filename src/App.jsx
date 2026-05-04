@@ -237,13 +237,10 @@ function RegistrationTimer({warMode="classic"}) {
     <div style={{background:"rgba(255,107,107,0.05)",border:"1px solid rgba(255,107,107,0.15)",borderRadius:"8px",padding:"12px",marginBottom:"12px",textAlign:"center"}}>
       <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.2em",color:"rgba(255,107,107,0.6)",marginBottom:"6px"}}>REGISTRO CERRADO</div>
       <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)",lineHeight:"1.6"}}>
-        El registro abre con la siguiente guerra de clanes.
+        El registro abre el próximo lunes.
         <br/>
-        <strong style={{color:"#A8FF78"}}>Viernes</strong>
-        {warMode==="new"
-          ? <span> · <strong style={{color:"#FF9F43"}}>{spainHStr(11)}</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 11:00am Ecuador · 10:00am México</span></span>
-          : <span> · <strong style={{color:"#A8FF78"}}>{spainHStr(7)}</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 7:00am Ecuador · 6:00am México</span></span>
-        }
+        <strong style={{color:"#A8FF78"}}>Lunes</strong>
+        <span> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.25)"}}> · 9:00am Ecuador · 8:00am México</span></span>
       </div>
     </div>
   );
@@ -729,9 +726,9 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           <div style={{background:"rgba(255,107,107,0.06)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",textAlign:"center"}}>
             <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,107,107,0.7)",marginBottom:"2px"}}>REGISTRO CERRADO</div>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
-              {warMode==="new"
-                ? "Abre el lunes · Cierra viernes 18:00h España (11:00am Ecuador · 10:00am México)"
-                : "Abre el lunes · Cierra viernes 14:00h España (7:00am Ecuador · 6:00am México)"}
+              warMode==="new"
+                ? <span>Abre <strong style={{color:"#A8FF78"}}>lunes</strong> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.3)"}}> · 9:00am Ecuador · 8:00am México</span></span>
+                : <span>Abre <strong style={{color:"#A8FF78"}}>lunes</strong> · <strong style={{color:"#40E0FF"}}>{spainHStr(9)} hora España</strong><span style={{color:"rgba(255,255,255,0.3)"}}> · 9:00am Ecuador · 8:00am México</span></span>
             </div>
           </div>
         )}
