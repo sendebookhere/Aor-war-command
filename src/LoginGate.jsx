@@ -120,17 +120,50 @@ function LoginScreen({onLogin}) {
     setTimeout(()=>phoneRef.current?.focus(), 100);
   }
 
-  // Award +1pt for first daily login with unique code
+  // Award +1pt for first login of the "jornada" (Ecuador day: 8am→7:59am next day)
   async function awardDailyCodePt(player) {
-    const todayKey = "aor_code_day_"+player.id;
-    const lastDay  = localStorage.getItem(todayKey);
-    const today    = new Date().toISOString().slice(0,10);
-    if (lastDay === today) return; // already awarded today
-    localStorage.setItem(todayKey, today);
+    // Jornada key: Ecuador date at 8am boundary
+    // Ecuador = UTC-5. Jornada starts at 8am Ecuador = 13:00 UTC
+    const now = new Date();
+    const utcH = now.getUTCHours();
+    const utcMin = now.getUTCMinutes();
+    // If before 13:00 UTC (= before 8am Ecuador), jornada is the previous calendar day
+    const jornadaDate = new Date(now);
+    if (utcH < 13 || (utcH === 13 && utcMin < 0)) {
+      jornadaDate.setUTCDate(jornadaDate.getUTCDate() - 1);
+    }
+    const jornadaKey = "jornada_" + jornadaDate.toISOString().slice(0,10);
+    const todayKey = "aor_code_day_" + player.id;
+    const lastJornada = localStorage.getItem(todayKey);
+    if (lastJornada === jornadaKey) return; // already awarded this jornada
+    localStorage.setItem(todayKey, jornadaKey);
+
+    // Calculate correct week (Monday-based, Ecuador 8am boundary)
+    function getWarWeek() {
+      const ec = new Date(now.getTime() - 5*3600000);
+      // If before 8am Ecuador on Monday, still previous week
+      const ecH = ec.getUTCHours(), ecDay = ec.getUTCDay();
+      const inThisWeek = !(ecDay === 1 && ecH < 8);
+      const ref = new Date(ec);
+      if (!inThisWeek) ref.setUTCDate(ec.getUTCDate() - 7);
+      const mon = new Date(ref);
+      mon.setUTCDate(ref.getUTCDate() - ((ref.getUTCDay() + 6) % 7));
+      mon.setUTCHours(8,0,0,0);
+      const y = mon.getUTCFullYear();
+      const w = Math.ceil(((mon - new Date(Date.UTC(y,0,1)))/86400000 + 1)/7);
+      return `${y}-W${String(w).padStart(2,"0")}`;
+    }
+    const week = getWarWeek();
+    const month = now.toISOString().slice(0,7);
+
     try {
       const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(player.id)).single();
       await supabase.from("players").update({pts_acumulados:(p?.pts_acumulados||0)+1}).eq("id",parseInt(player.id));
-      await supabase.from("pts_ledger").insert({player_id:parseInt(player.id),pts:1,source:"codigo_unico",note:"Primera entrada del dia con codigo unico",week:new Date().toISOString().slice(0,7)+"W",created_at:new Date().toISOString()}).catch(()=>{});
+      await supabase.from("pts_ledger").insert({
+        player_id:parseInt(player.id), pts:1, source:"codigo_unico",
+        note:"Primera entrada de la jornada con código único",
+        week, month, created_at:now.toISOString()
+      }).catch(()=>{});
     } catch(e){}
   }
 
@@ -175,24 +208,9 @@ function LoginScreen({onLogin}) {
         accessed_at: new Date().toISOString(),
       });
     } catch(e) {}
-    // +1pt for code usage (once per day)
+    // +1pt for first login of the jornada with code (handled by awardDailyCodePt)
     if (mode === "code") {
-      try {
-        const today = new Date().toISOString().slice(0,10);
-        const {data:logs} = await supabase.from("user_access_logs")
-          .select("id").eq("player_id",selected.id).eq("method","code")
-          .gte("accessed_at",today+"T00:00:00Z");
-        if (logs && logs.length <= 1) {
-          await supabase.from("players").update({pts_acumulados:(selected.pts_acumulados||0)+1}).eq("id",selected.id);
-          // Log to pts_ledger — fuente única de verdad
-          const week = (()=>{const now=new Date(),ec=new Date(now.getTime()-5*3600000);const fri=new Date(ec);fri.setDate(ec.getDate()-((ec.getDay()+2)%7));const y=fri.getFullYear(),w=Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);return`${y}-W${w}`;})();
-          await supabase.from("pts_ledger").insert({
-            player_id:selected.id, pts:1, source:"codigo_unico",
-            note:"Primera entrada del día con código único",
-            week, created_at:new Date().toISOString()
-          }).catch(()=>{});
-        }
-      } catch(e) {}
+      await awardDailyCodePt(selected);
     }
     setVerifying(false);
     onLogin(selected, mode);
