@@ -53,7 +53,7 @@ const TASKS = {
 };
 
 const TIMEZONES = {
-  sur:    { label:"Sudamérica",   offset:-5, flag:"🌎", sub:"hora Ecuador" },
+  sur:    { label:"Sudamérica",   offset:-5, flag:"🇪🇨", sub:"hora Ecuador" },
   norte:  { label:"Norteamérica", offset:-6, flag:"🇲🇽", sub:"hora México" },
   espana: { label:"España",       offset:2,  flag:"🇪🇸", sub:"hora España" },
   otro:   { label:"Otro",         offset:-5, flag:"🌍",  sub:"hora Ecuador" },
