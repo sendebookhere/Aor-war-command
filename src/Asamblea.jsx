@@ -482,16 +482,23 @@ export default function Asamblea() {
               {top3.map((p,i)=>{
                 const pl=players.find(x=>x.id===p.id);
                 if(!pl) return null;
-                const warPts=(pl.pt_registro||0)+(pl.pt_disponibilidad_declarada||0)+(pl.pt_disponibilidad||0)+(pl.pt_obediencia||0)+(pl.pt_batallas_ganadas||0)*2+(pl.pt_batallas_perdidas||0)+(pl.pt_defensas||0)+(pl.pt_bonus||0)+(pl.pt_bandido_post||0)+(pl.pt_stats||0)+((pl.pt_batallas_ganadas||0)>=6?10:0)-(pl.pt_penalizacion||0)-(pl.pt_no_aparecio||0)-(pl.pt_ignoro_orden||0)*2-(pl.pt_abandono||0)*2-(pl.pt_inactivo_4h||0)*3-(pl.pt_bandido_pre||0);
-                const acc=pl.pts_acumulados||0;
-                // acc = pts_acumulados includes WA, propaganda, votos, PvP, código, archives
-                // Show WA separately, then the rest (acc minus WA)
-                const waBonus=pl.pt_whatsapp||0;
-                const directRest=acc-waBonus; // propaganda+votos+PvP+código+archives
+                // p.pts = calcPeriodScore = warPts only (this week's war columns)
+                // Breakdown shows each war subcategory with a non-zero value
+                const reg   = (pl.pt_registro||0)+(pl.pt_registro_temprano||0)+(pl.pt_disponibilidad_declarada||0);
+                const act   = (pl.pt_disponibilidad||0)+(pl.pt_obediencia||0)*2;
+                const bat   = (pl.pt_batallas_ganadas||0)*2+(pl.pt_batallas_perdidas||0)+((pl.pt_batallas_ganadas||0)>=6?10:0);
+                const def   = pl.pt_defensas||0;
+                const stats = pl.pt_stats||0;
+                const other = (pl.pt_bonus||0)*5+(pl.pt_bandido_post||0);
+                const penal = -((pl.pt_penalizacion||0)+(pl.pt_no_aparecio||0)+(pl.pt_ignoro_orden||0)*2+(pl.pt_abandono||0)*2+(pl.pt_inactivo_4h||0)*3+(pl.pt_bandido_pre||0));
                 const breakdownItems=[
-                  warPts>0&&{l:"⚔ Guerra",v:warPts,c:"#40E0FF"},
-                  waBonus>0&&{l:"📱 WhatsApp",v:waBonus,c:"#A8FF78"},
-                  directRest>0&&{l:"📡 Acumulado (propaganda·votos·PvP·código)",v:directRest,c:"#C8A2FF"},
+                  reg>0   &&{l:"📋 Registro",          v:reg,   c:"#A8FF78"},
+                  act>0   &&{l:"⚔ Actividad",          v:act,   c:"#40E0FF"},
+                  bat>0   &&{l:"⚔ Batallas",           v:bat,   c:"#40E0FF"},
+                  def>0   &&{l:"🛡 Defensas",           v:def,   c:"#40E0FF"},
+                  stats>0 &&{l:"📊 Stats",              v:stats, c:"#FFD700"},
+                  other>0 &&{l:"⭐ Bonus",              v:other, c:"#FFD700"},
+                  penal<0 &&{l:"⚠ Penalizaciones",     v:penal, c:"#FF6B6B"},
                 ].filter(Boolean);
                 return(
                   <div key={p.id} style={{marginBottom:"12px",padding:"10px 12px",background:`rgba(255,255,255,0.0${4-i})`,borderRadius:"8px",border:`1px solid ${medalColors[i]}22`}}>
