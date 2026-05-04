@@ -3500,13 +3500,15 @@ export default function App() {
         const ecNow = new Date(now.getTime() - 5*3600000);
         const day  = ecNow.getUTCDay();   // 1 = Monday
         const hour = ecNow.getUTCHours();
-        const isResetWindow = day === 1 && hour >= 8; // Monday 8am+ Ecuador
-        if (!isResetWindow) return;
-        // Check if already reset this Monday
+        // Find this week's Monday 8am Ecuador (UTC-5 = 13:00 UTC)
         const thisMonday = new Date(ecNow);
-        thisMonday.setUTCDate(ecNow.getUTCDate() - (ecNow.getUTCDay() - 1));
-        thisMonday.setUTCHours(8,0,0,0);
-        if (lastReset && lastReset >= thisMonday) return; // already done
+        const daysToMon = ecNow.getUTCDay() === 0 ? 6 : ecNow.getUTCDay() - 1;
+        thisMonday.setUTCDate(ecNow.getUTCDate() - daysToMon);
+        thisMonday.setUTCHours(13,0,0,0); // 8am Ecuador = 13:00 UTC
+        // Only trigger if we are past this Monday's reset time
+        if (now < thisMonday) return;
+        // Skip if already reset this week
+        if (lastReset && new Date(lastReset) >= thisMonday) return;
         console.log("Auto weekly reset triggered: Monday 9am Spain");
         await weeklyReset(true);
         // Show notification to any admin viewing the app
