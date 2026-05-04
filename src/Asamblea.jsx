@@ -106,17 +106,18 @@ export default function Asamblea() {
   const week = getWarWeek();
 
   // calcPeriodScore must be at component scope (used in render AND in useEffect)
+  // calcPeriodScore = solo puntos de la jornada actual (columnas pt_* de guerra)
+  // El "Mayor Puntaje" de asamblea se refiere a la semana en curso, no al histórico
   function calcPeriodScore(p) {
-    const warPts = (p.pt_registro||0)+(p.pt_registro_temprano||0)
+    return (p.pt_registro||0)+(p.pt_registro_temprano||0)
       +(p.pt_disponibilidad_declarada||0)+(p.pt_disponibilidad||0)
       +(p.pt_obediencia||0)+(p.pt_batallas_ganadas||0)*2+(p.pt_batallas_perdidas||0)
-      +(p.pt_defensas||0)+(p.pt_bonus||0)+(p.pt_bandido_post||0)+(p.pt_stats||0)
+      +(p.pt_defensas||0)+(p.pt_bonus||0)*5+(p.pt_bandido_post||0)+(p.pt_stats||0)
       +((p.pt_batallas_ganadas||0)>=6?10:0)
       -(p.pt_penalizacion||0)-(p.pt_no_aparecio||0)
       -(p.pt_ignoro_orden||0)*2-(p.pt_abandono||0)*2
       -(p.pt_inactivo_4h||0)*3-(p.pt_bandido_pre||0)
       -(p.pt_fuera_castillo||0)*2;
-    return (p.pts_acumulados||0) + warPts;
   }
 
   useEffect(()=>{
@@ -276,8 +277,8 @@ export default function Asamblea() {
                 const acum = top.pts_acumulados||0;
                 const totalAll = acum + warPts; // = calcPeriodScore(top) = topPts
                 const breakdown = [
-                  warPts>0 && {l:"⚔ Esta guerra",v:warPts,c:"#40E0FF"},
-                  acum>0 && {l:"📡 Acumulado histórico",v:acum,c:"#C8A2FF"},
+                  warPts>0 && {l:"⚔ Puntos esta semana",v:warPts,c:"#40E0FF"},
+                  acum>0 && {l:"📡 Histórico acumulado",v:acum,c:"rgba(200,162,255,0.4)"},
                 ].filter(x=>x&&x.v>0);
                 // Pichichi: only if UNIQUE top scorer (no tie) and same as most voted
                 const topPts2 = ranked.length>1 ? ranked[1].pts : 0;
@@ -311,8 +312,8 @@ export default function Asamblea() {
                   {isUniqueTop && <div style={{fontFamily:"serif",fontSize:"15px",color:"#A8FF78",fontWeight:"bold",marginBottom:"2px",lineHeight:1.2}}>{top.name}</div>}
                   {isUniqueTop && (
                   <div>
-                    <div style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"2px"}}>{topPts>0?"+":""}{topPts} pts jornada</div>
-                    <div style={{fontSize:"9px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>{(top.pts_acumulados||0).toLocaleString()} pts acumulados</div>
+                    <div style={{fontSize:"16px",color:"#A8FF78",fontWeight:"bold",fontFamily:"monospace",marginBottom:"2px"}}>{topPts>0?"+":""}{topPts} pts esta semana</div>
+                    <div style={{fontSize:"9px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",marginBottom:"6px"}}>{(top.pts_acumulados||0).toLocaleString()} pts acumulados históricos</div>
                   </div>
                 )}
                   {isUniqueTop && breakdown.map(x=>(
