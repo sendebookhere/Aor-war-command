@@ -52,9 +52,10 @@ const TASKS = {
 };
 
 const TIMEZONES = {
-  mexico: { label:"México",  offset:-6, flag:"🇲🇽" },
-  espana: { label:"España",  offset:2,  flag:"🇪🇸" },
-  otra:   { label:"Otra",    offset:0,  flag:"🌍"  },
+  sur:    { label:"Sudamérica",   offset:-5, flag:"🌎", sub:"hora Ecuador" },
+  norte:  { label:"Norteamérica", offset:-6, flag:"🇲🇽", sub:"hora México" },
+  espana: { label:"España",       offset:2,  flag:"🇪🇸", sub:"hora España" },
+  otro:   { label:"Otro",         offset:-5, flag:"🌍",  sub:"hora Ecuador" },
 };
 
 const HOURS = ["No sé","00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"];
@@ -345,7 +346,7 @@ function isRegistrationOpen(warMode="classic") {
 function RegistrationForm({onRegistered, warMode="classic"}) {
   const [name, setName]             = useState("");
   const [avail, setAvail]           = useState("");
-  const [tz, setTz]                 = useState("mexico");
+  const [tz, setTz]                 = useState(()=>localStorage.getItem("aor_region")||"norte");
   const [hour, setHour]             = useState("No sé");
   const [task1, setTask1]           = useState("");
   const [task2, setTask2]           = useState("");
@@ -565,24 +566,7 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
 
         {/* Stats update - right after name */}
         {selectedPlayer && !alreadyRegistered && (
-          <><div style={{marginBottom:"12px",background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.1)",borderRadius:"8px",padding:"10px"}}>
-            <div style={{fontSize:"9px",color:"rgba(64,224,255,0.4)",fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:"6px"}}>TU REGIÓN</div>
-            <div style={{display:"flex",gap:"6px"}}>
-              {[
-                {id:"sur",   label:"Sudamérica",   sub:"hora Ecuador"},
-                {id:"norte", label:"Norteamérica", sub:"hora México"},
-                {id:"spain", label:"España",        sub:"hora España"},
-                {id:"otro",  label:"Otro",          sub:"hora Ecuador"},
-              ].map(reg=>(
-                <button key={reg.id} type="button" onClick={()=>{ setRegion(reg.id); localStorage.setItem("aor_region",reg.id); }} style={{flex:1,padding:"8px 4px",background:region===reg.id?"rgba(64,224,255,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(region===reg.id?"rgba(64,224,255,0.3)":"rgba(255,255,255,0.07)"),borderRadius:"6px",color:region===reg.id?"#40E0FF":"rgba(255,255,255,0.3)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace",textAlign:"center"}}>
-                  {reg.label}<br/><span style={{fontSize:"7px",opacity:0.6}}>{reg.sub}</span>
-                </button>
-              ))}
-            </div>
-            {region&&<div style={{fontSize:"8px",color:"rgba(64,224,255,0.3)",fontFamily:"monospace",marginTop:"4px"}}>✓ guardado · cambia cuando quieras</div>}
-
-          </div>
-
+          <>
           <div style={{marginBottom:"16px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.15)",borderRadius:"8px",padding:"12px"}}>
             <label style={{fontSize:"11px",color:"#FFD700",display:"block",marginBottom:"4px"}}>
               📊 ACTUALIZA TUS STATS
@@ -708,13 +692,13 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
           </div>
         </div>
           
-        {/* Timezone */}
+        {/* Timezone — 4 unified regions */}
         <div style={{marginBottom:"16px"}}>
           <label style={{fontSize:"11px",color:"rgba(255,255,255,0.5)",display:"block",marginBottom:"6px"}}>ZONA HORARIA</label>
-          <div style={{display:"flex",gap:"6px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:"5px"}}>
             {Object.entries(TIMEZONES).map(([key,tz2])=>(
-              <button key={key} onClick={()=>setTz(key)} style={{flex:1,padding:"8px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",background:tz===key?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(tz===key?"#40E0FF":"rgba(255,255,255,0.08)"),color:tz===key?"#40E0FF":"rgba(255,255,255,0.5)"}}>
-                {tz2.flag} {tz2.label}
+              <button key={key} onClick={()=>{ setTz(key); localStorage.setItem("aor_region",key); }} style={{padding:"8px 4px",borderRadius:"6px",fontSize:"9px",cursor:"pointer",background:tz===key?"rgba(64,224,255,0.15)":"rgba(255,255,255,0.03)",border:"1px solid "+(tz===key?"#40E0FF":"rgba(255,255,255,0.08)"),color:tz===key?"#40E0FF":"rgba(255,255,255,0.5)",textAlign:"center",fontFamily:"monospace"}}>
+                {tz2.flag}<br/>{tz2.label}<br/><span style={{fontSize:"7px",opacity:0.6}}>{tz2.sub}</span>
               </button>
             ))}
           </div>
@@ -746,8 +730,8 @@ function RegistrationForm({onRegistered, warMode="classic"}) {
             <div style={{fontFamily:"monospace",fontSize:"9px",letterSpacing:"0.15em",color:"rgba(255,107,107,0.7)",marginBottom:"2px"}}>REGISTRO CERRADO</div>
             <div style={{fontSize:"10px",color:"rgba(255,255,255,0.4)"}}>
               {warMode==="new"
-                ? "Abre el lunes · Cierra viernes 21:00h España (15:00h Ecuador · 14:00h México)"
-                : "Abre el lunes · Cierra viernes 13:00h España (7:00h Ecuador · 6:00h México)"}
+                ? "Abre el lunes · Cierra viernes 18:00h España (11:00am Ecuador · 10:00am México)"
+                : "Abre el lunes · Cierra viernes 14:00h España (7:00am Ecuador · 6:00am México)"}
             </div>
           </div>
         )}
@@ -2886,7 +2870,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
               return b.bp - a.bp;
             }).map(p=>{
               const avail = AVAILABILITY[p.availability]||AVAILABILITY.pendiente;
-              const tz    = TIMEZONES[p.timezone]||TIMEZONES.mexico;
+              const tz    = TIMEZONES[p.timezone]||TIMEZONES.norte;
               const tasks = getTasksForPlayer(p.availability, p.level);
               return (
                 <div key={p.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+avail.color+"33",borderLeft:"3px solid "+avail.color,borderRadius:"8px",padding:"10px 12px",marginBottom:"6px"}}>
