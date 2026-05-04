@@ -184,6 +184,13 @@ function LoginScreen({onLogin}) {
           .gte("accessed_at",today+"T00:00:00Z");
         if (logs && logs.length <= 1) {
           await supabase.from("players").update({pts_acumulados:(selected.pts_acumulados||0)+1}).eq("id",selected.id);
+          // Log to pts_ledger — fuente única de verdad
+          const week = (()=>{const now=new Date(),ec=new Date(now.getTime()-5*3600000);const fri=new Date(ec);fri.setDate(ec.getDate()-((ec.getDay()+2)%7));const y=fri.getFullYear(),w=Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);return`${y}-W${w}`;})();
+          await supabase.from("pts_ledger").insert({
+            player_id:selected.id, pts:1, source:"codigo_unico",
+            note:"Primera entrada del día con código único",
+            week, created_at:new Date().toISOString()
+          }).catch(()=>{});
         }
       } catch(e) {}
     }

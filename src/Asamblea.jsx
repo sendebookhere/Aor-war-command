@@ -414,8 +414,7 @@ export default function Asamblea() {
                   if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
                   await supabase.from("assembly_votes").delete().eq("id",myVoteThisWeek.id);
                   try {
-                    const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-                    await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                    await revokePts(parseInt(playerId), PTS.asamblea.votar, "penalizacion", "Voto de asamblea retirado");
                   } catch(e) {}
                   // Refresh ALL votes so tally updates immediately
                   const {data:v} = await supabase.from("assembly_votes").select("*").eq("week",week);

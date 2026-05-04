@@ -2,7 +2,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import PageHeader from "./PageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
-import { awardPts } from "./PtsLedger";
+import { awardPts, revokePts } from "./PtsLedger";
 import { PTS } from "./GameRules";
 import NavBar from "./NavBar";
 import NalguitasFooter from "./NalguitasFooter";
@@ -181,8 +181,7 @@ export default function Inteligencia() {
               <button onClick={async()=>{
                 if(!confirm("¿Eliminar tu voto? Perderás los 3 pts acreditados.")) return;
                 await supabase.from("difficulty_votes").delete().eq("player_id",parseInt(playerId)).eq("week",week);
-                const {data:p} = await supabase.from("players").select("pts_acumulados").eq("id",parseInt(playerId)).single();
-                await supabase.from("players").update({pts_acumulados:Math.max(0,(p?.pts_acumulados||0)-3)}).eq("id",parseInt(playerId));
+                await revokePts(parseInt(playerId), PTS.intel.voto_dificultad, "penalizacion", "Voto de inteligencia retirado");
                 setMyVotes(null);
               }} style={{padding:"3px 8px",background:"rgba(255,107,107,0.08)",border:"1px solid rgba(255,107,107,0.2)",borderRadius:"4px",color:"rgba(255,107,107,0.6)",fontSize:"9px",cursor:"pointer",fontFamily:"monospace"}}>
                 Eliminar voto
