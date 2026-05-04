@@ -1,6 +1,7 @@
 import { LoadingScreen } from "./LoadingScreen";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { calcWarPts, calcGrandTotal, RANKS, getRankLabel, getRankColor } from "./GameRules";
 
 function UniqueCodeManager({playerId, playerName, uniqueCode: initialCode}) {
   const [code, setCode]       = useState(initialCode||"");
@@ -112,7 +113,6 @@ function getRank(acc, hon, name, clanRole) {
   return RANKS.find(r => total >= r.min) || RANKS[RANKS.length-1];
 }
 
-import { calcWarPts, calcGrandTotal } from "./GameRules";
 function totalPts(p) { return calcWarPts(p); }
 
 function Pill({ color, children }) {
