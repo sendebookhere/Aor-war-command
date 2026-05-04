@@ -100,9 +100,9 @@ export default function Comunicaciones() {
       player_id: parseInt(playerId), player_name: playerName,
       msg_id: msg.id, msg_title: msg.title, created_at: new Date().toISOString(),
     }).catch(()=>{});
-    localStorage.removeItem(pendingKey);
     const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
     setLogs(data||[]);
+    localStorage.removeItem(pendingKey); // remove AFTER reload so isPending stays true during await
     setFeedback(f=>({...f,[msg.id]:"✓ +1pt acreditado. ¡Gracias por difundir!"}));
     setTimeout(()=>setFeedback(f=>({...f,[msg.id]:""})), 5000);
   }
@@ -262,11 +262,12 @@ export default function Comunicaciones() {
               {(()=>{
                 const pendingKey = "aor_prop_pending_"+msg.id;
                 const pendingTs = localStorage.getItem(pendingKey) ? parseInt(localStorage.getItem(pendingKey)) : 0;
-                const isPending = !!localStorage.getItem(pendingKey) && !alreadyUsed;
-                // 6h block on this specific message after confirming
+                // isPending: pendingKey exists → user copied but hasn't confirmed yet
+                // Show confirm button regardless of alreadyUsed or cooldown
+                const isPending = pendingTs > 0 && !alreadyUsed;
+                // After confirming, 6h block on re-copying this message
                 const msg6hBlocked = alreadyUsed && pendingTs > Date.now();
                 const msg6hLeft = msg6hBlocked ? Math.ceil((pendingTs - Date.now())/60000) : 0;
-                const msgBlocked = msg6hBlocked;
                 return(
                   <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
                     {/* COPIAR button — disabled when pending confirm */}

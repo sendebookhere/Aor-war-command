@@ -277,6 +277,20 @@ function PlayerProfile({ player, onBack }) {
   // Grand total from GameRules.calcGrandTotal
   const grandTotal = calcGrandTotal(player);
 
+  // Weekly pts = sum of ALL pts_ledger entries this week (war + direct)
+  // This is the true "earned this week" figure across all mechanics
+  const currentWeek = (() => {
+    const now = new Date(), ec = new Date(now.getTime() - 5*3600000);
+    const fri = new Date(ec); fri.setDate(ec.getDate() - ((ec.getDay()+2)%7));
+    const y = fri.getFullYear(), w = Math.ceil(((fri-new Date(y,0,1))/86400000+1)/7);
+    return `${y}-W${w}`;
+  })();
+  const weeklyLedgerPts = ptsLedger
+    .filter(e => e.week === currentWeek)
+    .reduce((sum, e) => sum + (e.pts || 0), 0);
+  // Also include war pts from pt_* columns (not yet archived)
+  const weeklyTotal = weeklyLedgerPts + calcWarPts(player);
+
   return (
     <div style={{minHeight:"100vh",background:"#0d0d0f",padding:"20px",fontFamily:"Georgia,serif",color:"#d4c9a8"}}>
       <div style={{maxWidth:"600px",margin:"0 auto"}}>
@@ -288,9 +302,16 @@ function PlayerProfile({ player, onBack }) {
         {/* Header */}
         {/* ── Profile Header ─────────────────────────────────────────────── */}
         <div style={{background:"rgba(64,224,255,0.03)",border:"1px solid rgba(64,224,255,0.15)",borderRadius:"10px",padding:"16px",marginBottom:"16px"}}>
-          {/* Name in yellow */}
+          {/* Name in yellow + total prominently */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
-            <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",fontWeight:"bold"}}>{player.name}</div>
+            <div>
+              <div style={{fontFamily:"serif",fontSize:"22px",color:"#FFD700",fontWeight:"bold"}}>{player.name}</div>
+              <div style={{fontFamily:"monospace",fontSize:"10px",color:"rgba(255,255,255,0.3)",marginTop:"2px"}}>
+                <span style={{color:rank.color,fontWeight:"bold",fontSize:"13px"}}>{grandTotal}</span>
+                {" pts totales · "}
+                <span style={{color:rank.color}}>{rank.label}</span>
+              </div>
+            </div>
             <span style={{fontSize:"18px"}}>{player.whatsapp ? "📱" : ""}</span>
           </div>
           {/* Rank + Role in clan */}
@@ -322,13 +343,13 @@ function PlayerProfile({ player, onBack }) {
           <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
             <div style={{flex:1,background:"rgba(168,255,120,0.05)",border:"1px solid rgba(168,255,120,0.15)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
               <div style={{fontSize:"8px",color:"rgba(168,255,120,0.5)",fontFamily:"monospace",letterSpacing:"0.1em"}}>ESTA SEMANA</div>
-              <div style={{fontSize:"20px",color:pts>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold",fontFamily:"monospace"}}>{pts>0?"+":""}{pts}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts activos</div>
+              <div style={{fontSize:"20px",color:weeklyTotal>=0?"#A8FF78":"#FF6B6B",fontWeight:"bold",fontFamily:"monospace"}}>{weeklyTotal>0?"+":""}{weeklyTotal}</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>pts activos esta semana</div>
             </div>
             <div style={{flex:1,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:"6px",padding:"8px",textAlign:"center"}}>
               <div style={{fontSize:"8px",color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:"0.1em"}}>TOTAL ACUMULADO</div>
               <div style={{fontSize:"20px",color:rank.color,fontWeight:"bold",fontFamily:"monospace"}}>{grandTotal}</div>
-              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>desde el inicio</div>
+              <div style={{fontSize:"8px",color:"rgba(255,255,255,0.2)",fontFamily:"monospace"}}>total acumulado histórico</div>
             </div>
           </div>
 
