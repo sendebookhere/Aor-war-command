@@ -102,7 +102,7 @@ function totalPts(p) {
 function acumulado(p) { return p.pts_acumulados||0; }
 
 // Ranks and points imported from central rules file
-import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS } from "./GameRules";
+import { RANKS, getRank, calcWarPts, calcGrandTotal, PTS, spainOffset } from "./GameRules";
 
 function Pill({color,children}) {
   return <span style={{fontSize:"9px",padding:"1px 6px",borderRadius:"10px",background:color+"22",color,border:"1px solid "+color+"44"}}>{children}</span>;
