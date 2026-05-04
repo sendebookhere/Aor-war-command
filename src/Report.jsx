@@ -245,6 +245,7 @@ function PlayerProfile({ player, onBack }) {
     { label:"Defensas de castillo",               val: player.pt_defensas||0,                  show: (player.pt_defensas||0)>0 },
     { label:"Bonus completo",                     val: (player.pt_bonus||0)*5,                 show: (player.pt_bonus||0)>0 },
     { label:"Bandido post-guerra",                val: player.pt_bandido_post||0,              show: (player.pt_bandido_post||0)>0 },
+    { label:"📊 Stats BP/Poder/Nivel",            val: player.pt_stats||0,                     show: (player.pt_stats||0)>0 },
   ].filter(i=>i.show);
 
   // Read ALL direct pts from pts_ledger — single source of truth

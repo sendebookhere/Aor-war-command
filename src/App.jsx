@@ -286,12 +286,12 @@ function getWarWeek() {
 
 
 function getEarlyRegistrationBonus(availability) {
-  // Early bonus: registers from Mon 9am → Thu 7am Ecuador
+  // Early bonus: registers from Mon 9am → Thu 7am Ecuador (UTC-5)
   // Conquistador +5 · Refuerzos +2 · Reserva +2
   const now = new Date();
-  const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
-  const day  = ec.getDay();   // 0=Sun,1=Mon,...
-  const hour = ec.getHours();
+  const ec  = new Date(now.getTime() - 5*60*60*1000); // shift to Ecuador UTC-5
+  const day  = ec.getUTCDay();   // must use UTC methods on shifted date
+  const hour = ec.getUTCHours();
   // Window: Mon from 9am, Tue all day, Wed all day, Thu before 7am
   const inEarlyWindow = (day===1&&hour>=9) || day===2 || day===3 || (day===4&&hour<7);
   if (!inEarlyWindow) return 0;
@@ -305,8 +305,8 @@ function earlyBonusTimeLeft() {
   // Countdown to early bonus end: Thursday 7:00am Ecuador
   const now = new Date();
   const ec  = new Date(now.getTime() - 5*60*60*1000); // Ecuador UTC-5
-  const day  = ec.getDay();
-  const hour = ec.getHours();
+  const day  = ec.getUTCDay();
+  const hour = ec.getUTCHours();
   // Window: Mon 9am → Thu 7am Ecuador
   const inWindow = (day===1&&hour>=9)||day===2||day===3||(day===4&&hour<7);
   if (!inWindow) return null;
