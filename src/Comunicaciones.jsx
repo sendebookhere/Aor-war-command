@@ -35,7 +35,7 @@ export default function Comunicaciones() {
     Promise.all([
       supabase.from("players").select("id,name,active").eq("active",true).order("name"),
       supabase.from("comunicaciones_msgs").select("*").order("slot"),
-      supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(500),
+      supabase.from("message_logs").select("*").order("created_at", {ascending:false}).limit(2000),
       supabase.from("app_settings").select("value").eq("key","daily_msg_limit").single(),
       supabase.from("app_settings").select("value").eq("key","weekly_msg_limit").single(),
     ]).then(([p, m, l, s, sw]) => {
@@ -103,7 +103,7 @@ export default function Comunicaciones() {
       player_id: parseInt(playerId), player_name: playerName,
       msg_id: msg.id, msg_title: msg.title, created_at: new Date().toISOString(),
     }).catch(()=>{});
-    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(2000);
     setLogs(data||[]);
     // key already removed at start of function
     setFeedback(f=>({...f,[msg.id]:"✓ +1pt acreditado. ¡Gracias por difundir!"}));
@@ -139,15 +139,24 @@ export default function Comunicaciones() {
     setBlockUntil(blockEnd);
     localStorage.setItem("aor_prop_block", String(blockEnd));
     // Force re-render to show the confirm button
-    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(500);
+    const {data} = await supabase.from("message_logs").select("*").order("created_at",{ascending:false}).limit(2000);
     setLogs(data||[]);
     setFeedback(f=>({...f,[msg.id]:"✓ Copiado. Ve al chat del juego, pega el mensaje y vuelve aquí para confirmar."}));
   }
 
-  // Ranking: top propagandists
-  const rankMap = {};
-  logs.forEach(l=>{ rankMap[l.player_name] = (rankMap[l.player_name]||0)+1; });
-  const ranking = Object.entries(rankMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  // Ranking: top propagandists — grouped by player_id (not name, to avoid inconsistencies)
+  const rankMapById = {};
+  const idToName = {};
+  logs.forEach(l=>{
+    if(!l.player_id) return;
+    rankMapById[l.player_id] = (rankMapById[l.player_id]||0)+1;
+    if(l.player_name) idToName[l.player_id] = l.player_name;
+  });
+  // Also count from players list for players who may have name mismatches
+  const ranking = Object.entries(rankMapById)
+    .map(([id, count]) => [idToName[id]||id, count])
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10);
 
   if (loading) return <LoadingScreen page="/propaganda"/>;
 
@@ -209,7 +218,7 @@ export default function Comunicaciones() {
 
         {msgs.map((msg, idx) => {
           const todayLogs = playerId ? logsToday(playerId) : [];
-          const alreadyUsed = todayLogs.some(l=>l.msg_id===msg.id);
+          const alreadyUsed = todayLogs.some(l=>String(l.msg_id)===String(msg.id));
           const limitReached = todayLogs.length >= dailyLimit;
           const isBlocked = blockUntil && blockUntil > Date.now();
           const hasCooldown = playerId && cooldownRemaining(playerId) > 0;
@@ -333,7 +342,7 @@ export default function Comunicaciones() {
               <div style={{display:"grid",gridTemplateColumns:"24px 1fr auto",gap:"0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
                 <div style={{padding:"8px 12px",fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>#</div>
                 <div style={{padding:"8px",fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}>GUERRERO</div>
-                <div style={{padding:"8px 12px",fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace",textAlign:"right"}}>PUBLICACIONES</div>
+                <div style={{padding:"8px 12px",fontSize:"9px",color:"rgba(255,255,255,0.25)",fontFamily:"monospace",textAlign:"right"}}>TOTAL PUBLICACIONES</div>
               </div>
               {ranking.map(([name, count], i)=>(
                 <div key={name} style={{display:"grid",gridTemplateColumns:"24px 1fr auto",borderBottom:"1px solid rgba(255,255,255,0.03)",background:i===0?"rgba(255,215,0,0.04)":"transparent"}}>
