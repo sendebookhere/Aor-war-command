@@ -24,7 +24,7 @@ const VERSIONS = [
   {
     v:"v0.2", title:"Comunicaciones y Admin", date:"Abr 2026",
     items:[
-      "Panel de control con PIN A2O0R26",
+      "Panel de control con PIN protegido",
       "Propaganda de guerra con cooldown 1h entre mensajes",
       "Mensajes preformateados para el chat del juego (≤250 chars)",
       "Toggle modo guerra clásico / nuevo (switch en admin)",

@@ -3604,7 +3604,7 @@ function AdminPanel({players, update, loading, saving, reload}) {
 
 
 // ── Admin Auth ──────────────────────────────────────────────────────────────
-const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "A2O0R26";
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "";
 
 function AdminAuth({onAuth}) {
   const [pin, setPin]     = useState("");
